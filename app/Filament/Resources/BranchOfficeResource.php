@@ -24,9 +24,11 @@ class BranchOfficeResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('branch_code')
+                    ->label('Kode Cabang')
                     ->required()
                     ->maxLength(2),
                 Forms\Components\TextInput::make('branch_name')
+                    ->label('Nama Cabang')
                     ->required()
                     ->maxLength(255),
             ]);
@@ -37,8 +39,10 @@ class BranchOfficeResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('branch_code')
+                    ->label('Kode Cabang')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('branch_name')
+                    ->label('Nama Cabang')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
