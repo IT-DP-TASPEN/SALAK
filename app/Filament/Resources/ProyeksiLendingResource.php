@@ -157,71 +157,98 @@ class ProyeksiLendingResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('lending_tanggal')
-                    ->date()
+                    ->label('Tanggal')
+                    ->date('d M Y')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('lending_kantor')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_agent')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_nama_debitur')
+                Tables\Columns\TextColumn::make('branchOffice.branch_name')
+                    ->label('Kantor Cabang'),
+                Tables\Columns\TextColumn::make('agent.name')
+                    ->label('AO/Marketing')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('lending_jenis_pengajuan'),
-                Tables\Columns\TextColumn::make('lending_produk'),
-                Tables\Columns\TextColumn::make('lending_sumber_pembayaran'),
-                Tables\Columns\TextColumn::make('lending_status_dapem'),
-                Tables\Columns\TextColumn::make('lending_status_kerja'),
+                Tables\Columns\TextColumn::make('lending_nama_debitur')
+                    ->label('Nama Debitur')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('lending_jenis_pengajuan')
+                    ->label('Jenis Pengajuan')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('lending_produk')
+                    ->label('Produk')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('lending_sumber_pembayaran')
+                    ->label('Sumber Pembayaran')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('lending_status_dapem')
+                    ->label('Status Dapem')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('lending_status_kerja')
+                    ->label('Status Kerja')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('lending_booking')
-                    ->numeric()
+                    ->label('Booking')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_pelunasan_pokok')
-                    ->numeric()
+                    ->label('Pelunasan Pokok')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_booking_bersih')
-                    ->numeric()
+                    ->label('Booking Bersih')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_tanggal_realisasi')
-                    ->date()
+                    ->label('Tanggal Realisasi')
+                    ->date('d M Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_jkw')
-                    ->numeric()
+                    ->label('Jangka Waktu (Bulan)')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_tanggal_jatuh_tempo')
-                    ->date()
+                    ->label('Tanggal Jatuh Tempo')
+                    ->date('d M Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_tanggal_rencana_bayar')
-                    ->date()
+                    ->label('Tanggal Rencana Bayar')
+                    ->date('d M Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_tanggal_rencana_takeover')
-                    ->date()
+                    ->label('Tanggal Rencana Takeover')
+                    ->date('d M Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_pot_provisi')
-                    ->numeric()
+                    ->label('Potongan Provisi')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_pot_admin')
-                    ->numeric()
+                    ->label('Potongan Administrasi')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_pot_asuransi')
-                    ->numeric()
+                    ->label('Potongan Asuransi')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_pot_asuransi_extra')
-                    ->numeric()
+                    ->label('Potongan Asuransi Extra')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_bunga_muka')
-                    ->numeric()
+                    ->label('Bunga Diterima di Muka')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_saldo_tab_mengendap')
-                    ->numeric()
+                    ->label('Saldo Tabungan Mengendap')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_angsuran_muka')
-                    ->numeric()
+                    ->label('Angsuran di Muka')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_nominal_pelunasan_takeover')
-                    ->numeric()
+                    ->label('Nominal Pelunasan Takeover')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_booking_bersih2')
-                    ->numeric()
+                    ->label('Booking Bersih 2')
+                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_kre_rekening')
                     ->searchable(),
