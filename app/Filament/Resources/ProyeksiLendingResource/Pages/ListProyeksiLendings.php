@@ -27,7 +27,7 @@ class ListProyeksiLendings extends ListRecords
         ];
         $user = auth()->user();
 
-        if (!$user->hasRole('approver')) {
+        if ($user->hasRole('approver')) {
             $tabs['needs-approval'] = Tab::make()
                 ->label('Needs Approval')
                 ->icon('heroicon-o-clock')
