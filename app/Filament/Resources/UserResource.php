@@ -26,6 +26,12 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('name')
                     ->required()
                     ->prefixIcon('heroicon-o-user')
+                    ->columnSpanFull()
+                    ->maxLength(255),
+                Forms\Components\TextInput::make('username')
+                    ->required()
+                    ->unique(ignoreRecord: true)
+                    ->prefixIcon('heroicon-o-user-circle')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('email')
                     ->email()
