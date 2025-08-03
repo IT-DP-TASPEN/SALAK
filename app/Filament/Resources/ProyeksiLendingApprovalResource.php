@@ -23,18 +23,19 @@ class ProyeksiLendingApprovalResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('approval_lending')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('approval_user')
-                    ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('approval_status')
+                Forms\Components\Select::make('approval_lending')
+                    ->label('Lending')
+                    ->relationship('proyeksiLending', 'lending_nama_debitur')
+                    ->required(),
+                Forms\Components\Select::make('approval_status')
+                    ->label('Status')
+                    ->options(function () {
+                        $options = ProyeksiLendingApproval::getPossibleEnumValues('approval_status');
+                        return array_combine($options, $options);
+                    })
                     ->required(),
                 Forms\Components\Textarea::make('approval_comment')
                     ->columnSpanFull(),
-                Forms\Components\DateTimePicker::make('approval_approved_at'),
-                Forms\Components\DateTimePicker::make('approval_rejected_at'),
             ]);
     }
 
