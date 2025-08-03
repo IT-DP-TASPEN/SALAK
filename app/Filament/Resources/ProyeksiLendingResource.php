@@ -43,26 +43,27 @@ class ProyeksiLendingResource extends Resource
                         Forms\Components\Select::make('lending_sumber_pembayaran')
                             ->label('Sumber Pembayaran')
                             ->prefixIcon('heroicon-o-currency-dollar')
-                            ->options(
-                                function () {
-                                    $opts = ProyeksiLending::getPossibleEnumValues('lending_sumber_pembayaran');
-                                    return array_combine($opts, $opts);
-                                }
+                            ->relationship(
+                                'sumberPembayaran',
+                                'sumber_nama',
+                                fn($query) => $query->orderBy('sumber_nama')
                             ),
                         Forms\Components\Select::make('lending_status_dapem')
                             ->label('Status Dapem')
                             ->prefixIcon('heroicon-o-check-badge')
-                            ->options(function () {
-                                $opts = ProyeksiLending::getPossibleEnumValues('lending_status_dapem');
-                                return array_combine($opts, $opts);
-                            }),
+                            ->relationship(
+                                'statusDapem',
+                                'dapem_nama',
+                                fn($query) => $query->orderBy('dapem_nama')
+                            ),
                         Forms\Components\Select::make('lending_status_kerja')
                             ->label('Status Kerja')
                             ->prefixIcon('heroicon-o-briefcase')
-                            ->options(function () {
-                                $opts = ProyeksiLending::getPossibleEnumValues('lending_status_kerja');
-                                return array_combine($opts, $opts);
-                            }),
+                            ->relationship(
+                                'statusKerja',
+                                'kerja_nama',
+                                fn($query) => $query->orderBy('kerja_nama')
+                            ),
                     ]),
                 Forms\Components\Fieldset::make('Informasi Lending')
                     ->columns(2)
@@ -85,11 +86,10 @@ class ProyeksiLendingResource extends Resource
                         Forms\Components\Select::make('lending_produk')
                             ->label('Produk')
                             ->prefixIcon('heroicon-o-briefcase')
-                            ->options(
-                                function () {
-                                    $opts = ProyeksiLending::getPossibleEnumValues('lending_produk');
-                                    return array_combine($opts, $opts);
-                                }
+                            ->relationship(
+                                'produk',
+                                'produk_nama',
+                                fn($query) => $query->orderBy('produk_nama')
                             ),
                         Forms\Components\TextInput::make('lending_booking')
                             ->label('Booking')

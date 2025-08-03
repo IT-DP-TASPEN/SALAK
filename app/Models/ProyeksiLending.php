@@ -13,7 +13,6 @@ class ProyeksiLending extends BaseModel
     protected $casts = [
         'lending_tanggal' => 'datetime',
         'lending_sumber_pembayaran' => 'string',
-        'lending_status_dapem' => 'string',
         'lending_status_kerja' => 'string',
         'lending_produk' => 'string',
     ];
@@ -29,6 +28,26 @@ class ProyeksiLending extends BaseModel
             $approval->approval_status = 'Pending';
             $approval->save();
         });
+    }
+
+    public function statusDapem(): BelongsTo
+    {
+        return $this->belongsTo(StatusDapem::class, 'lending_status_dapem', 'id');
+    }
+
+    public function produk(): BelongsTo
+    {
+        return $this->belongsTo(ProdukLending::class, 'lending_produk', 'id');
+    }
+
+    public function sumberPembayaran(): BelongsTo
+    {
+        return $this->belongsTo(SumberPembayaranLending::class, 'lending_sumber_pembayaran', 'id');
+    }
+
+    public function statusKerja(): BelongsTo
+    {
+        return $this->belongsTo(StatusKerja::class, 'lending_status_kerja', 'id');
     }
 
     public function branchOffice(): BelongsTo

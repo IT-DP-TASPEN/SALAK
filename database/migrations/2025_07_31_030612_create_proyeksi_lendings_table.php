@@ -22,38 +22,22 @@ return new class extends Migration
                 ->onDelete('cascade');
             $table->string('lending_nama_debitur');
             $table->enum('lending_jenis_pengajuan', ['BARU', 'TOP UP'])->nullable();
-            $table->enum('lending_produk', [
-                'REGULER PRA PENSIUN',
-                'REGULER PENSIUN',
-                'PLATINUM',
-                'PLATINUM PLUS',
-                'DISKONTO',
-                'KREDIT PEGAWAI AKTIF',
-            ])->nullable();
-            $table->enum('lending_sumber_pembayaran', [
-                'GAJI',
-                'TUNJ CUTI',
-                'JASPROD',
-                'THT PENSIUN'
-            ])->nullable();
-            $table->enum('lending_status_dapem', [
-                'MUTASI DARI BANK LAIN',
-                'SUDAH DI BANK DP TASPEN',
-                'BARU PENSIUN KBY BANK DP TASPEN',
-                'DAPEM BANPOT BANK MANTAP',
-                'LAINNYA (BUKAN PENSIUNAN)'
-            ])->nullable();
-            $table->enum('lending_status_kerja', [
-                'PENSIUN ASN',
-                'PENSIUN DP TASPEN',
-                'PEG TASPEN GROUP',
-                'PEG BANK DP TASPEN',
-                'PEG OJK',
-                'PEG SWASTA LAINNYA',
-                'PENSIUN ASABRI',
-                'PRA PENSIUN ASN',
-                'PRA PENSIUN DP TASPEN',
-            ])->nullable();
+            $table->foreignId('lending_produk')
+                ->nullable()
+                ->constrained('produk_lendings')
+                ->onDelete('set null');
+            $table->foreignId('lending_sumber_pembayaran')
+                ->nullable()
+                ->constrained('sumber_pembayaran_lendings')
+                ->onDelete('set null');
+            $table->foreignId('lending_status_dapem')
+                ->nullable()
+                ->constrained('status_dapems')
+                ->onDelete('set null');
+            $table->foreignId('lending_status_kerja')
+                ->nullable()
+                ->constrained('status_kerjas')
+                ->onDelete('set null');
             $table->double('lending_booking', 15, 2);
             $table->double('lending_pelunasan_pokok', 15, 2)->nullable();
             $table->double('lending_booking_bersih', 15, 2)->nullable();
