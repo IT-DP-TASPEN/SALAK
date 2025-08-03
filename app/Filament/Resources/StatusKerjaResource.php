@@ -16,7 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class StatusKerjaResource extends Resource
 {
     protected static ?string $model = StatusKerja::class;
-
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?string $navigationLabel = 'Status Kerja';
     protected static ?string $navigationIcon = 'heroicon-o-briefcase';
 
     public static function form(Form $form): Form

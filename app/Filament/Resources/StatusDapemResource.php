@@ -16,7 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class StatusDapemResource extends Resource
 {
     protected static ?string $model = StatusDapem::class;
-
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?string $navigationLabel = 'Status Dapem';
     protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
     public static function form(Form $form): Form

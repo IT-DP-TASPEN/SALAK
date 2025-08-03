@@ -16,7 +16,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class SumberPembayaranLendingResource extends Resource
 {
     protected static ?string $model = SumberPembayaranLending::class;
-
+    protected static ?string $navigationGroup = 'Master Data';
+    protected static ?string $navigationLabel = 'Sumber Pembayaran';
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
     public static function form(Form $form): Form

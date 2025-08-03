@@ -16,7 +16,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class ProyeksiLendingApprovalResource extends Resource
 {
     protected static ?string $model = ProyeksiLendingApproval::class;
-
+    protected static ?string $navigationGroup = 'Proyeksi Lending';
+    protected static ?string $navigationLabel = 'Approval Proyeksi Lending';
+    protected static ?int $navigationSort = 100;
     protected static ?string $navigationIcon = 'heroicon-o-check-circle';
 
     public static function form(Form $form): Form
