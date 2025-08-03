@@ -45,17 +45,27 @@ class ProyeksiLendingApprovalResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('approval_lending')
-                    ->numeric()
+                Tables\Columns\TextColumn::make('proyeksiLending.lending_nama_debitur')
+                    ->label('Lending')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('approver.name')
+                    ->label('Penyetuju')
+                    ->searchable()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('approval_user')
-                    ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('approval_status'),
+                Tables\Columns\TextColumn::make('approval_status')
+                    ->label('Status')
+                    ->badge()
+                    ->colors([
+                        'primary' => 'Pending',
+                        'success' => 'Approved',
+                        'danger' => 'Rejected',
+                    ]),
                 Tables\Columns\TextColumn::make('approval_approved_at')
+                    ->label('Disetujui Pada')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('approval_rejected_at')
+                    ->label('Ditolak Pada')
                     ->dateTime()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
