@@ -16,4 +16,11 @@ class ListProyeksiLendings extends ListRecords
             Actions\CreateAction::make(),
         ];
     }
+
+    public function getTabs(): array
+    {
+        $tabs = [];
+
+        return $tabs;
+    }
 }

@@ -1,0 +1,90 @@
+<?php
+
+namespace App\Filament\Resources\ProyeksiLendingResource\Pages;
+
+use App\Filament\Resources\ProyeksiLendingResource;
+use App\Models\ProyeksiLending;
+use Filament\Actions;
+use Filament\Forms\Components\Textarea;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\HtmlString;
+
+class ViewProyeksiLending extends ViewRecord
+{
+    protected static string $resource = ProyeksiLendingResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('approve')
+                ->label('Approve')
+                ->icon('heroicon-o-check')
+                ->visible(
+                    fn(ProyeksiLending $record) =>
+                    auth()->user()?->can('create_proyeksilendingapproval')
+                        && (
+                            $record->approvals->isEmpty()
+                            || $record->approvals->last()->approval_status === 'Pending'
+                        )
+                )
+                ->action(function (ProyeksiLending $record, array $data) {
+                    $record->approvals()->create([
+                        'approval_status' => 'Approved',
+                        'approval_user' => auth()->id(),
+                        'approval_approved_at' => now(),
+                        'approval_comment' => $data['approval_comment'] ?? null,
+                    ]);
+                    Notification::make()
+                        ->title('Lending approved successfully.')
+                        ->success()
+                        ->send();
+                })
+                ->requiresConfirmation()
+                ->color('success')
+                ->modalHeading('Approve Lending')
+                ->modalDescription(new HtmlString('Are you sure you want to approve this lending?<br/>This action cannot be undone.'))
+                ->modalSubmitActionLabel('Approve Lending')
+                ->form([
+                    Textarea::make('approval_comment')
+                        ->label('Remarks')
+                        ->placeholder('Optional remarks for approval')
+                        ->maxLength(500),
+                ]),
+            Actions\Action::make('reject')
+                ->label('Reject')
+                ->icon('heroicon-o-x-mark')
+                ->visible(
+                    fn(ProyeksiLending $record) =>
+                    auth()->user()?->can('create_proyeksilendingapproval')
+                        && (
+                            $record->approvals->isEmpty()
+                            || $record->approvals->last()->approval_status === 'Pending'
+                        )
+                )
+                ->action(function (ProyeksiLending $record, array $data) {
+                    $record->approvals()->create([
+                        'approval_status' => 'Rejected',
+                        'approval_user' => auth()->id(),
+                        'approval_rejected_at' => now(),
+                        'approval_comment' => $data['approval_comment'] ?? null,
+                    ]);
+                    Notification::make()
+                        ->title('Lending rejected successfully.')
+                        ->success()
+                        ->send();
+                })
+                ->requiresConfirmation()
+                ->color('danger')
+                ->modalHeading('Reject Lending')
+                ->modalDescription(new HtmlString('Are you sure you want to reject this lending?<br/>This action cannot be undone.'))
+                ->form([
+                    Textarea::make('approval_comment')
+                        ->label('Remarks')
+                        ->placeholder('Optional remarks for rejection')
+                        ->maxLength(500),
+                ])
+                ->modalSubmitActionLabel('Reject Lending'),
+        ];
+    }
+}

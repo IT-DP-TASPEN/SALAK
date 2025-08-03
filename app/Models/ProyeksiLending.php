@@ -2,13 +2,33 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ProyeksiLending extends Model
+class ProyeksiLending extends BaseModel
 {
     protected $guarded = [];
+
+    protected $casts = [
+        'lending_tanggal' => 'datetime',
+        'lending_sumber_pembayaran' => 'string',
+        'lending_status_dapem' => 'string',
+        'lending_status_kerja' => 'string',
+        'lending_produk' => 'string',
+    ];
+
+    // booted method to set default values for certain fields
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($lending) {
+            $approval = new ProyeksiLendingApproval();
+            $approval->approval_lending = $lending->id;
+            $approval->approval_status = 'Pending';
+            $approval->save();
+        });
+    }
 
     public function branchOffice(): BelongsTo
     {
@@ -20,16 +40,8 @@ class ProyeksiLending extends Model
         return $this->belongsTo(User::class, 'lending_agent', 'id');
     }
 
-    public static function getPossibleEnumValues($name)
+    public function approvals(): HasMany
     {
-        $instance = new static; // create an instance of the model to be able to get the table name
-        $type = DB::select('SHOW COLUMNS FROM ' . $instance->getTable() . ' WHERE Field = "' . $name . '"')[0]->Type;
-        preg_match('/^enum\((.*)\)$/', $type, $matches);
-        $enum = array();
-        foreach (explode(',', $matches[1]) as $value) {
-            $v = trim($value, "'");
-            $enum[] = $v;
-        }
-        return $enum;
+        return $this->hasMany(ProyeksiLendingApproval::class, 'approval_lending', 'id');
     }
 }

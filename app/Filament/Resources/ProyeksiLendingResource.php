@@ -31,22 +31,38 @@ class ProyeksiLendingResource extends Resource
                         Forms\Components\TextInput::make('lending_nama_debitur')
                             ->label('Nama Debitur')
                             ->required()
+                            ->prefixIcon('heroicon-o-user')
                             ->maxLength(255)
                             ->columnSpanFull(),
                         Forms\Components\TextInput::make('lending_kre_rekening')
                             ->label('Rekening Kredit')
                             ->hint('Isi ketika kredit sudah di realisasi')
                             ->maxLength(255)
+                            ->prefixIcon('heroicon-o-credit-card')
                             ->default(null),
                         Forms\Components\Select::make('lending_sumber_pembayaran')
                             ->label('Sumber Pembayaran')
-                            ->options(ProyeksiLending::getPossibleEnumValues('lending_sumber_pembayaran')),
+                            ->prefixIcon('heroicon-o-currency-dollar')
+                            ->options(
+                                function () {
+                                    $opts = ProyeksiLending::getPossibleEnumValues('lending_sumber_pembayaran');
+                                    return array_combine($opts, $opts);
+                                }
+                            ),
                         Forms\Components\Select::make('lending_status_dapem')
                             ->label('Status Dapem')
-                            ->options(ProyeksiLending::getPossibleEnumValues('lending_status_dapem')),
+                            ->prefixIcon('heroicon-o-check-badge')
+                            ->options(function () {
+                                $opts = ProyeksiLending::getPossibleEnumValues('lending_status_dapem');
+                                return array_combine($opts, $opts);
+                            }),
                         Forms\Components\Select::make('lending_status_kerja')
                             ->label('Status Kerja')
-                            ->options(ProyeksiLending::getPossibleEnumValues('lending_status_kerja')),
+                            ->prefixIcon('heroicon-o-briefcase')
+                            ->options(function () {
+                                $opts = ProyeksiLending::getPossibleEnumValues('lending_status_kerja');
+                                return array_combine($opts, $opts);
+                            }),
                     ]),
                 Forms\Components\Fieldset::make('Informasi Lending')
                     ->columns(2)
@@ -54,14 +70,27 @@ class ProyeksiLendingResource extends Resource
                         Forms\Components\DatePicker::make('lending_tanggal')
                             ->label('Tanggal')
                             ->default(now())
+                            ->prefixIcon('heroicon-o-calendar')
                             ->columnSpanFull()
                             ->required(),
                         Forms\Components\Select::make('lending_jenis_pengajuan')
                             ->label('Jenis Pengajuan')
-                            ->options(ProyeksiLending::getPossibleEnumValues('lending_jenis_pengajuan')),
+                            ->prefixIcon('heroicon-o-document-text')
+                            ->options(
+                                function () {
+                                    $opts = ProyeksiLending::getPossibleEnumValues('lending_jenis_pengajuan');
+                                    return array_combine($opts, $opts);
+                                }
+                            ),
                         Forms\Components\Select::make('lending_produk')
                             ->label('Produk')
-                            ->options(ProyeksiLending::getPossibleEnumValues('lending_produk')),
+                            ->prefixIcon('heroicon-o-briefcase')
+                            ->options(
+                                function () {
+                                    $opts = ProyeksiLending::getPossibleEnumValues('lending_produk');
+                                    return array_combine($opts, $opts);
+                                }
+                            ),
                         Forms\Components\TextInput::make('lending_booking')
                             ->label('Booking')
                             ->required()
@@ -78,15 +107,19 @@ class ProyeksiLendingResource extends Resource
                             ->default(null),
                         Forms\Components\DatePicker::make('lending_tanggal_realisasi')
                             ->label('Tanggal Realisasi')
+                            ->prefixIcon('heroicon-o-calendar')
                             ->required()
                             ->reactive(),
                         Forms\Components\TextInput::make('lending_jkw')
                             ->numeric()
+                            ->prefixIcon('heroicon-o-clock')
                             ->label('Jangka Waktu (Bulan)')
                             ->required(),
                         Forms\Components\DatePicker::make('lending_tanggal_rencana_bayar')
+                            ->prefixIcon('heroicon-o-calendar')
                             ->label('Tanggal Rencana Bayar'),
                         Forms\Components\DatePicker::make('lending_tanggal_rencana_takeover')
+                            ->prefixIcon('heroicon-o-calendar')
                             ->label('Tanggal Rencana Takeover'),
                     ]),
                 Forms\Components\Fieldset::make('Potongan dan Saldo')
@@ -156,6 +189,14 @@ class ProyeksiLendingResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('approvals.approval_status')
+                    ->label('Status')
+                    ->badge()
+                    ->colors([
+                        'primary' => 'Pending',
+                        'success' => 'Approved',
+                        'danger' => 'Rejected',
+                    ]),
                 Tables\Columns\TextColumn::make('lending_tanggal')
                     ->label('Tanggal')
                     ->date('d M Y')
@@ -271,7 +312,9 @@ class ProyeksiLendingResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]));
     }
 
     public static function getRelations(): array
@@ -287,6 +330,7 @@ class ProyeksiLendingResource extends Resource
             'index' => Pages\ListProyeksiLendings::route('/'),
             'create' => Pages\CreateProyeksiLending::route('/create'),
             'edit' => Pages\EditProyeksiLending::route('/{record}/edit'),
+            'view' => Pages\ViewProyeksiLending::route('/{record}'),
         ];
     }
 }
