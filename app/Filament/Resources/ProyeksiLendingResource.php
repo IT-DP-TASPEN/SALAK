@@ -314,7 +314,8 @@ class ProyeksiLendingResource extends Resource
                 ]),
             ])
             ->defaultSort('created_at', 'desc')
-            ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]));
+            ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]))
+            ->emptyStateHeading(fn(): string => 'Tidak ada data proyeksi lending yang ditemukan');
     }
 
     public static function getRelations(): array
@@ -332,5 +333,19 @@ class ProyeksiLendingResource extends Resource
             'edit' => Pages\EditProyeksiLending::route('/{record}/edit'),
             'view' => Pages\ViewProyeksiLending::route('/{record}'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        return $query
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->when(
+                $user->hasRole(['approver', 'maker']),
+                fn(Builder $query) =>
+                $query->where('lending_kantor', $user->branch_office_id)
+            );
     }
 }

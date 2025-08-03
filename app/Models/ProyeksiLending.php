@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ProyeksiLending extends BaseModel
 {
@@ -40,8 +41,8 @@ class ProyeksiLending extends BaseModel
         return $this->belongsTo(User::class, 'lending_agent', 'id');
     }
 
-    public function approvals(): HasMany
+    public function approvals(): HasOne
     {
-        return $this->hasMany(ProyeksiLendingApproval::class, 'approval_lending', 'id');
+        return $this->hasOne(ProyeksiLendingApproval::class, 'approval_lending', 'id');
     }
 }

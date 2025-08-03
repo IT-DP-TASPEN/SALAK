@@ -24,17 +24,20 @@ class ViewProyeksiLending extends ViewRecord
                     fn(ProyeksiLending $record) =>
                     auth()->user()?->can('create_proyeksilendingapproval')
                         && (
-                            $record->approvals->isEmpty()
-                            || $record->approvals->last()->approval_status === 'Pending'
+                            $record->approvals === null
+                            || $record->approvals->approval_status === 'Pending'
                         )
                 )
                 ->action(function (ProyeksiLending $record, array $data) {
-                    $record->approvals()->create([
-                        'approval_status' => 'Approved',
-                        'approval_user' => auth()->id(),
-                        'approval_approved_at' => now(),
-                        'approval_comment' => $data['approval_comment'] ?? null,
-                    ]);
+                    $record->approvals()->updateOrCreate(
+                        ['approval_lending' => $record->id],
+                        [
+                            'approval_status' => 'Approved',
+                            'approval_user' => auth()->id(),
+                            'approval_approved_at' => now(),
+                            'approval_comment' => $data['approval_comment'] ?? null,
+                        ]
+                    );
                     Notification::make()
                         ->title('Lending approved successfully.')
                         ->success()
@@ -58,17 +61,20 @@ class ViewProyeksiLending extends ViewRecord
                     fn(ProyeksiLending $record) =>
                     auth()->user()?->can('create_proyeksilendingapproval')
                         && (
-                            $record->approvals->isEmpty()
-                            || $record->approvals->last()->approval_status === 'Pending'
+                            $record->approvals === null
+                            || $record->approvals->approval_status === 'Pending'
                         )
                 )
                 ->action(function (ProyeksiLending $record, array $data) {
-                    $record->approvals()->create([
-                        'approval_status' => 'Rejected',
-                        'approval_user' => auth()->id(),
-                        'approval_rejected_at' => now(),
-                        'approval_comment' => $data['approval_comment'] ?? null,
-                    ]);
+                    $record->approvals()->updateOrCreate(
+                        ['approval_lending' => $record->id],
+                        [
+                            'approval_status' => 'Rejected',
+                            'approval_user' => auth()->id(),
+                            'approval_rejected_at' => now(),
+                            'approval_comment' => $data['approval_comment'] ?? null,
+                        ]
+                    );
                     Notification::make()
                         ->title('Lending rejected successfully.')
                         ->success()
