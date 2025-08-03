@@ -212,16 +212,16 @@ class ProyeksiLendingResource extends Resource
                 Tables\Columns\TextColumn::make('lending_jenis_pengajuan')
                     ->label('Jenis Pengajuan')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('lending_produk')
+                Tables\Columns\TextColumn::make('produk.produk_nama')
                     ->label('Produk')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('lending_sumber_pembayaran')
+                Tables\Columns\TextColumn::make('sumberPembayaran.sumber_nama')
                     ->label('Sumber Pembayaran')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('lending_status_dapem')
+                Tables\Columns\TextColumn::make('statusDapem.dapem_nama')
                     ->label('Status Dapem')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('lending_status_kerja')
+                Tables\Columns\TextColumn::make('statusKerja.kerja_nama')
                     ->label('Status Kerja')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('lending_booking')
