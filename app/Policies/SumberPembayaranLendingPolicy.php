@@ -2,12 +2,14 @@
 
 namespace App\Policies;
 
-use App\Models\SumberPembayaranLending;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\SumberPembayaranLending;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class SumberPembayaranLendingPolicy
 {
+    use HandlesAuthorization;
+
     /**
      * Determine whether the user can view any models.
      */
@@ -49,7 +51,31 @@ class SumberPembayaranLendingPolicy
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine whether the user can bulk delete.
+     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_sumberpembayaranlending');
+    }
+
+    /**
+     * Determine whether the user can permanently delete.
+     */
+    public function forceDelete(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
+    {
+        return $user->can('force_delete_sumberpembayaranlending');
+    }
+
+    /**
+     * Determine whether the user can permanently bulk delete.
+     */
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('force_delete_any_sumberpembayaranlending');
+    }
+
+    /**
+     * Determine whether the user can restore.
      */
     public function restore(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
     {
@@ -57,10 +83,26 @@ class SumberPembayaranLendingPolicy
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can bulk restore.
      */
-    public function forceDelete(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
+    public function restoreAny(User $user): bool
     {
-        return $user->can('force_delete_sumberpembayaranlending');
+        return $user->can('restore_any_sumberpembayaranlending');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
+    {
+        return $user->can('replicate_sumberpembayaranlending');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_sumberpembayaranlending');
     }
 }

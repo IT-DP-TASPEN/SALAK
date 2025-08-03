@@ -2,12 +2,14 @@
 
 namespace App\Policies;
 
-use App\Models\ProdukLending;
 use App\Models\User;
-use Illuminate\Auth\Access\Response;
+use App\Models\ProdukLending;
+use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ProdukLendingPolicy
 {
+    use HandlesAuthorization;
+
     /**
      * Determine whether the user can view any models.
      */
@@ -49,7 +51,31 @@ class ProdukLendingPolicy
     }
 
     /**
-     * Determine whether the user can restore the model.
+     * Determine whether the user can bulk delete.
+     */
+    public function deleteAny(User $user): bool
+    {
+        return $user->can('delete_any_produklending');
+    }
+
+    /**
+     * Determine whether the user can permanently delete.
+     */
+    public function forceDelete(User $user, ProdukLending $produkLending): bool
+    {
+        return $user->can('force_delete_produklending');
+    }
+
+    /**
+     * Determine whether the user can permanently bulk delete.
+     */
+    public function forceDeleteAny(User $user): bool
+    {
+        return $user->can('force_delete_any_produklending');
+    }
+
+    /**
+     * Determine whether the user can restore.
      */
     public function restore(User $user, ProdukLending $produkLending): bool
     {
@@ -57,10 +83,26 @@ class ProdukLendingPolicy
     }
 
     /**
-     * Determine whether the user can permanently delete the model.
+     * Determine whether the user can bulk restore.
      */
-    public function forceDelete(User $user, ProdukLending $produkLending): bool
+    public function restoreAny(User $user): bool
     {
-        return $user->can('force_delete_produklending');
+        return $user->can('restore_any_produklending');
+    }
+
+    /**
+     * Determine whether the user can replicate.
+     */
+    public function replicate(User $user, ProdukLending $produkLending): bool
+    {
+        return $user->can('replicate_produklending');
+    }
+
+    /**
+     * Determine whether the user can reorder.
+     */
+    public function reorder(User $user): bool
+    {
+        return $user->can('reorder_produklending');
     }
 }
