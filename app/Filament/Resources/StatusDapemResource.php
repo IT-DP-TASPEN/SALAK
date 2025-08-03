@@ -17,7 +17,7 @@ class StatusDapemResource extends Resource
 {
     protected static ?string $model = StatusDapem::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
 
     public static function form(Form $form): Form
     {
