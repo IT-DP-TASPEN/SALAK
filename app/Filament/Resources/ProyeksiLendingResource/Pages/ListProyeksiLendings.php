@@ -25,73 +25,54 @@ class ListProyeksiLendings extends ListRecords
             'all' => Tab::make()->label('All')
                 ->icon('heroicon-o-document-text')
         ];
-        $user = auth()->user();
 
-        if ($user->hasRole(['approver', 'super_admin'])) {
-            $tabs['needs-approval'] = Tab::make()
-                ->label('Needs Approval')
-                ->icon('heroicon-o-clock')
-                ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
+        $tabs['needs-approval'] = Tab::make()
+            ->label('Needs Approval')
+            ->icon('heroicon-o-clock')
+            ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
+                'approvals',
+                fn(Builder $query) =>
+                $query->where('approval_status', 'pending')
+            ))
+            ->badge(
+                fn() => $this->getModel()::whereHas(
                     'approvals',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'pending')
-                ))
-                ->badge(
-                    fn() => $this->getModel()::whereHas(
-                        'approvals',
-                        fn(Builder $query) =>
-                        $query->where('approval_status', 'pending')
-                    )->count()
-                );
-        }
+                )->count()
+            );
 
-        if ($user->hasRole(['maker', 'super_admin'])) {
-            $tabs['pending'] = Tab::make()
-                ->label('Pending')
-                ->icon('heroicon-o-clock')
-                ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
-                    'approvals',
-                    fn(Builder $query) =>
-                    $query->where('approval_status', 'pending')
-                ))
-                ->badge(
-                    fn() => $this->getModel()::whereHas(
-                        'approvals',
-                        fn(Builder $query) =>
-                        $query->where('approval_status', 'pending')
-                    )->count()
-                );
-            $tabs['approved'] = Tab::make()
-                ->label('Approved')
-                ->icon('heroicon-o-check-circle')
-                ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
+        $tabs['approved'] = Tab::make()
+            ->label('Approved')
+            ->icon('heroicon-o-check-circle')
+            ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
+                'approvals',
+                fn(Builder $query) =>
+                $query->where('approval_status', 'approved')
+            ))
+            ->badge(
+                fn() => $this->getModel()::whereHas(
                     'approvals',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'approved')
-                ))
-                ->badge(
-                    fn() => $this->getModel()::whereHas(
-                        'approvals',
-                        fn(Builder $query) =>
-                        $query->where('approval_status', 'approved')
-                    )->count()
-                );
-            $tabs['rejected'] = Tab::make()
-                ->label('Rejected')
-                ->icon('heroicon-o-x-circle')
-                ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
+                )->count()
+            );
+
+        $tabs['rejected'] = Tab::make()
+            ->label('Rejected')
+            ->icon('heroicon-o-x-circle')
+            ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
+                'approvals',
+                fn(Builder $query) =>
+                $query->where('approval_status', 'rejected')
+            ))
+            ->badge(
+                fn() => $this->getModel()::whereHas(
                     'approvals',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'rejected')
-                ))
-                ->badge(
-                    fn() => $this->getModel()::whereHas(
-                        'approvals',
-                        fn(Builder $query) =>
-                        $query->where('approval_status', 'rejected')
-                    )->count()
-                );
-        }
+                )->count()
+            );
 
         return $tabs;
     }
