@@ -13,9 +13,10 @@ class CreateProyeksiLending extends CreateRecord
 
     protected function mutateFormDataBeforeCreate(array $data): array
     {
+        $data['lending_tanggal'] = Carbon::today()->toDateString();
         $data['lending_agent'] = auth()->id();
         $data['lending_kantor'] = auth()->user()->branchOffice->id;
-        $data['lending_booking_bersih'] = $data['lending_booking'] - ($data['lending_pelunasan_pokok'] ?? 0);
+        $data['lending_booking_bersih'] = $data['lending_plafond'] - ($data['lending_pelunasan_pokok'] ?? 0);
 
         $data['lending_tanggal_jatuh_tempo'] = Carbon::parse($data['lending_tanggal_realisasi'])
             ->addMonths((int)$data['lending_jkw'])
