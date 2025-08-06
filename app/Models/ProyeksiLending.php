@@ -12,6 +12,10 @@ class ProyeksiLending extends BaseModel
 
     protected $casts = [
         'lending_tanggal' => 'datetime',
+        'lending_tanggal_realisasi' => 'datetime',
+        'lending_tanggal_jatuh_tempo' => 'datetime',
+        'lending_tanggal_rencana_takeover' => 'datetime',
+        'lending_tanggal_lahir_debitur' => 'datetime',
         'lending_sumber_pembayaran' => 'string',
         'lending_status_kerja' => 'string',
         'lending_produk' => 'string',
@@ -48,6 +52,11 @@ class ProyeksiLending extends BaseModel
     public function statusKerja(): BelongsTo
     {
         return $this->belongsTo(StatusKerja::class, 'lending_status_kerja', 'id');
+    }
+
+    public function mitraBayarTakeover(): BelongsTo
+    {
+        return $this->belongsTo(MitraBayar::class, 'lending_mitra_bayar_takeover', 'id');
     }
 
     public function branchOffice(): BelongsTo

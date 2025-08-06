@@ -4,7 +4,10 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProyeksiLendingResource\Pages;
 use App\Filament\Resources\ProyeksiLendingResource\RelationManagers;
+use App\Models\MitraBayar;
+use App\Models\ProdukLending;
 use App\Models\ProyeksiLending;
+use App\Models\StatusKerja;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -27,54 +30,135 @@ class ProyeksiLendingResource extends Resource
         return $form
             ->schema([
                 Forms\Components\Fieldset::make('Informasi Debitur')
-                    ->columns(2)
+                    ->columns(1)
                     ->schema([
                         Forms\Components\TextInput::make('lending_nama_debitur')
                             ->label('Nama Debitur')
                             ->required()
                             ->prefixIcon('heroicon-o-user')
                             ->maxLength(255)
-                            ->columnSpanFull(),
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_notas')
+                            ->label('NOTAS')
+                            ->required(
+                                function ($get) {
+                                    $statusKerja = StatusKerja::find($get('lending_status_kerja'));
+                                    if (!$statusKerja) {
+                                        return false;
+                                    }
+                                    return in_array(
+                                        $statusKerja->kerja_nama,
+                                        [
+                                            'PENSIUN ASN',
+                                            'PENSIUN DP TASPEN',
+                                            'PENSIUN ASABRI',
+                                            'PRA PENSIUN ASN',
+                                            'PRA PENSIUN DP TASPEN',
+                                        ]
+                                    );
+                                }
+                            )
+                            ->visible(
+                                function ($get) {
+                                    $statusKerja = StatusKerja::find($get('lending_status_kerja'));
+                                    if (!$statusKerja) {
+                                        return false;
+                                    }
+                                    return in_array(
+                                        $statusKerja->kerja_nama,
+                                        [
+                                            'PENSIUN ASN',
+                                            'PENSIUN DP TASPEN',
+                                            'PENSIUN ASABRI',
+                                            'PRA PENSIUN ASN',
+                                            'PRA PENSIUN DP TASPEN',
+                                        ]
+                                    );
+                                }
+                            )
+                            ->prefixIcon('heroicon-o-document-text')
+                            ->maxLength(255)
+                            ->inlineLabel(),
+                        Forms\Components\DatePicker::make('lending_tanggal_lahir_debitur')
+                            ->label('Tanggal Lahir Debitur')
+                            ->required()
+                            ->prefixIcon('heroicon-o-cake')
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_no_hp_debitur')
+                            ->label('No. HP Debitur')
+                            ->required()
+                            ->prefixIcon('heroicon-o-phone')
+                            ->maxLength(20)
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_kre_rekening')
                             ->label('Rekening Kredit')
                             ->hint('Isi ketika kredit sudah di realisasi')
                             ->maxLength(255)
                             ->prefixIcon('heroicon-o-credit-card')
-                            ->default(null),
+                            ->default(null)
+                            ->inlineLabel(),
                         Forms\Components\Select::make('lending_sumber_pembayaran')
                             ->label('Sumber Pembayaran')
                             ->prefixIcon('heroicon-o-currency-dollar')
                             ->relationship(
                                 'sumberPembayaran',
                                 'sumber_nama',
-                                fn($query) => $query->orderBy('sumber_nama')
-                            ),
+                            )
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\Select::make('lending_status_dapem')
                             ->label('Status Dapem')
                             ->prefixIcon('heroicon-o-check-badge')
                             ->relationship(
                                 'statusDapem',
                                 'dapem_nama',
-                                fn($query) => $query->orderBy('dapem_nama')
-                            ),
+                            )
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\Select::make('lending_status_kerja')
                             ->label('Status Kerja')
                             ->prefixIcon('heroicon-o-briefcase')
                             ->relationship(
                                 'statusKerja',
                                 'kerja_nama',
-                                fn($query) => $query->orderBy('kerja_nama')
-                            ),
+                            )
+                            ->required()
+                            ->reactive()
+                            ->inlineLabel(),
                     ]),
                 Forms\Components\Fieldset::make('Informasi Lending')
-                    ->columns(2)
+                    ->columns(1)
                     ->schema([
-                        Forms\Components\DatePicker::make('lending_tanggal')
-                            ->label('Tanggal')
-                            ->default(now())
-                            ->prefixIcon('heroicon-o-calendar')
-                            ->columnSpanFull()
-                            ->required(),
+                        Forms\Components\Select::make('lending_mitra_bayar_takeover')
+                            ->label('Mitra Bayar Takeover')
+                            ->prefixIcon('heroicon-o-building-office-2')
+                            ->relationship(
+                                'mitraBayarTakeover',
+                                'mitra_nama',
+                            )
+                            ->hint('Isi ketika ada takeover')
+                            ->nullable()
+                            ->searchable()
+                            ->preload()
+                            ->reactive()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_nama_koperasi_takeover')
+                            ->label('Nama Koperasi Takeover')
+                            ->prefixIcon('heroicon-o-building-office-2')
+                            ->maxLength(255)
+                            ->inlineLabel()
+                            ->required(
+                                function ($get) {
+                                    $mitra = $get('lending_mitra_bayar_takeover');
+                                    return MitraBayar::find($mitra)?->mitra_nama === 'KOPERASI';
+                                }
+                            )
+                            ->visible(
+                                function ($get) {
+                                    $mitra = $get('lending_mitra_bayar_takeover');
+                                    return MitraBayar::find($mitra)?->mitra_nama === 'KOPERASI';
+                                }
+                            ),
                         Forms\Components\Select::make('lending_jenis_pengajuan')
                             ->label('Jenis Pengajuan')
                             ->prefixIcon('heroicon-o-document-text')
@@ -83,48 +167,91 @@ class ProyeksiLendingResource extends Resource
                                     $opts = ProyeksiLending::getPossibleEnumValues('lending_jenis_pengajuan');
                                     return array_combine($opts, $opts);
                                 }
-                            ),
+                            )
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\Select::make('lending_produk')
                             ->label('Produk')
                             ->prefixIcon('heroicon-o-briefcase')
                             ->relationship(
                                 'produk',
                                 'produk_nama',
-                                fn($query) => $query->orderBy('produk_nama')
-                            ),
-                        Forms\Components\TextInput::make('lending_booking')
-                            ->label('Booking')
+                            )
+                            ->required()
+                            ->reactive()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_plafond')
+                            ->label('Plafond')
                             ->required()
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
-                            ->numeric(),
+                            ->numeric()
+                            ->inlineLabel(),
+                        Forms\Components\Select::make('lending_sistem_bunga')
+                            ->label('Sistem Bunga')
+                            ->prefixIcon('heroicon-o-calculator')
+                            ->options(
+                                function () {
+                                    $opts = ProyeksiLending::getPossibleEnumValues('lending_sistem_bunga');
+                                    return array_combine($opts, $opts);
+                                }
+                            )
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pelunasan_pokok')
                             ->label('Pelunasan Pokok')
                             ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp ')
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
+                            ->required()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_pelunasan_bunga')
+                            ->label('Pelunasan Bunga')
+                            ->mask(RawJs::make('$money($input)'))
+                            ->prefix('Rp ')
+                            ->stripCharacters(',')
+                            ->numeric()
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\DatePicker::make('lending_tanggal_realisasi')
                             ->label('Tanggal Realisasi')
                             ->prefixIcon('heroicon-o-calendar')
                             ->required()
-                            ->reactive(),
+                            ->reactive()
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_jkw')
                             ->numeric()
                             ->prefixIcon('heroicon-o-clock')
                             ->label('Jangka Waktu (Bulan)')
-                            ->required(),
+                            ->required()
+                            ->inlineLabel(),
+                        Forms\Components\Group::make([
+                            Forms\Components\TextInput::make('lending_nominal_pelunasan_takeover')
+                                ->label('Nominal Pelunasan Takeover')
+                                ->prefix('Rp ')
+                                ->mask(RawJs::make('$money($input)'))
+                                ->stripCharacters(',')
+                                ->numeric()
+                                ->required(fn($get) => filled($get('lending_mitra_bayar_takeover')))
+                                ->inlineLabel(),
+                            Forms\Components\DatePicker::make('lending_tanggal_rencana_takeover')
+                                ->prefixIcon('heroicon-o-calendar')
+                                ->label('Tanggal Rencana Takeover')
+                                ->required(fn($get) => filled($get('lending_mitra_bayar_takeover')))
+                                ->inlineLabel(),
+                        ])
+                            ->visible(fn($get) => filled($get('lending_mitra_bayar_takeover'))),
                         Forms\Components\DatePicker::make('lending_tanggal_rencana_bayar')
                             ->prefixIcon('heroicon-o-calendar')
-                            ->label('Tanggal Rencana Bayar'),
-                        Forms\Components\DatePicker::make('lending_tanggal_rencana_takeover')
-                            ->prefixIcon('heroicon-o-calendar')
-                            ->label('Tanggal Rencana Takeover'),
+                            ->label('Tanggal Rencana Bayar')
+                            ->required()
+                            ->inlineLabel(),
                     ]),
                 Forms\Components\Fieldset::make('Potongan dan Saldo')
-                    ->columns(2)
+                    ->columns(1)
                     ->schema([
                         Forms\Components\TextInput::make('lending_pot_provisi')
                             ->label('Potongan Provisi')
@@ -132,56 +259,63 @@ class ProyeksiLendingResource extends Resource
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_admin')
                             ->label('Potongan Administrasi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
-                        Forms\Components\TextInput::make('lending_pot_asuransi')
+                            ->required()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_pot_premi')
                             ->label('Potongan Asuransi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
-                        Forms\Components\TextInput::make('lending_pot_asuransi_extra')
+                            ->required()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_pot_premi_extra')
                             ->label('Potongan Asuransi Extra')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_bunga_muka')
                             ->label('Bunga Diterima di Muka')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
+                            ->required(function ($get) {
+                                $produk = $get('lending_produk');
+                                return ProdukLending::find($produk)?->produk_nama === 'DISKONTO';
+                            })
+                            ->visible(function ($get) {
+                                $produk = $get('lending_produk');
+                                return ProdukLending::find($produk)?->produk_nama === 'DISKONTO';
+                            })
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_saldo_tab_mengendap')
                             ->label('Saldo Tabungan Mengendap')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_angsuran_muka')
                             ->label('Angsuran di Muka')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->default(null),
-                        Forms\Components\TextInput::make('lending_nominal_pelunasan_takeover')
-                            ->label('Nominal Pelunasan Takeover')
-                            ->prefix('Rp ')
-                            ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
-                            ->numeric()
-                            ->default(null),
+                            ->required()
+                            ->inlineLabel(),
                     ]),
             ]);
     }
