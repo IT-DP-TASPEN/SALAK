@@ -594,6 +594,17 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('lending_nama_debitur')->label('Nama Debitur')->icon('heroicon-o-user'),
                         TextEntry::make('lending_notas')->label('NOTAS')->icon('heroicon-o-document-text')->visible(fn($record) => filled($record->lending_notas)),
                         TextEntry::make('lending_tanggal_lahir_debitur')->label('Tanggal Lahir')->date()->icon('heroicon-o-cake'),
+                        TextEntry::make('lending_usia_debitur')->label('Usia Debitur')->getStateUsing(function ($record) {
+                            if (!$record->lending_tanggal_lahir_debitur) {
+                                return null;
+                            }
+                            $now = \Carbon\Carbon::now();
+                            $birth = \Carbon\Carbon::parse($record->lending_tanggal_lahir_debitur);
+                            $years = (int)$now->diffInYears($birth, true);
+                            $months = (int)$now->diffInMonths($birth, true) % 12;
+                            $days = (int)$now->diffInDays($birth, true) % 30;
+                            return "{$years} Tahun {$months} Bulan {$days} Hari";
+                        }),
                         TextEntry::make('lending_no_hp_debitur')->label('No. HP')->icon('heroicon-o-phone'),
                         TextEntry::make('lending_kre_rekening')->label('Rekening Kredit')->icon('heroicon-o-credit-card'),
                         TextEntry::make('sumberPembayaran.sumber_nama')->label('Sumber Pembayaran')->icon('heroicon-o-currency-dollar'),
@@ -605,11 +616,24 @@ class ProyeksiLendingResource extends Resource
                     ->columns(2)
                     ->collapsible()
                     ->schema([
+                        TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
+                        TextEntry::make('agent.name')->label('AO/Marketing')->icon('heroicon-o-user-group'),
+                        TextEntry::make('approvals.approval_status')
+                            ->label('Status')
+                            ->badge()
+                            ->colors([
+                                'primary' => 'Pending',
+                                'success' => 'Approved',
+                                'danger' => 'Rejected',
+                            ]),
                         TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2'),
                         TextEntry::make('lending_nama_koperasi_takeover')->label('Nama Koperasi Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => filled($record->lending_nama_koperasi_takeover)),
                         TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
                         TextEntry::make('produk.produk_nama')->label('Produk')->icon('heroicon-o-briefcase'),
                         TextEntry::make('lending_plafond')->label('Plafond')->money('IDR')->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_booking_bersih')->label('Booking Bersih')->money('IDR')->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_tanggal_jatuh_tempo')->label('Tanggal Jatuh Tempo')->date()->icon('heroicon-o-banknotes'),
+                        TextEntry::make('branchOffice.branch_name')->label('Kantor Cabang')->icon('heroicon-o-building-office-2'),
                         TextEntry::make('lending_bunga_percent')->label('Bunga')->suffix('%')->numeric()->icon('heroicon-o-chart-bar'),
                         TextEntry::make('lending_sistem_bunga')->label('Sistem Bunga')->icon('heroicon-o-calculator'),
                         TextEntry::make('lending_pelunasan_pokok')->label('Pelunasan Pokok')->money('IDR')->icon('heroicon-o-banknotes'),
