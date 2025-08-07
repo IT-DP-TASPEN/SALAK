@@ -11,12 +11,15 @@ use App\Models\StatusKerja;
 use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
 use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Infolist;
 
 class ProyeksiLendingResource extends Resource
 {
@@ -40,24 +43,7 @@ class ProyeksiLendingResource extends Resource
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_notas')
                             ->label('NOTAS')
-                            ->required(
-                                function ($get) {
-                                    $statusKerja = StatusKerja::find($get('lending_status_kerja'));
-                                    if (!$statusKerja) {
-                                        return false;
-                                    }
-                                    return in_array(
-                                        $statusKerja->kerja_nama,
-                                        [
-                                            'PENSIUN ASN',
-                                            'PENSIUN DP TASPEN',
-                                            'PENSIUN ASABRI',
-                                            'PRA PENSIUN ASN',
-                                            'PRA PENSIUN DP TASPEN',
-                                        ]
-                                    );
-                                }
-                            )
+                            ->required()
                             ->visible(
                                 function ($get) {
                                     $statusKerja = StatusKerja::find($get('lending_status_kerja'));
@@ -147,12 +133,7 @@ class ProyeksiLendingResource extends Resource
                             ->prefixIcon('heroicon-o-building-office-2')
                             ->maxLength(255)
                             ->inlineLabel()
-                            ->required(
-                                function ($get) {
-                                    $mitra = $get('lending_mitra_bayar_takeover');
-                                    return MitraBayar::find($mitra)?->mitra_nama === 'KOPERASI';
-                                }
-                            )
+                            ->required()
                             ->visible(
                                 function ($get) {
                                     $mitra = $get('lending_mitra_bayar_takeover');
@@ -187,6 +168,34 @@ class ProyeksiLendingResource extends Resource
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $provisiPercent = floatval($get('lending_pot_provisi_percent'));
+                                $provisi = floatval(str_replace(',', '', $get('lending_pot_provisi')));
+                                $adminPercent = floatval($get('lending_pot_admin_percent'));
+                                $admin = floatval(str_replace(',', '', $get('lending_pot_admin')));
+                                $plafond = floatval(str_replace(',', '', $state));
+
+                                if ($provisiPercent) {
+                                    $set('lending_pot_provisi', ($plafond * $provisiPercent) / 100);
+                                } elseif ($provisi) {
+                                    $set('lending_pot_provisi_percent', $plafond ? ($provisi / $plafond) * 100 : 0);
+                                }
+
+                                if ($adminPercent) {
+                                    $set('lending_pot_admin', ($plafond * $adminPercent) / 100);
+                                } elseif ($admin) {
+                                    $set('lending_pot_admin_percent', $plafond ? ($admin / $plafond) * 100 : 0);
+                                }
+                            })
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_bunga_percent')
+                            ->label('Bunga (%)')
+                            ->prefix('%')
+                            ->numeric()
+                            ->stripCharacters(',')
+                            ->default(0)
+                            ->required()
                             ->inlineLabel(),
                         Forms\Components\Select::make('lending_sistem_bunga')
                             ->label('Sistem Bunga')
@@ -254,18 +263,62 @@ class ProyeksiLendingResource extends Resource
                     ->columns(1)
                     ->schema([
                         Forms\Components\TextInput::make('lending_pot_provisi')
-                            ->label('Potongan Provisi')
+                            ->label('Provisi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
                             ->required()
+                            ->debounce()
+                            ->reactive()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set('lending_pot_provisi_percent', ($state / $plafond) * 100);
+                            })
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_pot_provisi_percent')
+                            ->label('Provisi (%)')
+                            ->prefix('%')
+                            ->required()
+                            ->debounce()
+                            ->reactive()
+                            ->numeric()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond =  floatval(str_replace(',', '', $get('lending_plafond')));
+                                $set('lending_pot_provisi', ($plafond * $state) / 100);
+                            })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_admin')
-                            ->label('Potongan Administrasi')
+                            ->label('Administrasi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
+                            ->debounce()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set('lending_pot_admin_percent', ($state / $plafond) * 100);
+                            })
+                            ->numeric()
+                            ->required()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_pot_admin_percent')
+                            ->label('Administrasi (%)')
+                            ->prefix('%')
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters(',')
+                            ->debounce()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $set('lending_pot_admin', ($plafond * $state) / 100);
+                            })
                             ->numeric()
                             ->required()
                             ->inlineLabel(),
@@ -278,7 +331,7 @@ class ProyeksiLendingResource extends Resource
                             ->required()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_premi_extra')
-                            ->label('Potongan Asuransi Extra')
+                            ->label('Potongan Extra Premi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
@@ -291,22 +344,31 @@ class ProyeksiLendingResource extends Resource
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
-                            ->required(function ($get) {
-                                $produk = $get('lending_produk');
-                                return ProdukLending::find($produk)?->produk_nama === 'DISKONTO';
-                            })
-                            ->visible(function ($get) {
-                                $produk = $get('lending_produk');
-                                return ProdukLending::find($produk)?->produk_nama === 'DISKONTO';
-                            })
+                            ->required()
+                            ->visibleOn('view')
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_saldo_tab_mengendap_bulan')
+                            ->label('Tabungan Mengendap')
+                            ->postfix(' Bulan')
+                            ->numeric()
+                            ->required()
+                            ->visibleOn('create')
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_angsuran_muka_bulan')
+                            ->label('Angsuran di Muka')
+                            ->postfix(' Bulan')
+                            ->numeric()
+                            ->required()
+                            ->visibleOn('create')
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_saldo_tab_mengendap')
-                            ->label('Saldo Tabungan Mengendap')
+                            ->label('Tabungan Mengendap')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters(',')
                             ->numeric()
                             ->required()
+                            ->visibleOn('view')
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_angsuran_muka')
                             ->label('Angsuran di Muka')
@@ -315,6 +377,7 @@ class ProyeksiLendingResource extends Resource
                             ->stripCharacters(',')
                             ->numeric()
                             ->required()
+                            ->visibleOn('view')
                             ->inlineLabel(),
                     ]),
             ]);
@@ -344,6 +407,40 @@ class ProyeksiLendingResource extends Resource
                 Tables\Columns\TextColumn::make('lending_nama_debitur')
                     ->label('Nama Debitur')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('lending_notas')
+                    ->label('NOTAS')
+                    ->searchable()
+                    ->visible(fn($record) => in_array(
+                        $record?->statusKerja?->kerja_nama,
+                        [
+                            'PENSIUN ASN',
+                            'PENSIUN DP TASPEN',
+                            'PENSIUN ASABRI',
+                            'PRA PENSIUN ASN',
+                            'PRA PENSIUN DP TASPEN',
+                        ]
+                    )),
+                Tables\Columns\TextColumn::make('lending_tanggal_lahir_debitur')
+                    ->label('Tanggal Lahir Debitur')
+                    ->date('d M Y')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('lending_usia_debitur')
+                    ->label('Usia')
+                    ->getStateUsing(function ($record) {
+                        $tglLahir = $record->lending_tanggal_lahir_debitur;
+                        if (!$tglLahir) {
+                            return null;
+                        }
+                        $today = Carbon::today();
+                        $tahun = (int)$today->diffInYears($tglLahir, true);
+                        $bulan = (int)$today->diffInMonths($tglLahir, true) % 12;
+                        $hari = (int)$today->diffInDays($tglLahir, true) % 30;
+                        return "{$tahun} Tahun {$bulan} Bulan {$hari} Hari";
+                    }),
+                Tables\Columns\TextColumn::make('lending_no_hp_debitur')
+                    ->label('No. HP Debitur')
+                    ->searchable()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('lending_jenis_pengajuan')
                     ->label('Jenis Pengajuan')
                     ->searchable(),
@@ -359,8 +456,16 @@ class ProyeksiLendingResource extends Resource
                 Tables\Columns\TextColumn::make('statusKerja.kerja_nama')
                     ->label('Status Kerja')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('lending_booking')
-                    ->label('Booking')
+                Tables\Columns\TextColumn::make('mitraBayarTakeover.mitra_nama')
+                    ->label('Mitra Bayar Takeover')
+                    ->searchable()
+                    ->visible(fn($record) => filled($record?->lending_mitra_bayar_takeover)),
+                Tables\Columns\TextColumn::make('lending_nama_koperasi_takeover')
+                    ->label('Nama Koperasi Takeover')
+                    ->searchable(),
+                // ->visible(fn($record) => dd($record)?->lending_mitra_bayar_takeover?->mitra_nama === 'KOPERASI'),
+                Tables\Columns\TextColumn::make('lending_plafond')
+                    ->label('Plafond')
                     ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_pelunasan_pokok')
@@ -398,12 +503,12 @@ class ProyeksiLendingResource extends Resource
                     ->label('Potongan Administrasi')
                     ->money('IDR', 0, 'id_ID')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('lending_pot_asuransi')
+                Tables\Columns\TextColumn::make('lending_pot_premi')
                     ->label('Potongan Asuransi')
                     ->money('IDR', 0, 'id_ID')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('lending_pot_asuransi_extra')
-                    ->label('Potongan Asuransi Extra')
+                Tables\Columns\TextColumn::make('lending_pot_premi_extra')
+                    ->label('Potongan Extra Premi')
                     ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_bunga_muka')
@@ -422,12 +527,6 @@ class ProyeksiLendingResource extends Resource
                     ->label('Nominal Pelunasan Takeover')
                     ->money('IDR', 0, 'id_ID')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('lending_booking_bersih2')
-                    ->label('Booking Bersih 2')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_kre_rekening')
-                    ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -482,5 +581,62 @@ class ProyeksiLendingResource extends Resource
                 fn(Builder $query) =>
                 $query->where('lending_kantor', $user->branch_office_id)
             );
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Informasi Debitur')
+                    ->columns(2)
+                    ->collapsible()
+                    ->schema([
+                        TextEntry::make('lending_nama_debitur')->label('Nama Debitur')->icon('heroicon-o-user'),
+                        TextEntry::make('lending_notas')->label('NOTAS')->icon('heroicon-o-document-text')->visible(fn($record) => filled($record->lending_notas)),
+                        TextEntry::make('lending_tanggal_lahir_debitur')->label('Tanggal Lahir')->date()->icon('heroicon-o-cake'),
+                        TextEntry::make('lending_no_hp_debitur')->label('No. HP')->icon('heroicon-o-phone'),
+                        TextEntry::make('lending_kre_rekening')->label('Rekening Kredit')->icon('heroicon-o-credit-card'),
+                        TextEntry::make('sumberPembayaran.sumber_nama')->label('Sumber Pembayaran')->icon('heroicon-o-currency-dollar'),
+                        TextEntry::make('statusDapem.dapem_nama')->label('Status Dapem')->icon('heroicon-o-check-badge'),
+                        TextEntry::make('statusKerja.kerja_nama')->label('Status Kerja')->icon('heroicon-o-briefcase'),
+                    ]),
+
+                Section::make('Informasi Lending')
+                    ->columns(2)
+                    ->collapsible()
+                    ->schema([
+                        TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2'),
+                        TextEntry::make('lending_nama_koperasi_takeover')->label('Nama Koperasi Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => filled($record->lending_nama_koperasi_takeover)),
+                        TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
+                        TextEntry::make('produk.produk_nama')->label('Produk')->icon('heroicon-o-briefcase'),
+                        TextEntry::make('lending_plafond')->label('Plafond')->money('IDR')->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_bunga_percent')->label('Bunga')->suffix('%')->numeric()->icon('heroicon-o-chart-bar'),
+                        TextEntry::make('lending_sistem_bunga')->label('Sistem Bunga')->icon('heroicon-o-calculator'),
+                        TextEntry::make('lending_pelunasan_pokok')->label('Pelunasan Pokok')->money('IDR')->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_pelunasan_bunga')->label('Pelunasan Bunga')->money('IDR')->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_tanggal_realisasi')->label('Tanggal Realisasi')->date()->icon('heroicon-o-calendar'),
+                        TextEntry::make('lending_jkw')->label('Jangka Waktu (Bulan)')->numeric()->icon('heroicon-o-clock'),
+                        TextEntry::make('lending_nominal_pelunasan_takeover')->label('Nominal Pelunasan Takeover')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_nominal_pelunasan_takeover)),
+                        TextEntry::make('lending_tanggal_rencana_takeover')->label('Tanggal Rencana Takeover')->date()->icon('heroicon-o-calendar')->visible(fn($record) => filled($record->lending_tanggal_rencana_takeover)),
+                        TextEntry::make('lending_tanggal_rencana_bayar')->label('Tanggal Rencana Bayar')->date()->icon('heroicon-o-calendar'),
+                    ]),
+
+                Section::make('Potongan dan Saldo')
+                    ->columns(2)
+                    ->collapsible()
+                    ->schema([
+                        TextEntry::make('lending_pot_provisi')->label('Provisi')->money('IDR')->icon('heroicon-o-minus-circle'),
+                        TextEntry::make('lending_pot_provisi_percent')->label('Provisi (%)')->suffix('%')->numeric()->icon('heroicon-o-adjustments-horizontal'),
+                        TextEntry::make('lending_pot_admin')->label('Administrasi')->money('IDR')->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_pot_admin_percent')->label('Administrasi (%)')->suffix('%')->numeric()->icon('heroicon-o-adjustments-horizontal'),
+                        TextEntry::make('lending_pot_premi')->label('Potongan Asuransi')->money('IDR')->icon('heroicon-o-shield-check'),
+                        TextEntry::make('lending_pot_premi_extra')->label('Potongan Extra Premi')->money('IDR')->icon('heroicon-o-shield-exclamation'),
+                        TextEntry::make('lending_bunga_muka')->label('Bunga Diterima di Muka')->money('IDR')->icon('heroicon-o-cash')->visible(fn($record) => filled($record->lending_bunga_muka)),
+                        TextEntry::make('lending_saldo_tab_mengendap_bulan')->label('Tabungan Mengendap (Bulan)')->suffix('bulan')->numeric()->visible(fn($record) => filled($record->lending_saldo_tab_mengendap_bulan)),
+                        TextEntry::make('lending_angsuran_muka_bulan')->label('Angsuran di Muka (Bulan)')->suffix('bulan')->numeric()->visible(fn($record) => filled($record->lending_angsuran_muka_bulan)),
+                        TextEntry::make('lending_saldo_tab_mengendap')->label('Tabungan Mengendap')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_saldo_tab_mengendap)),
+                        TextEntry::make('lending_angsuran_muka')->label('Angsuran di Muka')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_angsuran_muka)),
+                    ]),
+            ]);
     }
 }

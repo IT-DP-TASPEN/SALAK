@@ -15,12 +15,12 @@ return new class extends Migration
             $table->decimal('lending_pelunasan_bunga', 15, 2)
                 ->after('lending_pelunasan_pokok');
             $table->foreignId('lending_mitra_bayar_takeover')
-                ->constrained('mitra_bayars')
                 ->nullable()
-                ->before('lending_tanggal_rencana_takeover');
+                ->constrained('mitra_bayars')
+                ->after('lending_tanggal_rencana_takeover');
             $table->string('lending_nama_koperasi_takeover')
                 ->nullable()
-                ->after('lending_tanggal_rencana_takeover');
+                ->after('lending_mitra_bayar_takeover');
             $table->date('lending_tanggal_lahir_debitur')
                 ->after('lending_nama_debitur');
             $table->string('lending_no_hp_debitur')

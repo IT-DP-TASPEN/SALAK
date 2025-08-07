@@ -21,7 +21,7 @@ return new class extends Migration
                 ->constrained('users')
                 ->onDelete('cascade');
             $table->string('lending_nama_debitur');
-            $table->enum('lending_jenis_pengajuan', ['BARU', 'TOP UP'])->nullable();
+            $table->enum('lending_jenis_pengajuan', ['BARU', 'TOP UP']);
             $table->foreignId('lending_produk')
                 ->nullable()
                 ->constrained('produk_lendings')
@@ -39,22 +39,21 @@ return new class extends Migration
                 ->constrained('status_kerjas')
                 ->onDelete('set null');
             $table->double('lending_booking', 15, 2);
-            $table->double('lending_pelunasan_pokok', 15, 2)->nullable();
-            $table->double('lending_booking_bersih', 15, 2)->nullable();
-            $table->date('lending_tanggal_realisasi')->nullable();
-            $table->integer('lending_jkw')->nullable();
-            $table->date('lending_tanggal_jatuh_tempo')->nullable();
-            $table->date('lending_tanggal_rencana_bayar')->nullable();
+            $table->double('lending_pelunasan_pokok', 15, 2);
+            $table->double('lending_booking_bersih', 15, 2);
+            $table->date('lending_tanggal_realisasi');
+            $table->integer('lending_jkw');
+            $table->date('lending_tanggal_jatuh_tempo');
+            $table->date('lending_tanggal_rencana_bayar');
             $table->date('lending_tanggal_rencana_takeover')->nullable();
-            $table->double('lending_pot_provisi', 15, 2)->nullable();
-            $table->double('lending_pot_admin', 15, 2)->nullable();
-            $table->double('lending_pot_asuransi', 15, 2)->nullable();
-            $table->double('lending_pot_asuransi_extra', 15, 2)->nullable();
+            $table->double('lending_pot_provisi', 15, 2);
+            $table->double('lending_pot_admin', 15, 2);
+            $table->double('lending_pot_asuransi', 15, 2);
+            $table->double('lending_pot_asuransi_extra', 15, 2);
             $table->double('lending_bunga_muka', 15, 2)->nullable();
-            $table->double('lending_saldo_tab_mengendap', 15, 2)->nullable();
-            $table->double('lending_angsuran_muka', 15, 2)->nullable();
+            $table->double('lending_saldo_tab_mengendap', 15, 2);
+            $table->double('lending_angsuran_muka', 15, 2);
             $table->double('lending_nominal_pelunasan_takeover', 15, 2)->nullable();
-            $table->double('lending_booking_bersih2', 15, 2)->nullable();
             $table->string('lending_kre_rekening')->nullable();
 
             $table->timestamps();
