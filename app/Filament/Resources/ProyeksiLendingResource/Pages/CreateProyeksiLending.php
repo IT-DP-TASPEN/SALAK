@@ -19,7 +19,6 @@ class CreateProyeksiLending extends CreateRecord
         $data['lending_tanggal'] = Carbon::today()->toDateString();
         $data['lending_agent'] = auth()->id();
         $data['lending_kantor'] = auth()->user()->branchOffice->id;
-        $data['lending_booking_bersih'] = $data['lending_plafond'] - ($data['lending_pelunasan_pokok'] ?? 0);
 
         $data['lending_tanggal_jatuh_tempo'] = Carbon::parse($data['lending_tanggal_realisasi'])
             ->addMonths((int)$data['lending_jkw'])
@@ -44,6 +43,15 @@ class CreateProyeksiLending extends CreateRecord
 
         $data['lending_angsuran_muka'] = $angsuran_awal * (int)$data['lending_angsuran_muka_bulan'];
         $data['lending_saldo_tab_mengendap'] = $angsuran_awal * (int)$data['lending_saldo_tab_mengendap_bulan'];
+        $data['lending_booking_bersih'] = $data['lending_plafond']
+            - $data['lending_pot_provisi']
+            - $data['lending_pot_admin']
+            - $data['lending_pot_premi']
+            - $data['lending_pot_premi_extra']
+            - ($data['lending_bunga_muka'] ?? 0)
+            - ($data['lending_saldo_tab_mengendap'] ?? 0)
+            - ($data['lending_angsuran_muka'] ?? 0)
+            - ($data['lending_nominal_pelunasan_takeover'] ?? 0);
 
         // remove lending_saldo_tab_mengendap_bulan and lending_angsuran_muka_bulan from data
         unset($data['lending_saldo_tab_mengendap_bulan'], $data['lending_angsuran_muka_bulan']);
