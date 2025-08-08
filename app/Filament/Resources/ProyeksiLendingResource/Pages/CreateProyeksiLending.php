@@ -37,8 +37,9 @@ class CreateProyeksiLending extends CreateRecord
             $data['lending_bunga_muka'] = $data['lending_plafond'] * $monthly_interest_percent * $data['lending_jkw'];
         } elseif ($data['lending_sistem_bunga'] === 'Flate') {
             $angsuran_awal =
-                (floatval($data['lending_plafond']) * (int)$data['lending_jkw'])
+                (floatval($data['lending_plafond']) / (int)$data['lending_jkw'])
                 + (floatval($data['lending_plafond']) * $monthly_interest_percent);
+            $angsuran_awal = floor($angsuran_awal);
         }
 
         $data['lending_angsuran_muka'] = $angsuran_awal * (int)$data['lending_angsuran_muka_bulan'];
