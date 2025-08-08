@@ -20,6 +20,7 @@ class AdminSeeder extends Seeder
                 'username' => 'admin',
                 'email' => 'admin@gmail.com',
                 'password' => bcrypt('admin'),
+                'branch_office_id' => 1,
                 'email_verified_at' => now(),
             ]
         );
