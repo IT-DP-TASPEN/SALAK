@@ -1,0 +1,39 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class ProyeksiFunding extends Model
+{
+    protected $fillable = [
+        'funding_tanggal',
+        'funding_kantor',
+        'funding_agent',
+        'funding_produk',
+        'funding_deposito_jenis',
+        'funding_nasabah_nama',
+        'funding_nominal',
+        'funding_nominal_bersih',
+    ];
+
+    protected $casts = [
+        'funding_tanggal' => 'date',
+    ];
+
+    public function branchOffice(): BelongsTo
+    {
+        return $this->belongsTo(BranchOffice::class, 'funding_kantor', 'id');
+    }
+
+    public function agent(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'funding_agent', 'id');
+    }
+
+    public function produk(): BelongsTo
+    {
+        return $this->belongsTo(ProdukFunding::class, 'funding_produk', 'id');
+    }
+}
