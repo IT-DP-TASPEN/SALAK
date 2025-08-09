@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\BranchOfficeResource\Pages;
 use App\Filament\Resources\BranchOfficeResource\RelationManagers;
+use App\Filament\Resources\BranchOfficeResource\RelationManagers\DataAbaMasterRelationManager;
 use App\Models\BranchOffice;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -64,13 +65,14 @@ class BranchOfficeResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->recordUrl(fn(BranchOffice $record): ?string => static::getUrl('view', ['record' => $record]));
     }
 
     public static function getRelations(): array
     {
         return [
-            //
+            DataAbaMasterRelationManager::class,
         ];
     }
 
@@ -80,6 +82,7 @@ class BranchOfficeResource extends Resource
             'index' => Pages\ListBranchOffices::route('/'),
             'create' => Pages\CreateBranchOffice::route('/create'),
             'edit' => Pages\EditBranchOffice::route('/{record}/edit'),
+            'view' => Pages\ViewBranchOffice::route('/{record}'),
         ];
     }
 }

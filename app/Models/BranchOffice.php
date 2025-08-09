@@ -17,4 +17,9 @@ class BranchOffice extends BaseModel
     {
         return $this->hasMany(User::class, 'branch_office_id', 'id');
     }
+
+    public function penempatanABA(): HasMany
+    {
+        return $this->hasMany(DataAbaMaster::class, 'aba_kantor', 'branch_code');
+    }
 }
