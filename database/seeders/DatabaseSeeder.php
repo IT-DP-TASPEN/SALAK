@@ -17,6 +17,7 @@ class DatabaseSeeder extends Seeder
             BranchOfficeSeeder::class,
             JabatanSeeder::class,
             MitraBayarSeeder::class,
+            ProdukFundingSeeder::class,
             ProdukLendingSeeder::class,
             StatusDapemSeeder::class,
             StatusKerjaSeeder::class,
