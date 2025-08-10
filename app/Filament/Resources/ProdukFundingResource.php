@@ -18,7 +18,7 @@ class ProdukFundingResource extends Resource
     protected static ?string $model = ProdukFunding::class;
     protected static ?string $navigationGroup = 'Master Data';
     protected static ?string $navigationLabel = 'Produk Funding';
-    protected static ?string $navigationIcon = 'heroicon-o-currency-dollar';
+    protected static ?string $navigationIcon = 'heroicon-o-circle-stack';
 
     public static function form(Form $form): Form
     {
