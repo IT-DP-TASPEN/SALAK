@@ -2,10 +2,9 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class ProyeksiFunding extends Model
+class ProyeksiFunding extends BaseModel
 {
     protected $fillable = [
         'funding_tanggal',
