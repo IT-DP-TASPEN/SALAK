@@ -463,7 +463,6 @@ class ProyeksiLendingResource extends Resource
                 Tables\Columns\TextColumn::make('lending_nama_koperasi_takeover')
                     ->label('Nama Koperasi Takeover')
                     ->searchable(),
-                // ->visible(fn($record) => dd($record)?->lending_mitra_bayar_takeover?->mitra_nama === 'KOPERASI'),
                 Tables\Columns\TextColumn::make('lending_plafond')
                     ->label('Plafond')
                     ->money('IDR', 0, 'id_ID')
