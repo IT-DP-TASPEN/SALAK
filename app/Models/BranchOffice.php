@@ -22,4 +22,10 @@ class BranchOffice extends BaseModel
     {
         return $this->hasMany(DataAbaMaster::class, 'aba_kantor', 'branch_code');
     }
+
+    public function getSaldoAbaAttribute(): float
+    {
+        return $this->penempatanABA()
+            ->sum('aba_saldo_efektif');
+    }
 }
