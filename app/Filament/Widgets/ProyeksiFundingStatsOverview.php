@@ -2,36 +2,36 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\BranchOffice;
-use App\Models\ProyeksiLending;
 use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
-use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Carbon\Carbon;
+use App\Models\BranchOffice;
+use App\Models\ProyeksiFunding;
 
-class ProyeksiLendingStatsOverview extends BaseWidget
+class ProyeksiFundingStatsOverview extends BaseWidget
 {
     use HasWidgetShield;
 
-    protected ?string $heading = 'Proyeksi Lending';
+    protected ?string $heading = 'Proyeksi Funding';
 
     protected function getStats(): array
     {
         $today = Carbon::today();
         $branches = BranchOffice::orderBy('branch_code')->get();
-        $lendingsToday = ProyeksiLending::whereDate('lending_tanggal', $today)
-            ->selectRaw('lending_kantor, SUM(lending_plafond) as total_booking')
-            ->groupBy('lending_kantor')
-            ->pluck('total_booking', 'lending_kantor');
+        $fundingsToday = ProyeksiFunding::whereDate('funding_tanggal', $today)
+            ->selectRaw('funding_kantor, SUM(funding_nominal) as total_funding')
+            ->groupBy('funding_kantor')
+            ->pluck('total_funding', 'funding_kantor');
 
-        $stats = $branches->map(function ($branch) use ($lendingsToday) {
-            $total = $lendingsToday[$branch->id] ?? 0;
+        $stats = $branches->map(function ($branch) use ($fundingsToday) {
+            $total = $fundingsToday[$branch->id] ?? 0;
 
             return Stat::make(
                 $branch->branch_name,
                 'Rp. ' . number_format($total, 0, ',', '.')
             )
-                ->description('Total Booking Hari Ini')
+                ->description('Total Funding Hari Ini')
                 ->color('primary')
                 ->icon('heroicon-o-building-office-2');
         });
