@@ -6,10 +6,13 @@ use App\Filament\Resources\BranchOfficeResource\Pages;
 use App\Filament\Resources\BranchOfficeResource\RelationManagers;
 use App\Filament\Resources\BranchOfficeResource\RelationManagers\DataAbaMasterRelationManager;
 use App\Models\BranchOffice;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\Summarizers\Sum;
+use Filament\Tables\Columns\Summarizers\Summarizer;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -50,6 +53,26 @@ class BranchOfficeResource extends Resource
                     ->label('Saldo ABA')
                     ->money('IDR', 0, 'id_ID')
                     ->getStateUsing(fn(BranchOffice $record) => ceil($record->saldo_aba)),
+                Tables\Columns\TextColumn::make('saldo_kas')
+                    ->label('Saldo Kas')
+                    ->money('IDR', 0, 'id_ID')
+                    ->getStateUsing(fn(BranchOffice $record) => ceil($record->saldo_kas)),
+                Tables\Columns\TextColumn::make('cash_ratio')
+                    ->label('Cash Ratio')
+                    ->getStateUsing(fn(BranchOffice $record) => number_format($record->cash_ratio, 4, ',', '.') . '%')
+                    ->summarize(
+                        Summarizer::make()
+                            ->label('Konsolidasi Cash Ratio')
+                            ->using(fn() => number_format(BranchOffice::konsolidasiCashRatio(), 4, ',', '.') . '%')
+                    ),
+                Tables\Columns\TextColumn::make('loan_to_deposit_ratio')
+                    ->label('LDR')
+                    ->getStateUsing(fn(BranchOffice $record) => number_format($record->loan_to_deposit_ratio, 4, ',', '.') . '%')
+                    ->summarize(
+                        Summarizer::make()
+                            ->label('Konsolidasi LDR')
+                            ->using(fn() => number_format(BranchOffice::konsolidasiLDR(), 4, ',', '.') . '%')
+                    ),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

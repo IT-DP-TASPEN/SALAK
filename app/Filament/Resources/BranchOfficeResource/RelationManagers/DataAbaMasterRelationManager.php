@@ -44,6 +44,7 @@ class DataAbaMasterRelationManager extends RelationManager
                     ->formatStateUsing(fn($state) => match ($state) {
                         '10' => 'Giro',
                         '20' => 'Tabungan Umum',
+                        '30' => 'Deposito Umum',
                         default => 'Lainnya',
                     }),
                 Tables\Columns\TextColumn::make('aba_saldo_efektif')
@@ -56,7 +57,15 @@ class DataAbaMasterRelationManager extends RelationManager
                     ->money('IDR', 0, 'id_ID'),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('aba_jenis')
+                    ->label('Jenis')
+                    ->multiple()
+                    ->options([
+                        '10' => 'Giro',
+                        '20' => 'Tabungan Umum',
+                        '30' => 'Deposito Umum',
+                        '40' => 'Lainnya',
+                    ]),
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make(),
