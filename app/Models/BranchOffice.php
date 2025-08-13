@@ -25,32 +25,25 @@ class BranchOffice extends BaseModel
         return $this->hasMany(DataAbaMaster::class, 'aba_kantor', 'branch_code');
     }
 
-    public function getSaldoAbaAttribute(): float
+    public function saldoAbpTabungan(?string $tanggal = null): float
     {
-        return $this
-            ->penempatanABA()
-            ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
-            ->sum('aba_saldo_efektif');
+        return $this->saldoNeraca(['1.240.10'], $tanggal)['1.240.10'];
     }
 
-    public function getAbpTabunganAttribute(): float
-    {
-        return $this->saldoNeraca(['1.240.10'])['1.240.10'];
-    }
-
-    public function getSaldoKasAttribute(?string $tanggal)
+    public function saldoKas(?string $tanggal = null): float
     {
         return $this->saldoNeraca(['1.100'], $tanggal)['1.100'];
     }
 
-    public function assetLiquid(): float
+    public function assetLiquid(?string $tanggal = null): float
     {
+        // TODO: take $tanggal into account
         $giroTab = $this
             ->penempatanABA()
             ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
             ->sum('aba_saldo_efektif');
 
-        $kas = $this->saldo_kas;
+        $kas = $this->saldoKas($tanggal);
 
         return $kas + $giroTab;
     }
@@ -66,22 +59,20 @@ class BranchOffice extends BaseModel
         return $res['1.200'] + $res['1.210'] + $res['1.220'];
     }
 
-    public function getCashRatioAttribute(): float
+    public function cashRatio(?string $tanggal = null): float
     {
-        $assetLiquid = $this->assetLiquid();
-        $kewajibanLancar = $this->kewajibanLancar();
+        $assetLiquid = $this->assetLiquid($tanggal);
+        $kewajibanLancar = $this->kewajibanLancar($tanggal);
         if ($kewajibanLancar === 0.0) {
             return 0.0;
         }
         return $assetLiquid / $kewajibanLancar * 100;
     }
 
-    public function getLoanToDepositRatioAttribute(): float
+    public function loanToDepositRatio(?string $tanggal = null): float
     {
-        $yesterday = Carbon::yesterday()->toDateString();
-
         // Single round-trip for all needed codes
-        $res = $this->saldoNeraca(['1.130.1', '1.210', '1.220'], $yesterday);
+        $res = $this->saldoNeraca(['1.130.1', '1.210', '1.220'], $tanggal);
 
         $bakiDebet = $res['1.130.1']; // kredit yang diberikan
         $simpanan = $res['1.210'] + $res['1.220']; // total simpanan (tabungan + deposito)
@@ -95,13 +86,14 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiCashRatio(): float
     {
+        $yesterday = Carbon::yesterday()->toDateString();
         $totalLiquid = 0.0;
         $totalKewajibanLancar = 0.0;
 
-        static::query()->chunkById(200, function ($branches) use (&$totalLiquid, &$totalKewajibanLancar) {
+        static::query()->chunkById(200, function ($branches) use ($yesterday, &$totalLiquid, &$totalKewajibanLancar) {
             foreach ($branches as $branch) {
-                $totalLiquid += $branch->assetLiquid();
-                $totalKewajibanLancar += $branch->kewajibanLancar();
+                $totalLiquid += $branch->assetLiquid($yesterday);
+                $totalKewajibanLancar += $branch->kewajibanLancar($yesterday);
             }
         });
 
@@ -110,12 +102,13 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiLDR(): float
     {
+        $yesterday = Carbon::yesterday()->toDateString();
         $totalBakiDebet = 0.0;
         $totalSimpanan = 0.0;
 
-        static::query()->chunkById(200, function ($branches) use (&$totalBakiDebet, &$totalSimpanan) {
+        static::query()->chunkById(200, function ($branches) use ($yesterday, &$totalBakiDebet, &$totalSimpanan) {
             foreach ($branches as $branch) {
-                $res = $branch->saldoNeraca(['1.130.1', '1.210', '1.220']);
+                $res = $branch->saldoNeraca(['1.130.1', '1.210', '1.220'], $yesterday);
                 $totalBakiDebet += $res['1.130.1'];
                 $totalSimpanan += $res['1.210'] + $res['1.220'];
             }

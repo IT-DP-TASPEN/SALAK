@@ -49,29 +49,25 @@ class BranchOfficeResource extends Resource
                 Tables\Columns\TextColumn::make('branch_name')
                     ->label('Nama Cabang')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('saldo_aba')
-                    ->label('Saldo ABA')
+                Tables\Columns\TextColumn::make('asset_liquid')
+                    ->label('Asset Liquid')
                     ->money('IDR', 0, 'id_ID')
-                    ->getStateUsing(fn(BranchOffice $record) => ceil($record->saldo_aba)),
-                Tables\Columns\TextColumn::make('saldo_kas')
-                    ->label('Saldo Kas')
-                    ->money('IDR', 0, 'id_ID')
-                    ->getStateUsing(fn(BranchOffice $record) => ceil($record->saldo_kas)),
+                    ->getStateUsing(fn(BranchOffice $record) => ceil($record->assetLiquid())),
                 Tables\Columns\TextColumn::make('cash_ratio')
                     ->label('Cash Ratio')
-                    ->getStateUsing(fn(BranchOffice $record) => number_format($record->cash_ratio, 4, ',', '.') . '%')
+                    ->getStateUsing(fn(BranchOffice $record) => number_format($record->cashRatio(), 2, ',', '.') . '%')
                     ->summarize(
                         Summarizer::make()
                             ->label('Konsolidasi Cash Ratio')
-                            ->using(fn() => number_format(BranchOffice::konsolidasiCashRatio(), 4, ',', '.') . '%')
+                            ->using(fn() => number_format(BranchOffice::konsolidasiCashRatio(), 2, ',', '.') . '%')
                     ),
                 Tables\Columns\TextColumn::make('loan_to_deposit_ratio')
                     ->label('LDR')
-                    ->getStateUsing(fn(BranchOffice $record) => number_format($record->loan_to_deposit_ratio, 4, ',', '.') . '%')
+                    ->getStateUsing(fn(BranchOffice $record) => number_format($record->loanToDepositRatio(), 2, ',', '.') . '%')
                     ->summarize(
                         Summarizer::make()
                             ->label('Konsolidasi LDR')
-                            ->using(fn() => number_format(BranchOffice::konsolidasiLDR(), 4, ',', '.') . '%')
+                            ->using(fn() => number_format(BranchOffice::konsolidasiLDR(), 2, ',', '.') . '%')
                     ),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
