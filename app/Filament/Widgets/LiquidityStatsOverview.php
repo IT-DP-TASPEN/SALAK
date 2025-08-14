@@ -17,15 +17,63 @@ class LiquidityStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        $cashRatio = number_format(BranchOffice::konsolidasiCashRatio(), 2, ',', '.') . '%';
-        $ldr = number_format(BranchOffice::konsolidasiLDR(), 2, ',', '.') . '%';
+        $cashRatio = BranchOffice::konsolidasiCashRatio();
+        $ldr = BranchOffice::konsolidasiLDR();
+
+        $kshtCashRatio = match (true) {
+            $cashRatio >= 4.05 => [
+                'color' => 'success',
+                'description' => 'Sangat sehat',
+            ],
+            $cashRatio >= 3.30 && $cashRatio < 4.05 => [
+                'color' => 'success',
+                'description' => 'Sehat',
+            ],
+            $cashRatio >= 2.55 && $cashRatio < 3.30 => [
+                'color' => 'warning',
+                'description' => 'Cukup sehat',
+            ],
+            $cashRatio >= 1.8 && $cashRatio < 2.55 => [
+                'color' => 'danger',
+                'description' => 'Tidak sehat',
+            ],
+            default => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+        };
+
+        $kshtLDR = match (true) {
+            $ldr > 100 => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+            $ldr >= 98.25 && $ldr <= 100 => [
+                'color' => 'danger',
+                'description' => 'Tidak sehat',
+            ],
+            $ldr >= 96.5 && $ldr < 98.25 => [
+                'color' => 'warning',
+                'description' => 'Cukup sehat',
+            ],
+            $ldr >= 94.75 && $ldr < 96.5 => [
+                'color' => 'success',
+                'description' => 'Sehat',
+            ],
+            default => [
+                'color' => 'success',
+                'description' => 'Sangat sehat',
+            ],
+        };
 
         return [
-            Stat::make('Cash Ratio', $cashRatio)
-                ->color('success')
+            Stat::make('Cash Ratio', number_format($cashRatio, 2, ',', '.') . '%')
+                ->color($kshtCashRatio['color'])
+                ->description($kshtCashRatio['description'])
                 ->icon('heroicon-o-currency-dollar'),
-            Stat::make('LDR', $ldr)
-                ->color('warning')
+            Stat::make('LDR', number_format($ldr, 2, ',', '.') . '%')
+                ->color($kshtLDR['color'])
+                ->description($kshtLDR['description'])
                 ->icon('heroicon-o-chart-bar'),
         ];
     }
