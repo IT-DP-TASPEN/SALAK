@@ -21,7 +21,6 @@ class LoanToDepositRatioChart extends ChartWidget
             });
         $labels = $ldrPerKC->keys()->toArray();
         $data = $ldrPerKC->values()->toArray();
-        $data = array_map(fn($value) => number_format($value, 2, ',', '.') . '%', $data);
 
         return [
             'labels' => $labels,
