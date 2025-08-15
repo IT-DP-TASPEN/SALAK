@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ProyeksiFunding extends BaseModel
 {
@@ -21,6 +22,19 @@ class ProyeksiFunding extends BaseModel
         'funding_tanggal' => 'date',
     ];
 
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($funding) {
+            $approval = new ProyeksiFundingApproval();
+            $approval->approval_funding = $funding->id;
+            $approval->approval_status = 'Pending';
+            $approval->save();
+        });
+    }
+
+
     public function branchOffice(): BelongsTo
     {
         return $this->belongsTo(BranchOffice::class, 'funding_kantor', 'id');
@@ -34,5 +48,10 @@ class ProyeksiFunding extends BaseModel
     public function produk(): BelongsTo
     {
         return $this->belongsTo(ProdukFunding::class, 'funding_produk', 'id');
+    }
+
+    public function approval(): HasOne
+    {
+        return $this->hasOne(ProyeksiFundingApproval::class, 'approval_funding', 'id');
     }
 }

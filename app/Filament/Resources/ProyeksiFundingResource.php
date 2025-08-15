@@ -100,6 +100,14 @@ class ProyeksiFundingResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('approval.approval_status')
+                    ->label('Status')
+                    ->badge()
+                    ->colors([
+                        'primary' => 'Pending',
+                        'success' => 'Approved',
+                        'danger' => 'Rejected',
+                    ]),
                 Tables\Columns\TextColumn::make('funding_tanggal')
                     ->label('Tanggal')
                     ->date('d M Y')
