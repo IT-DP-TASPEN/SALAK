@@ -420,27 +420,6 @@ class ProyeksiLendingResource extends Resource
                             'PRA PENSIUN DP TASPEN',
                         ]
                     )),
-                Tables\Columns\TextColumn::make('lending_tanggal_lahir_debitur')
-                    ->label('Tanggal Lahir Debitur')
-                    ->date('d M Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_usia_debitur')
-                    ->label('Usia')
-                    ->getStateUsing(function ($record) {
-                        $tglLahir = $record->lending_tanggal_lahir_debitur;
-                        if (!$tglLahir) {
-                            return null;
-                        }
-                        $today = Carbon::today();
-                        $tahun = (int)$today->diffInYears($tglLahir, true);
-                        $bulan = (int)$today->diffInMonths($tglLahir, true) % 12;
-                        $hari = (int)$today->diffInDays($tglLahir, true) % 30;
-                        return "{$tahun} Tahun {$bulan} Bulan {$hari} Hari";
-                    }),
-                Tables\Columns\TextColumn::make('lending_no_hp_debitur')
-                    ->label('No. HP Debitur')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('lending_jenis_pengajuan')
                     ->label('Jenis Pengajuan')
                     ->searchable(),
@@ -455,13 +434,6 @@ class ProyeksiLendingResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('statusKerja.kerja_nama')
                     ->label('Status Kerja')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('mitraBayarTakeover.mitra_nama')
-                    ->label('Mitra Bayar Takeover')
-                    ->searchable()
-                    ->visible(fn($record) => filled($record?->lending_mitra_bayar_takeover)),
-                Tables\Columns\TextColumn::make('lending_nama_koperasi_takeover')
-                    ->label('Nama Koperasi Takeover')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('lending_plafond')
                     ->label('Plafond')
@@ -481,50 +453,6 @@ class ProyeksiLendingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_jkw')
                     ->label('Jangka Waktu (Bulan)')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_tanggal_jatuh_tempo')
-                    ->label('Tanggal Jatuh Tempo')
-                    ->date('d M Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_tanggal_rencana_bayar')
-                    ->label('Tanggal Rencana Bayar')
-                    ->date('d M Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_tanggal_rencana_takeover')
-                    ->label('Tanggal Rencana Takeover')
-                    ->date('d M Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_pot_provisi')
-                    ->label('Potongan Provisi')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_pot_admin')
-                    ->label('Potongan Administrasi')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_pot_premi')
-                    ->label('Potongan Asuransi')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_pot_premi_extra')
-                    ->label('Potongan Extra Premi')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_bunga_muka')
-                    ->label('Bunga Diterima di Muka')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_saldo_tab_mengendap')
-                    ->label('Saldo Tabungan Mengendap')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_angsuran_muka')
-                    ->label('Angsuran di Muka')
-                    ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_nominal_pelunasan_takeover')
-                    ->label('Nominal Pelunasan Takeover')
-                    ->money('IDR', 0, 'id_ID')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
