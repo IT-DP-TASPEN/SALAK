@@ -20,6 +20,9 @@ class ProyeksiFundingStatsOverview extends BaseWidget
         $today = Carbon::today();
         $branches = BranchOffice::orderBy('branch_code')->get();
         $fundingsToday = ProyeksiFunding::whereDate('funding_tanggal', $today)
+            ->whereHas('approval', function ($query) {
+                $query->where('approval_status', 'Approved');
+            })
             ->selectRaw('funding_kantor, SUM(funding_nominal) as total_funding')
             ->groupBy('funding_kantor')
             ->pluck('total_funding', 'funding_kantor');
