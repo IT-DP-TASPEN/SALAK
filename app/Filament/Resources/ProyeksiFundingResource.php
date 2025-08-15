@@ -15,6 +15,9 @@ use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Filament\Infolists\Infolist;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 
 class ProyeksiFundingResource extends Resource
 {
@@ -164,7 +167,9 @@ class ProyeksiFundingResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('created_at', 'desc')
+            ->recordUrl(fn(ProyeksiFunding $record): string => static::getUrl('view', ['record' => $record]));
     }
 
     public static function getRelations(): array
@@ -180,6 +185,52 @@ class ProyeksiFundingResource extends Resource
             'index' => Pages\ListProyeksiFundings::route('/'),
             'create' => Pages\CreateProyeksiFunding::route('/create'),
             'edit' => Pages\EditProyeksiFunding::route('/{record}/edit'),
+            'view' => Pages\ViewProyeksiFunding::route('/{record}'),
         ];
+    }
+
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        return $query
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->when(
+                $user->hasRole(['approver', 'maker']),
+                fn(Builder $query) =>
+                $query->where('lending_kantor', $user->branch_office_id)
+            );
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Informasi Funding')
+                    ->columns(2)
+                    ->schema([
+                        TextEntry::make('funding_tanggal')
+                            ->label('Tanggal')
+                            ->date('d M Y'),
+                        TextEntry::make('branchOffice.branch_name')
+                            ->label('Kantor Cabang'),
+                        TextEntry::make('agent.name')
+                            ->label('Agent'),
+                        TextEntry::make('produk.produk_nama')
+                            ->label('Produk'),
+                        TextEntry::make('funding_deposito_jenis')
+                            ->label('Jenis Penempatan Deposito')
+                            ->getStateUsing(fn(ProyeksiFunding $record) => $record->funding_deposito_jenis ?? '-'),
+                        TextEntry::make('funding_nasabah_nama')
+                            ->label('Nama Nasabah'),
+                        TextEntry::make('funding_nominal')
+                            ->label('Nominal')
+                            ->money('IDR', 0, 'id_ID'),
+                        TextEntry::make('funding_nominal_bersih')
+                            ->label('Nominal Bersih')
+                            ->money('IDR', 0, 'id_ID'),
+                    ]),
+            ]);
     }
 }
