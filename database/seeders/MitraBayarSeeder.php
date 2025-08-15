@@ -59,6 +59,7 @@ class MitraBayarSeeder extends Seeder
             'BANK ALADIN SYARIAH',
             'BANK MUAMALAT',
             'BANK MANDIRI',
+            'KOPERASI',
         ];
 
         foreach ($mitras as $mitra) {
