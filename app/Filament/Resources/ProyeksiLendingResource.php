@@ -387,7 +387,7 @@ class ProyeksiLendingResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('approvals.approval_status')
+                Tables\Columns\TextColumn::make('approval.approval_status')
                     ->label('Status')
                     ->badge()
                     ->colors([
@@ -545,7 +545,7 @@ class ProyeksiLendingResource extends Resource
                     ->schema([
                         TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('agent.name')->label('AO/Marketing')->icon('heroicon-o-user-group'),
-                        TextEntry::make('approvals.approval_status')
+                        TextEntry::make('approval.approval_status')
                             ->label('Status')
                             ->badge()
                             ->colors([

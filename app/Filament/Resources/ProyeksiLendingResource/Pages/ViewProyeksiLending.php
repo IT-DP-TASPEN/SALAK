@@ -24,12 +24,12 @@ class ViewProyeksiLending extends ViewRecord
                     fn(ProyeksiLending $record) =>
                     auth()->user()?->can('create_proyeksilendingapproval')
                         && (
-                            $record->approvals === null
-                            || $record->approvals->approval_status === 'Pending'
+                            $record->approval === null
+                            || $record->approval->approval_status === 'Pending'
                         )
                 )
                 ->action(function (ProyeksiLending $record, array $data) {
-                    $record->approvals()->updateOrCreate(
+                    $record->approval()->updateOrCreate(
                         ['approval_lending' => $record->id],
                         [
                             'approval_status' => 'Approved',
@@ -61,12 +61,12 @@ class ViewProyeksiLending extends ViewRecord
                     fn(ProyeksiLending $record) =>
                     auth()->user()?->can('create_proyeksilendingapproval')
                         && (
-                            $record->approvals === null
-                            || $record->approvals->approval_status === 'Pending'
+                            $record->approval === null
+                            || $record->approval->approval_status === 'Pending'
                         )
                 )
                 ->action(function (ProyeksiLending $record, array $data) {
-                    $record->approvals()->updateOrCreate(
+                    $record->approval()->updateOrCreate(
                         ['approval_lending' => $record->id],
                         [
                             'approval_status' => 'Rejected',

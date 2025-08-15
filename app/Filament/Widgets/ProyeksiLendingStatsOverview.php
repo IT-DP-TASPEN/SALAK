@@ -20,7 +20,7 @@ class ProyeksiLendingStatsOverview extends BaseWidget
         $today = Carbon::today();
         $branches = BranchOffice::orderBy('branch_code')->get();
         $lendingsToday = ProyeksiLending::whereDate('lending_tanggal', $today)
-            ->whereHas('approvals', function ($query) {
+            ->whereHas('approval', function ($query) {
                 $query->where('approval_status', 'Approved');
             })
             ->selectRaw('lending_kantor, SUM(lending_plafond) as total_booking')

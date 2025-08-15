@@ -30,13 +30,13 @@ class ListProyeksiLendings extends ListRecords
             ->label('Needs Approval')
             ->icon('heroicon-o-clock')
             ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
-                'approvals',
+                'approval',
                 fn(Builder $query) =>
                 $query->where('approval_status', 'pending')
             ))
             ->badge(
                 fn() => $this->getModel()::whereHas(
-                    'approvals',
+                    'approval',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'pending')
                 )->count()
@@ -46,13 +46,13 @@ class ListProyeksiLendings extends ListRecords
             ->label('Approved')
             ->icon('heroicon-o-check-circle')
             ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
-                'approvals',
+                'approval',
                 fn(Builder $query) =>
                 $query->where('approval_status', 'approved')
             ))
             ->badge(
                 fn() => $this->getModel()::whereHas(
-                    'approvals',
+                    'approval',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'approved')
                 )->count()
@@ -62,13 +62,13 @@ class ListProyeksiLendings extends ListRecords
             ->label('Rejected')
             ->icon('heroicon-o-x-circle')
             ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
-                'approvals',
+                'approval',
                 fn(Builder $query) =>
                 $query->where('approval_status', 'rejected')
             ))
             ->badge(
                 fn() => $this->getModel()::whereHas(
-                    'approvals',
+                    'approval',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'rejected')
                 )->count()
