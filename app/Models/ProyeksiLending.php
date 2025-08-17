@@ -73,4 +73,9 @@ class ProyeksiLending extends BaseModel
     {
         return $this->hasOne(ProyeksiLendingApproval::class, 'approval_lending', 'id');
     }
+
+    public function progress(): HasOne
+    {
+        return $this->hasOne(ProyeksiLendingProgress::class, 'progress_lending', 'id');
+    }
 }
