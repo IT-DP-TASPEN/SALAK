@@ -19,6 +19,7 @@ class DatabaseSeeder extends Seeder
             MitraBayarSeeder::class,
             ProdukFundingSeeder::class,
             ProdukLendingSeeder::class,
+            ProyeksiLendingProgressStatusSeeder::class,
             StatusDapemSeeder::class,
             StatusKerjaSeeder::class,
             SumberPembayaranLendingSeeder::class,
