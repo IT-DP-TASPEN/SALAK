@@ -20,22 +20,26 @@ class LiquidityStatsOverview extends BaseWidget
     {
         $kolek = Cache::get('dashboard:kolek', []);
         $npl = array_filter($kolek, fn($item) => !in_array($item->kolek, ['L', 'DP']));
-        $nplPercentage = (count($npl) / count($kolek)) * 100;
+        $nplPercentage = (count($npl) / max(1, count($kolek))) * 100;
         $cashRatio = BranchOffice::konsolidasiCashRatio();
         $ldr = BranchOffice::konsolidasiLDR();
 
         $kshtNpl = match (true) {
-            $nplPercentage >= 5 => [
-                'color' => 'danger',
-                'description' => 'Sangat tidak sehat',
-            ],
-            $nplPercentage >= 3 && $nplPercentage < 5 => [
+            $nplPercentage <= 5 => [
+                'level' => 'Tidak signifikan',
                 'color' => 'success',
-                'description' => 'Cukup sehat',
+            ],
+            $nplPercentage > 5 && $nplPercentage <= 6 => [
+                'level' => 'Kurang signifikan',
+                'color' => 'warning',
+            ],
+            $nplPercentage > 6 && $nplPercentage <= 7 => [
+                'level' => 'Cukup signifikan',
+                'color' => 'danger',
             ],
             default => [
-                'color' => 'success',
-                'description' => 'Sehat',
+                'level' => 'Sangat signifikan',
+                'color' => 'danger',
             ],
         };
 
@@ -62,34 +66,26 @@ class LiquidityStatsOverview extends BaseWidget
             ],
         };
 
-        $kshtLDR = match (true) {
-            $ldr > 100 && $nplPercentage > 5 => [
-                'color' => 'danger',
-                'description' => 'Sangat tidak sehat',
-            ],
-            $ldr > 100 && $nplPercentage <= 5 => [
+        $kshtLdr = match (true) {
+            $ldr <= 90 => [
                 'color' => 'success',
-                'description' => 'Cukup sehat',
+                'description' => 'Sangat sehat',
             ],
-            $ldr > 100 => [
-                'color' => 'danger',
-                'description' => 'Sangat tidak sehat',
-            ],
-            $ldr >= 98.25 && $ldr <= 100 => [
-                'color' => 'danger',
-                'description' => 'Tidak sehat',
-            ],
-            $ldr >= 96.5 && $ldr < 98.25 => [
-                'color' => 'warning',
-                'description' => 'Cukup sehat',
-            ],
-            $ldr >= 94.75 && $ldr < 96.5 => [
+            $ldr > 90 && $nplPercentage <= 5 => [
                 'color' => 'success',
                 'description' => 'Sehat',
             ],
-            default => [
-                'color' => 'success',
-                'description' => 'Sangat sehat',
+            $ldr > 90 && $nplPercentage > 5 && $nplPercentage <= 6 => [
+                'color' => 'warning',
+                'description' => 'Cukup sehat',
+            ],
+            $ldr > 90 && $nplPercentage > 6 && $nplPercentage <= 7 => [
+                'color' => 'danger',
+                'description' => 'Tidak sehat',
+            ],
+            $ldr > 90 && $nplPercentage > 7 => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
             ],
         };
 
@@ -98,13 +94,15 @@ class LiquidityStatsOverview extends BaseWidget
                 ->color($kshtCashRatio['color'])
                 ->description($kshtCashRatio['description'])
                 ->icon('heroicon-o-currency-dollar'),
+
             Stat::make('NPL', number_format($nplPercentage, 2, ',', '.') . '%')
                 ->color($kshtNpl['color'])
-                ->description($kshtNpl['description'])
+                ->description('NPL ' . $kshtNpl['level'])
                 ->icon('heroicon-o-exclamation-triangle'),
+
             Stat::make('LDR', number_format($ldr, 2, ',', '.') . '%')
-                ->color($kshtLDR['color'])
-                ->description($kshtLDR['description'])
+                ->color($kshtLdr['color'])
+                ->description($kshtLdr['description'])
                 ->icon('heroicon-o-chart-bar'),
         ];
     }
