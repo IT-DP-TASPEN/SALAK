@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\BranchOffice;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Support\Facades\Cache;
 
 class LiquidityStatsOverview extends BaseWidget
 {
@@ -12,13 +13,31 @@ class LiquidityStatsOverview extends BaseWidget
 
     protected function getColumns(): int
     {
-        return 2;
+        return 3;
     }
 
     protected function getStats(): array
     {
+        $kolek = Cache::get('dashboard:kolek', []);
+        $npl = array_filter($kolek, fn($item) => !in_array($item->kolek, ['L', 'DP']));
+        $nplPercentage = (count($npl) / count($kolek)) * 100;
         $cashRatio = BranchOffice::konsolidasiCashRatio();
         $ldr = BranchOffice::konsolidasiLDR();
+
+        $kshtNpl = match (true) {
+            $nplPercentage >= 5 => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+            $nplPercentage >= 3 && $nplPercentage < 5 => [
+                'color' => 'success',
+                'description' => 'Cukup sehat',
+            ],
+            default => [
+                'color' => 'success',
+                'description' => 'Sehat',
+            ],
+        };
 
         $kshtCashRatio = match (true) {
             $cashRatio >= 4.05 => [
@@ -44,6 +63,14 @@ class LiquidityStatsOverview extends BaseWidget
         };
 
         $kshtLDR = match (true) {
+            $ldr > 100 && $nplPercentage > 5 => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+            $ldr > 100 && $nplPercentage <= 5 => [
+                'color' => 'success',
+                'description' => 'Cukup sehat',
+            ],
             $ldr > 100 => [
                 'color' => 'danger',
                 'description' => 'Sangat tidak sehat',
@@ -71,6 +98,10 @@ class LiquidityStatsOverview extends BaseWidget
                 ->color($kshtCashRatio['color'])
                 ->description($kshtCashRatio['description'])
                 ->icon('heroicon-o-currency-dollar'),
+            Stat::make('NPL', number_format($nplPercentage, 2, ',', '.') . '%')
+                ->color($kshtNpl['color'])
+                ->description($kshtNpl['description'])
+                ->icon('heroicon-o-exclamation-triangle'),
             Stat::make('LDR', number_format($ldr, 2, ',', '.') . '%')
                 ->color($kshtLDR['color'])
                 ->description($kshtLDR['description'])

@@ -8,8 +8,8 @@ use Filament\Widgets\ChartWidget;
 class LoanToDepositRatioChart extends ChartWidget
 {
     protected int|string|array $columnSpan = 'full';
-    protected static ?string $heading = 'LDR';
-    protected static ?int $sort = -8;
+    protected static ?string $heading = 'Loan to Deposit Ratio (LDR)';
+    protected static ?int $sort = -7;
 
     protected function getData(): array
     {

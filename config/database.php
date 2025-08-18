@@ -76,6 +76,20 @@ return [
             'engine' => null,
         ],
 
+        'mso-backup' => [
+            'driver' => 'mysql',
+            'host' => env('MSO_DB_HOST'),
+            'port' => env('MSO_DB_PORT'),
+            'database' => env('MSO_DB_DATABASE_BACKUP'),
+            'username' => env('MSO_DB_USERNAME'),
+            'password' => env('MSO_DB_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => false,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
