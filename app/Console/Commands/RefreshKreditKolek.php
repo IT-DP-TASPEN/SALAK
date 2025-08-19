@@ -31,10 +31,12 @@ class RefreshKreditKolek extends Command
             ->select("
                 SELECT
                     t.kre_kantor AS kantor,
+                    t.kre_baki_debet AS baki_debet,
                     t.kolek AS kolek
                 FROM (
                     SELECT 
                         kre_kantor,
+                        kre_baki_debet,
                         HitungKreditKolek(kre_rekening, CURDATE()) AS kolek
                     FROM data_kredit_master
                     WHERE kre_status = 2

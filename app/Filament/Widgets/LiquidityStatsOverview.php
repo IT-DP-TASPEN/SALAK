@@ -20,7 +20,12 @@ class LiquidityStatsOverview extends BaseWidget
     {
         $kolek = Cache::get('dashboard:kolek', []);
         $npl = array_filter($kolek, fn($item) => !in_array($item->kolek, ['L', 'DP']));
-        $nplPercentage = (count($npl) / max(1, count($kolek))) * 100;
+        // Calculate NPL percentage based on kre_baki_debet
+        $totalBakiDebet = array_sum(array_column($kolek, 'baki_debet'));
+        $totalNplBakiDebet = array_sum(array_column($npl, 'baki_debet'));
+        $nplPercentage = $totalBakiDebet > 0
+            ? ($totalNplBakiDebet / $totalBakiDebet) * 100
+            : 0;
         $cashRatio = BranchOffice::konsolidasiCashRatio();
         $ldr = BranchOffice::konsolidasiLDR();
 

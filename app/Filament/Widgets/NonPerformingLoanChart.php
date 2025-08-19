@@ -15,18 +15,17 @@ class NonPerformingLoanChart extends ChartWidget
     protected function getData(): array
     {
         $kolek = Cache::get('dashboard:kolek', []);
+        $totalBakiDebet = array_sum(array_column($kolek, 'baki_debet'));
         $npl = array_filter($kolek, fn($item) => !in_array($item->kolek, ['L', 'DP']));
-        $nplPerKC = collect($npl)
-            ->groupBy('kantor')
-            ->map(fn($items) => count($items) / count($kolek) * 100);
-        $kc = BranchOffice::all()
-            ->mapWithKeys(function (BranchOffice $branchOffice) {
-                return [
-                    $branchOffice->branch_code => $branchOffice->branch_name,
-                ];
-            });
-        $labels = $nplPerKC->keys()->map(function ($key) use ($kc) {
-            return $kc->get($key, $key);
+        $nplPerKC = collect($npl)->groupBy('kantor')->map(function ($items) use ($totalBakiDebet) {
+            $totalNplBakiDebet = array_sum(array_column($items->toArray(), 'baki_debet'));
+            return $totalBakiDebet > 0 ? ($totalNplBakiDebet / $totalBakiDebet) * 100 : 0;
+        });
+        $labels = collect($nplPerKC->keys())->map(function ($kantor) {
+            return BranchOffice::where('branch_code', $kantor)->first()->branch_name ?? $kantor;
+        });
+        $nplPerKC = $nplPerKC->map(function ($value) {
+            return round($value, 2);
         });
 
         return [
