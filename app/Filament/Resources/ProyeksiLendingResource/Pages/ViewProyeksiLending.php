@@ -47,7 +47,7 @@ class ViewProyeksiLending extends ViewRecord
                         // Notify the user
                         Notification::make()
                             ->title('Status Proyeksi Lending Updated')
-                            ->body("Status proyeksi lending untuk {$record->lending_nama_debitur} telah diperbarui ke {$data['progress_status']}.")
+                            ->body("Status proyeksi lending untuk {$record->lending_nama_debitur} telah diperbarui.")
                             ->success()
                             ->send();
                     }

@@ -11,6 +11,7 @@ use App\Models\ProyeksiLendingProgressStatus;
 use App\Models\StatusKerja;
 use Carbon\Carbon;
 use Filament\Forms;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Tables\Enums\ActionsPosition;
+use Illuminate\Support\Facades\DB;
 
 class ProyeksiLendingResource extends Resource
 {
@@ -473,13 +475,94 @@ class ProyeksiLendingResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('update_status')
+                        ->label('Update Status')
+                        ->icon('heroicon-o-arrow-path')
+                        ->form([
+                            Select::make('progress_status')
+                                ->label('Status')
+                                ->options(ProyeksiLendingProgressStatus::pluck('progress_status', 'id'))
+                                ->required(),
+                        ])
+                        ->action(
+                            function (ProyeksiLending $record, array $data) {
+                                $record->progress()->updateOrCreate(
+                                    [
+                                        'progress_lending' => $record->id,
+                                    ],
+                                    [
+                                        'progress_status' => $data['progress_status'],
+                                    ]
+                                );
+
+                                // Notify the user
+                                Notification::make()
+                                    ->title('Status Proyeksi Lending Updated')
+                                    ->body("Status proyeksi lending untuk {$record->lending_nama_debitur} telah diperbarui.")
+                                    ->success()
+                                    ->send();
+                            }
+                        )
+                        ->visible(fn(ProyeksiLending $record) => (
+                            auth()->user()?->can('create_proyeksilendingprogress')
+                            || auth()->user()?->can('update_proyeksilendingprogress')
+                        ) && $record->approval->approval_status === 'Approved'),
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make(),
+                ]),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('bulk_update_progress')
+                        ->icon('heroicon-o-arrow-path')
+                        ->visible(function () {
+                            $usr = auth()->user();
+                            return $usr->can('create_proyeksilendingprogress')
+                                || $usr->can('update_proyeksilendingprogress');
+                        })
+                        ->form([
+                            Select::make('progress_status')
+                                ->label('Status')
+                                ->options(ProyeksiLendingProgressStatus::pluck('progress_status', 'id'))
+                                ->required(),
+                        ])
+                        ->action(function ($records, $data) {
+                            try {
+                                DB::transaction(function () use (&$records, $data) {
+                                    foreach ($records as $record) {
+                                        $record->progress()->updateOrCreate(
+                                            [
+                                                'progress_lending' => $record->id,
+                                            ],
+                                            [
+                                                'progress_status' => $data['progress_status'],
+                                            ]
+                                        );
+                                    }
+
+                                    $n = count($records);
+                                    Notification::make()
+                                        ->title('Status Proyeksi Lending Updated')
+                                        ->body("Berhasil mengupdate {$n} data.")
+                                        ->success()
+                                        ->send();
+                                });
+                            } catch (\Exception $ex) {
+                                Notification::make()
+                                    ->title('Gagal Mengupdate Status Proyeksi Lending')
+                                    ->body('Proyeksi lending gagal di update')
+                                    ->error()
+                                    ->send();
+                            }
+                        }),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
+            ->checkIfRecordIsSelectableUsing(
+                fn(ProyeksiLending $record): bool => $record->approval->approval_status === 'Approved',
+            )
+            ->selectCurrentPageOnly()
             ->defaultSort('created_at', 'desc')
             ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]))
             ->emptyStateHeading(fn(): string => 'Tidak ada data proyeksi lending yang ditemukan');
