@@ -24,8 +24,8 @@ class ViewProyeksiLending extends ViewRecord
                 ->icon('heroicon-o-pencil-square')
                 ->visible(fn(ProyeksiLending $record) => auth()->user()?->can('update_proyeksilending'))
                 ->url(fn(ProyeksiLending $record): string => ProyeksiLendingResource::getUrl('edit', ['record' => $record])),
-            Actions\Action::make('update_status')
-                ->label('Update Status')
+            Actions\Action::make('update_progress')
+                ->label('Update Progress')
                 ->icon('heroicon-o-arrow-path')
                 ->form([
                     Select::make('progress_status')

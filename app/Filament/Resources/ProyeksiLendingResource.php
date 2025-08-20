@@ -476,8 +476,8 @@ class ProyeksiLendingResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
-                    Tables\Actions\Action::make('update_status')
-                        ->label('Update Status')
+                    Tables\Actions\Action::make('update_progress')
+                        ->label('Update Progress')
                         ->icon('heroicon-o-arrow-path')
                         ->form([
                             Select::make('progress_status')
@@ -515,6 +515,7 @@ class ProyeksiLendingResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\BulkAction::make('bulk_update_progress')
+                        ->label('Update selected progress')
                         ->icon('heroicon-o-arrow-path')
                         ->visible(function () {
                             $usr = auth()->user();
