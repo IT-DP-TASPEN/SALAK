@@ -17,6 +17,11 @@ class ViewProyeksiFunding extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('edit')
+                ->label('Edit Funding')
+                ->icon('heroicon-o-pencil-square')
+                ->visible(fn(ProyeksiFunding $record) => auth()->user()?->can('update_proyeksifunding'))
+                ->url(fn(ProyeksiFunding $record): string => ProyeksiFundingResource::getUrl('edit', ['record' => $record])),
             Actions\Action::make('approve')
                 ->label('Approve')
                 ->icon('heroicon-o-check')
