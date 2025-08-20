@@ -16,6 +16,11 @@ class DataAbaMasterRelationManager extends RelationManager
     protected static string $relationship = 'penempatanABA';
     protected static ?string $title = 'Penempatan Antar Bank';
 
+    public function isReadOnly(): bool
+    {
+        return true;
+    }
+
     public function form(Form $form): Form
     {
         return $form
