@@ -21,7 +21,7 @@ class BranchOfficeSeeder extends Seeder
             ['branch_code' => '04', 'branch_name' => 'Kantor Cabang Tangerang'],
             ['branch_code' => '05', 'branch_name' => 'Kantor Cabang Jakarta Timur'],
             ['branch_code' => '06', 'branch_name' => 'Kantor Cabang Karawang'],
-            ['branch_code' => '07', 'branch_name' => 'Kantor Cabang Cabangbungin'],
+            ['branch_code' => '07', 'branch_name' => 'Kantor Cabang Cikarang'],
             ['branch_code' => '08', 'branch_name' => 'Kantor Cabang Purwokerto'],
         ];
 
