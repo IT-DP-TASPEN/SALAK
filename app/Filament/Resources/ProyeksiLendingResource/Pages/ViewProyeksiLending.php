@@ -4,7 +4,9 @@ namespace App\Filament\Resources\ProyeksiLendingResource\Pages;
 
 use App\Filament\Resources\ProyeksiLendingResource;
 use App\Models\ProyeksiLending;
+use App\Models\ProyeksiLendingProgressStatus;
 use Filament\Actions;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
@@ -17,6 +19,43 @@ class ViewProyeksiLending extends ViewRecord
     protected function getHeaderActions(): array
     {
         return [
+            Actions\Action::make('edit')
+                ->label('Edit Lending')
+                ->icon('heroicon-o-pencil-square')
+                ->visible(fn(ProyeksiLending $record) => auth()->user()?->can('update_proyeksilending'))
+                ->url(fn(ProyeksiLending $record): string => ProyeksiLendingResource::getUrl('edit', ['record' => $record])),
+            Actions\Action::make('update_status')
+                ->label('Update Status')
+                ->icon('heroicon-o-arrow-path')
+                ->form([
+                    Select::make('progress_status')
+                        ->label('Status')
+                        ->options(ProyeksiLendingProgressStatus::pluck('progress_status', 'id'))
+                        ->required(),
+                ])
+                ->action(
+                    function (ProyeksiLending $record, array $data) {
+                        $record->progress()->updateOrCreate(
+                            [
+                                'progress_lending' => $record->id,
+                            ],
+                            [
+                                'progress_status' => $data['progress_status'],
+                            ]
+                        );
+
+                        // Notify the user
+                        Notification::make()
+                            ->title('Status Proyeksi Lending Updated')
+                            ->body("Status proyeksi lending untuk {$record->lending_nama_debitur} telah diperbarui ke {$data['progress_status']}.")
+                            ->success()
+                            ->send();
+                    }
+                )
+                ->visible(fn(ProyeksiLending $record) => (
+                    auth()->user()?->can('create_proyeksilendingprogress')
+                    || auth()->user()?->can('update_proyeksilendingprogress')
+                ) && $record->approval->approval_status === 'Approved'),
             Actions\Action::make('approve')
                 ->label('Approve')
                 ->icon('heroicon-o-check')

@@ -7,6 +7,7 @@ use App\Filament\Resources\ProyeksiLendingResource\RelationManagers;
 use App\Models\MitraBayar;
 use App\Models\ProdukLending;
 use App\Models\ProyeksiLending;
+use App\Models\ProyeksiLendingProgressStatus;
 use App\Models\StatusKerja;
 use Carbon\Carbon;
 use Filament\Forms;
@@ -20,6 +21,8 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
+use Filament\Tables\Enums\ActionsPosition;
 
 class ProyeksiLendingResource extends Resource
 {
@@ -388,13 +391,16 @@ class ProyeksiLendingResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('approval.approval_status')
-                    ->label('Status')
+                    ->label('Status Approval')
                     ->badge()
                     ->colors([
                         'primary' => 'Pending',
                         'success' => 'Approved',
                         'danger' => 'Rejected',
                     ]),
+                Tables\Columns\TextColumn::make('progress.status.progress_status')
+                    ->label('Status')
+                    ->badge(),
                 Tables\Columns\TextColumn::make('lending_tanggal')
                     ->label('Tanggal')
                     ->date('d M Y')
@@ -546,13 +552,14 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('agent.name')->label('AO/Marketing')->icon('heroicon-o-user-group'),
                         TextEntry::make('approval.approval_status')
-                            ->label('Status')
+                            ->label('Status Approval')
                             ->badge()
                             ->colors([
                                 'primary' => 'Pending',
                                 'success' => 'Approved',
                                 'danger' => 'Rejected',
                             ]),
+                        TextEntry::make('progress.status.progress_status')->label('Progress')->icon('heroicon-o-arrow-path'),
                         TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2'),
                         TextEntry::make('lending_nama_koperasi_takeover')->label('Nama Koperasi Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => filled($record->lending_nama_koperasi_takeover)),
                         TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
