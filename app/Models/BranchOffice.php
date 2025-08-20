@@ -45,7 +45,7 @@ class BranchOffice extends BaseModel
 
         $kas = $this->saldoKas($tanggal);
 
-        return $kas + $giroTab;
+        return $kas + $giroTab - $this->branch_saldo_aba_blokir;
     }
 
     public function kewajibanLancar(?string $tanggal = null): float

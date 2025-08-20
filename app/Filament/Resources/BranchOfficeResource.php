@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
+use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Columns\Summarizers\Summarizer;
@@ -31,11 +32,25 @@ class BranchOfficeResource extends Resource
                 Forms\Components\TextInput::make('branch_code')
                     ->label('Kode Cabang')
                     ->required()
-                    ->maxLength(2),
+                    ->maxLength(2)
+                    ->columnSpanFull()
+                    ->inlineLabel(),
                 Forms\Components\TextInput::make('branch_name')
                     ->label('Nama Cabang')
                     ->required()
-                    ->maxLength(255),
+                    ->maxLength(255)
+                    ->columnSpanFull()
+                    ->inlineLabel(),
+                Forms\Components\TextInput::make('branch_saldo_aba_blokir')
+                    ->label('Saldo ABA Blokir')
+                    ->prefix('Rp')
+                    ->numeric()
+                    ->default(0)
+                    ->required()
+                    ->mask(RawJs::make('$money($input)'))
+                    ->stripCharacters(',')
+                    ->columnSpanFull()
+                    ->inlineLabel(),
             ]);
     }
 
@@ -49,10 +64,15 @@ class BranchOfficeResource extends Resource
                 Tables\Columns\TextColumn::make('branch_name')
                     ->label('Nama Cabang')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('branch_saldo_aba_blokir')
+                    ->label('Saldo ABA Blokir')
+                    ->money('IDR', 0, 'id_ID')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('asset_liquid')
                     ->label('Asset Liquid')
                     ->money('IDR', 0, 'id_ID')
-                    ->getStateUsing(fn(BranchOffice $record) => ceil($record->assetLiquid())),
+                    ->getStateUsing(fn(BranchOffice $record) => ceil($record->assetLiquid()))
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('cash_ratio')
                     ->label('Cash Ratio')
                     ->getStateUsing(fn(BranchOffice $record) => number_format($record->cashRatio(), 2, ',', '.') . '%')
@@ -60,7 +80,8 @@ class BranchOfficeResource extends Resource
                         Summarizer::make()
                             ->label('Konsolidasi Cash Ratio')
                             ->using(fn() => number_format(BranchOffice::konsolidasiCashRatio(), 2, ',', '.') . '%')
-                    ),
+                    )
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('loan_to_deposit_ratio')
                     ->label('LDR')
                     ->getStateUsing(fn(BranchOffice $record) => number_format($record->loanToDepositRatio(), 2, ',', '.') . '%')
@@ -68,7 +89,8 @@ class BranchOfficeResource extends Resource
                         Summarizer::make()
                             ->label('Konsolidasi LDR')
                             ->using(fn() => number_format(BranchOffice::konsolidasiLDR(), 2, ',', '.') . '%')
-                    ),
+                    )
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
