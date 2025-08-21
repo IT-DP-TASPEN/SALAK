@@ -3,13 +3,17 @@
 namespace App\Filament\Widgets;
 
 use App\Models\BranchOffice;
+use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use Illuminate\Support\Facades\Cache;
+use Livewire\Attributes\On;
 
 class LiquidityStatsOverview extends BaseWidget
 {
     protected static ?int $sort = -10;
+
+    public ?string $tanggal = null;
 
     protected function getColumns(): int
     {
@@ -26,8 +30,8 @@ class LiquidityStatsOverview extends BaseWidget
         $nplPercentage = $totalBakiDebet > 0
             ? ($totalNplBakiDebet / $totalBakiDebet) * 100
             : 0;
-        $cashRatio = BranchOffice::konsolidasiCashRatio();
-        $ldr = BranchOffice::konsolidasiLDR();
+        $cashRatio = BranchOffice::konsolidasiCashRatio($this->tanggal);
+        $ldr = BranchOffice::konsolidasiLDR($this->tanggal);
 
         $kshtNpl = match (true) {
             $nplPercentage <= 5 => [
@@ -110,5 +114,15 @@ class LiquidityStatsOverview extends BaseWidget
                 ->description($kshtLdr['description'])
                 ->icon('heroicon-o-chart-bar'),
         ];
+    }
+
+    #[On('chartTypeChanged')]
+    public function handleChartTypeChanged(string $chartType): void
+    {
+        match ($chartType) {
+            'realtime' => $this->tanggal = null,
+            'yesterday' => $this->tanggal = Carbon::yesterday()->format('Y-m-d'),
+            'simulation' => $this->tanggal = Carbon::now()->format('Y-m-d'),
+        };
     }
 }

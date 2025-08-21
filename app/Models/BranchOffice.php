@@ -84,31 +84,29 @@ class BranchOffice extends BaseModel
         return $bakiDebet / $simpanan * 100;
     }
 
-    public static function konsolidasiCashRatio(): float
+    public static function konsolidasiCashRatio(?string $tanggal = null): float
     {
-        $yesterday = Carbon::yesterday()->toDateString();
         $totalLiquid = 0.0;
         $totalKewajibanLancar = 0.0;
 
-        static::query()->chunkById(200, function ($branches) use ($yesterday, &$totalLiquid, &$totalKewajibanLancar) {
+        static::query()->chunkById(200, function ($branches) use ($tanggal, &$totalLiquid, &$totalKewajibanLancar) {
             foreach ($branches as $branch) {
-                $totalLiquid += $branch->assetLiquid($yesterday);
-                $totalKewajibanLancar += $branch->kewajibanLancar($yesterday);
+                $totalLiquid += $branch->assetLiquid($tanggal);
+                $totalKewajibanLancar += $branch->kewajibanLancar($tanggal);
             }
         });
 
         return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
     }
 
-    public static function konsolidasiLDR(): float
+    public static function konsolidasiLDR(?string $tanggal = null): float
     {
-        $yesterday = Carbon::yesterday()->toDateString();
         $totalBakiDebet = 0.0;
         $totalSimpanan = 0.0;
 
-        static::query()->chunkById(200, function ($branches) use ($yesterday, &$totalBakiDebet, &$totalSimpanan) {
+        static::query()->chunkById(200, function ($branches) use ($tanggal, &$totalBakiDebet, &$totalSimpanan) {
             foreach ($branches as $branch) {
-                $res = $branch->saldoNeraca(['1.130.1', '1.210', '1.220'], $yesterday);
+                $res = $branch->saldoNeraca(['1.130.1', '1.210', '1.220'], $tanggal);
                 $totalBakiDebet += $res['1.130.1'];
                 $totalSimpanan += $res['1.210'] + $res['1.220'];
             }
@@ -119,7 +117,7 @@ class BranchOffice extends BaseModel
 
     public function saldoNeraca(array $kodePerkiraanList, ?string $tanggal = null): array
     {
-        $tanggal ??= Carbon::yesterday()->toDateString();
+        $tanggal ??= Carbon::today()->toDateString();
 
         /**
          * SELECT

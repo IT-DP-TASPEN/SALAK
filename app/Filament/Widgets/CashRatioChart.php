@@ -3,7 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Models\BranchOffice;
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
+use Livewire\Attributes\On;
 
 class CashRatioChart extends ChartWidget
 {
@@ -11,12 +13,14 @@ class CashRatioChart extends ChartWidget
     protected static ?string $heading = 'Cash Ratio';
     protected static ?int $sort = -9;
 
+    public ?string $tanggal = null;
+
     protected function getData(): array
     {
         $cashRatioPerKC = BranchOffice::all()
             ->mapWithKeys(function (BranchOffice $branchOffice) {
                 return [
-                    $branchOffice->branch_name => $branchOffice->cashRatio(),
+                    $branchOffice->branch_name => $branchOffice->cashRatio($this->tanggal),
                 ];
             });
         $labels = $cashRatioPerKC->keys()->toArray();
@@ -34,6 +38,16 @@ class CashRatioChart extends ChartWidget
                 ],
             ],
         ];
+    }
+
+    #[On('chartTypeChanged')]
+    public function handleChartTypeChanged(string $chartType): void
+    {
+        match ($chartType) {
+            'realtime' => $this->tanggal = null,
+            'yesterday' => $this->tanggal = Carbon::yesterday()->format('Y-m-d'),
+            'simulation' => $this->tanggal = Carbon::now()->format('Y-m-d'),
+        };
     }
 
     protected function getType(): string
