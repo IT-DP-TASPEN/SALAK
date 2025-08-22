@@ -41,7 +41,8 @@ class DataAbaMasterRelationManager extends RelationManager
             ->recordTitleAttribute('aba_alias')
             ->columns([
                 Tables\Columns\TextColumn::make('aba_alias')
-                    ->label('Bank'),
+                    ->label('Bank')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('aba_rekening')
                     ->label('Rekening'),
                 Tables\Columns\TextColumn::make('aba_jenis')
@@ -54,6 +55,7 @@ class DataAbaMasterRelationManager extends RelationManager
                     }),
                 Tables\Columns\TextColumn::make('aba_saldo_efektif')
                     ->label('Saldo Efektif')
+                    ->sortable()
                     ->summarize(
                         Sum::make()
                             ->money('IDR', 0, 'id_ID')
