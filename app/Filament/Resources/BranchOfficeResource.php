@@ -73,6 +73,11 @@ class BranchOfficeResource extends Resource
                     ->money('IDR', 0, 'id_ID')
                     ->getStateUsing(fn(BranchOffice $record) => ceil($record->assetLiquid()))
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('kewajiban_lancar')
+                    ->label('Kewajiban Lancar')
+                    ->getStateUsing(fn(BranchOffice $record) => ceil($record->kewajibanLancar()))
+                    ->money('IDR', 0, 'id_ID')
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('cash_ratio')
                     ->label('Cash Ratio')
                     ->getStateUsing(fn(BranchOffice $record) => number_format($record->cashRatio(), 2, ',', '.') . '%')

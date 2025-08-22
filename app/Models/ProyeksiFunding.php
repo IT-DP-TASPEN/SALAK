@@ -34,7 +34,6 @@ class ProyeksiFunding extends BaseModel
         });
     }
 
-
     public function branchOffice(): BelongsTo
     {
         return $this->belongsTo(BranchOffice::class, 'funding_kantor', 'id');
