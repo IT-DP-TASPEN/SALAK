@@ -40,7 +40,7 @@ class BranchOffice extends BaseModel
         return $this->saldoNeraca(['1.100'], $tanggal)['1.100'];
     }
 
-    public function assetLiquid(?string $tanggal = null): float
+    public function assetLiquid(?string $tanggal = null, bool $simulated = false): float
     {
         // TODO: take $tanggal into account
         $giroTab = $this
@@ -50,7 +50,21 @@ class BranchOffice extends BaseModel
 
         $kas = $this->saldoKas($tanggal);
 
-        return $kas + $giroTab - $this->branch_saldo_aba_blokir;
+        $ret = $kas + $giroTab - $this->branch_saldo_aba_blokir;
+
+        if ($simulated) {
+            $proyeksiLendings = $this->proyeksiLendings()
+                ->whereRaw('lending_tanggal = CURDATE()')
+                ->sum('lending_booking_bersih');
+            $ret -= $proyeksiLendings;
+
+            $proyeksiFunding = $this->proyeksiFundings()
+                ->whereRaw('funding_tanggal = CURDATE()')
+                ->sum('funding_nominal_bersih');
+            $ret += $proyeksiFunding;
+        }
+
+        return $ret;
     }
 
     public function kewajibanLancar(?string $tanggal = null): float
@@ -64,9 +78,9 @@ class BranchOffice extends BaseModel
         return $res['1.200'] + $res['1.210'] + $res['1.220'];
     }
 
-    public function cashRatio(?string $tanggal = null): float
+    public function cashRatio(?string $tanggal = null, bool $simulated = false): float
     {
-        $assetLiquid = $this->assetLiquid($tanggal);
+        $assetLiquid = $this->assetLiquid($tanggal, $simulated);
         $kewajibanLancar = $this->kewajibanLancar($tanggal);
         if ($kewajibanLancar === 0.0) {
             return 0.0;
@@ -74,12 +88,18 @@ class BranchOffice extends BaseModel
         return $assetLiquid / $kewajibanLancar * 100;
     }
 
-    public function loanToDepositRatio(?string $tanggal = null): float
+    public function loanToDepositRatio(?string $tanggal = null, bool $simulated = false): float
     {
         // Single round-trip for all needed codes
         $res = $this->saldoNeraca(['1.130.1', '1.210', '1.220'], $tanggal);
 
         $bakiDebet = $res['1.130.1']; // kredit yang diberikan
+        if ($simulated) {
+            $proyeksiLendings = $this->proyeksiLendings()
+                ->whereRaw('lending_tanggal = CURDATE()')
+                ->sum('lending_booking_bersih');
+            $bakiDebet += $proyeksiLendings;
+        }
         $simpanan = $res['1.210'] + $res['1.220']; // total simpanan (tabungan + deposito)
 
         if ($simpanan === 0.0) {
@@ -89,14 +109,14 @@ class BranchOffice extends BaseModel
         return $bakiDebet / $simpanan * 100;
     }
 
-    public static function konsolidasiCashRatio(?string $tanggal = null): float
+    public static function konsolidasiCashRatio(?string $tanggal = null, bool $simulated = false): float
     {
         $totalLiquid = 0.0;
         $totalKewajibanLancar = 0.0;
 
-        static::query()->chunkById(200, function ($branches) use ($tanggal, &$totalLiquid, &$totalKewajibanLancar) {
+        static::query()->chunkById(200, function ($branches) use ($tanggal, $simulated, &$totalLiquid, &$totalKewajibanLancar) {
             foreach ($branches as $branch) {
-                $totalLiquid += $branch->assetLiquid($tanggal);
+                $totalLiquid += $branch->assetLiquid($tanggal, $simulated);
                 $totalKewajibanLancar += $branch->kewajibanLancar($tanggal);
             }
         });
@@ -104,15 +124,21 @@ class BranchOffice extends BaseModel
         return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
     }
 
-    public static function konsolidasiLDR(?string $tanggal = null): float
+    public static function konsolidasiLDR(?string $tanggal = null, bool $simulated = false): float
     {
         $totalBakiDebet = 0.0;
         $totalSimpanan = 0.0;
 
-        static::query()->chunkById(200, function ($branches) use ($tanggal, &$totalBakiDebet, &$totalSimpanan) {
+        static::query()->chunkById(200, function ($branches) use ($tanggal, $simulated, &$totalBakiDebet, &$totalSimpanan) {
             foreach ($branches as $branch) {
                 $res = $branch->saldoNeraca(['1.130.1', '1.210', '1.220'], $tanggal);
                 $totalBakiDebet += $res['1.130.1'];
+                if ($simulated) {
+                    $proyeksiLendings = $branch->proyeksiLendings()
+                        ->whereRaw('lending_tanggal = CURDATE()')
+                        ->sum('lending_booking_bersih');
+                    $totalBakiDebet += $proyeksiLendings;
+                }
                 $totalSimpanan += $res['1.210'] + $res['1.220'];
             }
         });
