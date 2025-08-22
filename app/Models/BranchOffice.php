@@ -15,6 +15,11 @@ class BranchOffice extends BaseModel
         return $this->hasMany(ProyeksiLending::class, 'lending_kantor', 'id');
     }
 
+    public function proyeksiFundings(): HasMany
+    {
+        return $this->hasMany(ProyeksiFunding::class, 'funding_kantor', 'id');
+    }
+
     public function users(): HasMany
     {
         return $this->hasMany(User::class, 'branch_office_id', 'id');
