@@ -74,6 +74,7 @@ class ProyeksiLendingResource extends Resource
                             ->label('Tanggal Lahir Debitur')
                             ->required()
                             ->prefixIcon('heroicon-o-cake')
+                            ->reactive()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_no_hp_debitur')
                             ->label('No. HP Debitur')
@@ -206,8 +207,9 @@ class ProyeksiLendingResource extends Resource
                             ->label('Plafond')
                             ->required()
                             ->prefix('Rp ')
+                            ->debounce()
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->reactive()
                             ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
@@ -220,7 +222,7 @@ class ProyeksiLendingResource extends Resource
                                 if ($provisiPercent) {
                                     $set(
                                         'lending_pot_provisi',
-                                        number_format(($plafond * $provisiPercent) / 100, 2, ',', '.')
+                                        number_format(($plafond * $provisiPercent) / 100, 0, ',', '.')
                                     );
                                 } elseif ($provisi) {
                                     $set('lending_pot_provisi_percent', $plafond ? ($provisi / $plafond) * 100 : 0);
@@ -229,18 +231,39 @@ class ProyeksiLendingResource extends Resource
                                 if ($adminPercent) {
                                     $set(
                                         'lending_pot_admin',
-                                        number_format(($plafond * $adminPercent) / 100, 2, ',', '.')
+                                        number_format(($plafond * $adminPercent) / 100, 0, ',', '.')
                                     );
                                 } elseif ($admin) {
                                     $set('lending_pot_admin_percent', $plafond ? ($admin / $plafond) * 100 : 0);
                                 }
                             })
                             ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_asuransi_perusahaan')
+                            ->label('Perusahaan Asuransi')
+                            ->prefixIcon('heroicon-o-building-office')
+                            ->required()
+                            ->inlineLabel(),
+                        Forms\Components\Select::make('lending_with_bpjs')
+                            ->label('Bundling BPJS?')
+                            ->prefixIcon('heroicon-o-shield-check')
+                            ->options([
+                                'YA' => 'YA',
+                                'TIDAK' => 'TIDAK',
+                            ])
+                            ->required()
+                            ->reactive()
+                            ->dehydrated()
+                            ->selectablePlaceholder(false)
+                            ->visible(
+                                fn($get) => $get('lending_tanggal_lahir_debitur')
+                                    && Carbon::parse($get('lending_tanggal_lahir_debitur'))->diffInYears(Carbon::now()) < 65
+                            )
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_bunga_percent')
                             ->label('Bunga p.a. (%)')
                             ->prefix('%')
                             ->numeric()
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
                             ->default(0)
                             ->required()
                             ->inlineLabel(),
@@ -259,7 +282,8 @@ class ProyeksiLendingResource extends Resource
                             ->label('Pelunasan Pokok')
                             ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp ')
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
+                            ->debounce()
                             ->numeric()
                             ->required()
                             ->visible(fn($get) => $get('lending_jenis_pengajuan') === 'TOP UP')
@@ -268,7 +292,8 @@ class ProyeksiLendingResource extends Resource
                             ->label('Pelunasan Bunga')
                             ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp ')
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
+                            ->debounce()
                             ->numeric()
                             ->required()
                             ->visible(fn($get) => $get('lending_jenis_pengajuan') === 'TOP UP')
@@ -284,14 +309,26 @@ class ProyeksiLendingResource extends Resource
                             ->numeric()
                             ->prefixIcon('heroicon-o-clock')
                             ->label('Jangka Waktu (Bulan)')
+                            ->reactive()
+                            ->debounce()
                             ->required()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                if ($get('lending_with_bpjs') === 'YA') {
+                                    // If using BPJS, calculate bundling BPJS cost
+                                    $bpjs = number_format($state * 16800, 0, ',', '.');  // 16,800 per bulan
+                                    $set('lending_bundling_bpjs', $bpjs);
+                                } else {
+                                    // Clear bundling BPJS if not using
+                                    $set('lending_bundling_bpjs', null);
+                                }
+                            })
                             ->inlineLabel(),
                         Forms\Components\Group::make([
                             Forms\Components\TextInput::make('lending_nominal_pelunasan_takeover')
                                 ->label('Nominal Pelunasan Takeover')
                                 ->prefix('Rp ')
                                 ->mask(RawJs::make('$money($input)'))
-                                ->stripCharacters(',')
+                                ->stripCharacters([',', '.'])
                                 ->numeric()
                                 ->required(fn($get) => filled($get('lending_mitra_bayar_takeover')))
                                 ->inlineLabel(),
@@ -324,7 +361,7 @@ class ProyeksiLendingResource extends Resource
                                 $state = floatval(str_replace(',', '', $state));
                                 $set(
                                     'lending_pot_provisi',
-                                    number_format(($plafond * $state) / 100, 2, ',', '.')
+                                    number_format(($plafond * $state) / 100, 0, ',', '.')
                                 );
                             })
                             ->inlineLabel(),
@@ -332,7 +369,7 @@ class ProyeksiLendingResource extends Resource
                             ->label('Provisi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->required()
                             ->debounce()
@@ -347,8 +384,6 @@ class ProyeksiLendingResource extends Resource
                         Forms\Components\TextInput::make('lending_pot_admin_percent')
                             ->label('Administrasi (%)')
                             ->prefix('%')
-                            ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
                             ->debounce()
                             ->disabled(fn($get) => blank($get('lending_plafond')))
                             ->reactive()
@@ -357,7 +392,7 @@ class ProyeksiLendingResource extends Resource
                                 $state = floatval(str_replace(',', '', $state));
                                 $set(
                                     'lending_pot_admin',
-                                    number_format(($plafond * $state) / 100, 2, ',', '.')
+                                    number_format(($plafond * $state) / 100, 0, ',', '.')
                                 );
                             })
                             ->numeric()
@@ -367,7 +402,7 @@ class ProyeksiLendingResource extends Resource
                             ->label('Administrasi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
                             ->debounce()
                             ->disabled(fn($get) => blank($get('lending_plafond')))
                             ->reactive()
@@ -383,7 +418,35 @@ class ProyeksiLendingResource extends Resource
                             ->label('Potongan Asuransi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->debounce()
+                            ->numeric()
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set('lending_pot_premi_percent', ($state / $plafond) * 100);
+                            })
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_pot_premi_percent')
+                            ->required()
+                            ->label('Potongan Asuransi (%)')
+                            ->prefix('%')
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters([',', '.'])
+                            ->debounce()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set(
+                                    'lending_pot_premi',
+                                    number_format(($plafond * $state) / 100, 0, ',', '.')
+                                );
+                            })
                             ->numeric()
                             ->required()
                             ->inlineLabel(),
@@ -391,15 +454,51 @@ class ProyeksiLendingResource extends Resource
                             ->label('Potongan Extra Premi')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
+                            ->numeric()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set('lending_pot_premi_extra_percent', ($state / $plafond) * 100);
+                            })
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_pot_premi_extra_percent')
+                            ->required()
+                            ->label('Potongan Extra Premi (%)')
+                            ->prefix('%')
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters([',', '.'])
+                            ->debounce()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set(
+                                    'lending_pot_premi_extra',
+                                    number_format(($plafond * $state) / 100, 0, ',', '.')
+                                );
+                            })
                             ->numeric()
                             ->required()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_bundling_bpjs')
+                            ->label('Bundling BPJS')
+                            ->prefix('Rp ')
+                            ->mask(RawJs::make('$money($input)'))
+                            ->visible(fn($get) => $get('lending_with_bpjs') === 'YA')
+                            ->stripCharacters([',', '.'])
+                            ->numeric()
+                            ->reactive()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_bunga_muka')
                             ->label('Bunga Diterima di Muka')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->required()
                             ->visible(fn($get) => ProdukLending::find($get('lending_produk'))?->produk_nama === 'DISKONTO')
@@ -423,7 +522,7 @@ class ProyeksiLendingResource extends Resource
                             ->label('Tabungan Mengendap')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->required()
                             ->visibleOn('view')
@@ -432,7 +531,7 @@ class ProyeksiLendingResource extends Resource
                             ->label('Angsuran di Muka')
                             ->prefix('Rp ')
                             ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
+                            ->stripCharacters([',', '.'])
                             ->numeric()
                             ->required()
                             ->visibleOn('view')
@@ -697,18 +796,20 @@ class ProyeksiLendingResource extends Resource
                                 'danger' => 'Rejected',
                             ]),
                         TextEntry::make('progress.status.progress_status')->label('Progress')->icon('heroicon-o-arrow-path'),
-                        TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2'),
+                        TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => $record->lending_tipe_pengajuan === 'Takeover' && filled($record->lending_mitra_bayar_takeover)),
                         TextEntry::make('lending_nama_koperasi_takeover')->label('Nama Koperasi Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => filled($record->lending_nama_koperasi_takeover)),
                         TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
+                        TextEntry::make('lending_tipe_pengajuan')->label('Tipe Pengajuan')->icon('heroicon-o-document-text'),
                         TextEntry::make('produk.produk_nama')->label('Produk')->icon('heroicon-o-briefcase'),
                         TextEntry::make('lending_plafond')->label('Plafond')->money('IDR')->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_booking_bersih')->label('Booking Bersih')->money('IDR')->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_tanggal_jatuh_tempo')->label('Tanggal Jatuh Tempo')->date()->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_asuransi_perusahaan')->label('Asuransi Perusahaan')->icon('heroicon-o-shield-check')->visible(fn($record) => filled($record->lending_asuransi_perusahaan)),
                         TextEntry::make('branchOffice.branch_name')->label('Kantor Cabang')->icon('heroicon-o-building-office-2'),
                         TextEntry::make('lending_bunga_percent')->label('Bunga')->suffix('%')->numeric()->icon('heroicon-o-chart-bar'),
                         TextEntry::make('lending_sistem_bunga')->label('Sistem Bunga')->icon('heroicon-o-calculator'),
-                        TextEntry::make('lending_pelunasan_pokok')->label('Pelunasan Pokok')->money('IDR')->icon('heroicon-o-banknotes'),
-                        TextEntry::make('lending_pelunasan_bunga')->label('Pelunasan Bunga')->money('IDR')->icon('heroicon-o-banknotes'),
+                        TextEntry::make('lending_pelunasan_pokok')->label('Pelunasan Pokok')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => $record->lending_jenis_pengajuan === 'TOP UP'),
+                        TextEntry::make('lending_pelunasan_bunga')->label('Pelunasan Bunga')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => $record->lending_jenis_pengajuan === 'TOP UP'),
                         TextEntry::make('lending_tanggal_realisasi')->label('Tanggal Realisasi')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('lending_jkw')->label('Jangka Waktu (Bulan)')->numeric()->icon('heroicon-o-clock'),
                         TextEntry::make('lending_nominal_pelunasan_takeover')->label('Nominal Pelunasan Takeover')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_nominal_pelunasan_takeover)),
@@ -725,8 +826,11 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('lending_pot_admin')->label('Administrasi')->money('IDR')->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_pot_admin_percent')->label('Administrasi (%)')->suffix('%')->numeric()->icon('heroicon-o-adjustments-horizontal'),
                         TextEntry::make('lending_pot_premi')->label('Potongan Asuransi')->money('IDR')->icon('heroicon-o-shield-check'),
+                        TextEntry::make('lending_pot_premi_percent')->label('Potongan Asuransi (%)')->suffix('%')->numeric()->icon('heroicon-o-adjustments-horizontal'),
                         TextEntry::make('lending_pot_premi_extra')->label('Potongan Extra Premi')->money('IDR')->icon('heroicon-o-shield-exclamation'),
-                        TextEntry::make('lending_bunga_muka')->label('Bunga Diterima di Muka')->money('IDR')->icon('heroicon-o-cash')->visible(fn($record) => filled($record->lending_bunga_muka)),
+                        TextEntry::make('lending_pot_premi_extra_percent')->label('Potongan Extra Premi (%)')->suffix('%')->numeric()->icon('heroicon-o-adjustments-horizontal'),
+                        TextEntry::make('lending_bundling_bpjs')->label('Bundling BPJS')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_bundling_bpjs)),
+                        TextEntry::make('lending_bunga_muka')->label('Bunga Diterima di Muka')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_bunga_muka)),
                         TextEntry::make('lending_saldo_tab_mengendap_bulan')->label('Tabungan Mengendap (Bulan)')->suffix('bulan')->numeric()->visible(fn($record) => filled($record->lending_saldo_tab_mengendap_bulan)),
                         TextEntry::make('lending_angsuran_muka_bulan')->label('Angsuran di Muka (Bulan)')->suffix('bulan')->numeric()->visible(fn($record) => filled($record->lending_angsuran_muka_bulan)),
                         TextEntry::make('lending_saldo_tab_mengendap')->label('Tabungan Mengendap')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_saldo_tab_mengendap)),

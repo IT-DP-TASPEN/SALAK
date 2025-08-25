@@ -81,6 +81,7 @@ class ProyeksiFundingResource extends Resource
                             ->stripCharacters(',')
                             ->numeric()
                             ->required()
+                            ->debounce()
                             ->reactive()
                             ->afterStateUpdated(function (callable $set, callable $get) {
                                 $nominal = $get('funding_nominal');
@@ -92,6 +93,7 @@ class ProyeksiFundingResource extends Resource
                             ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp ')
                             ->stripCharacters(',')
+                            ->debounce()
                             ->numeric()
                             ->required()
                             ->inlineLabel(),

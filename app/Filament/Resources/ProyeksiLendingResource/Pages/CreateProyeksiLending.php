@@ -49,13 +49,14 @@ class CreateProyeksiLending extends CreateRecord
             - $data['lending_pot_admin']
             - $data['lending_pot_premi']
             - $data['lending_pot_premi_extra']
+            - ($data['lending_bundling_bpjs'] ?? 0)
             - ($data['lending_bunga_muka'] ?? 0)
             - ($data['lending_saldo_tab_mengendap'] ?? 0)
             - ($data['lending_angsuran_muka'] ?? 0)
             - ($data['lending_nominal_pelunasan_takeover'] ?? 0);
 
         // remove lending_saldo_tab_mengendap_bulan and lending_angsuran_muka_bulan from data
-        unset($data['lending_saldo_tab_mengendap_bulan'], $data['lending_angsuran_muka_bulan']);
+        unset($data['lending_saldo_tab_mengendap_bulan'], $data['lending_angsuran_muka_bulan'], $data['lending_with_bpjs']);
 
         return $data;
     }
