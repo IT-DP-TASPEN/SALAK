@@ -120,31 +120,6 @@ class ProyeksiLendingResource extends Resource
                 Forms\Components\Fieldset::make('Informasi Lending')
                     ->columns(1)
                     ->schema([
-                        Forms\Components\Select::make('lending_mitra_bayar_takeover')
-                            ->label('Mitra Bayar Takeover')
-                            ->prefixIcon('heroicon-o-building-office-2')
-                            ->relationship(
-                                'mitraBayarTakeover',
-                                'mitra_nama',
-                            )
-                            ->hint('Isi ketika ada takeover')
-                            ->nullable()
-                            ->searchable()
-                            ->preload()
-                            ->reactive()
-                            ->inlineLabel(),
-                        Forms\Components\TextInput::make('lending_nama_koperasi_takeover')
-                            ->label('Nama Koperasi Takeover')
-                            ->prefixIcon('heroicon-o-building-office-2')
-                            ->maxLength(255)
-                            ->inlineLabel()
-                            ->required()
-                            ->visible(
-                                function ($get) {
-                                    $mitra = $get('lending_mitra_bayar_takeover');
-                                    return MitraBayar::find($mitra)?->mitra_nama === 'KOPERASI';
-                                }
-                            ),
                         Forms\Components\Select::make('lending_jenis_pengajuan')
                             ->label('Jenis Pengajuan')
                             ->prefixIcon('heroicon-o-document-text')
@@ -155,7 +130,68 @@ class ProyeksiLendingResource extends Resource
                                 }
                             )
                             ->required()
+                            ->reactive()
                             ->inlineLabel(),
+                        Forms\Components\Select::make('lending_tipe_pengajuan')
+                            ->label('Tipe Pengajuan')
+                            ->options([
+                                'Takeover' => 'Takeover',
+                                'Dapem sudah di Bank DP TASPEN' => 'Dapem sudah di Bank DP TASPEN',
+                                'Non-takeover (Dapem di bank lain, mutasi ke Bank DP TASPEN)' => 'Non-takeover (Dapem di bank lain, mutasi ke Bank DP TASPEN)',
+                            ])
+                            ->prefixIcon('heroicon-o-document-text')
+                            ->visible(fn($get) => $get('lending_jenis_pengajuan') === 'BARU')
+                            ->required()
+                            ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state) {
+                                if ($state !== 'Takeover') {
+                                    // Clear takeover-related state so dependents hide
+                                    $set('lending_mitra_bayar_takeover', null);
+                                    $set('lending_nominal_pelunasan_takeover', null);
+                                    $set('lending_tanggal_rencana_takeover', null);
+                                    $set('lending_nama_koperasi_takeover', null);
+                                }
+                            })
+                            ->inlineLabel(),
+                        Forms\Components\Select::make('lending_mitra_bayar_takeover')
+                            ->label('Bank yang Akan di Takeover')
+                            ->prefixIcon('heroicon-o-building-office-2')
+                            ->relationship(
+                                'mitraBayarTakeover',
+                                'mitra_nama',
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->reactive()
+                            ->required()
+                            ->visible(
+                                fn($get) => $get('lending_jenis_pengajuan') === 'BARU'
+                                    && $get('lending_tipe_pengajuan') === 'Takeover'
+                            )
+                            ->afterStateUpdated(function (Forms\Set $set, $state) {
+                                // If cleared or changed to non-KOPERASI, clear koperasi name and takeover fields as needed
+                                if (!$state) {
+                                    $set('lending_nominal_pelunasan_takeover', null);
+                                    $set('lending_tanggal_rencana_takeover', null);
+                                    $set('lending_nama_koperasi_takeover', null);
+                                    return;
+                                }
+                                $mitra = \App\Models\MitraBayar::find($state);
+                                if (!$mitra || $mitra->mitra_nama !== 'KOPERASI') {
+                                    $set('lending_nama_koperasi_takeover', null);
+                                }
+                            })
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_nama_koperasi_takeover')
+                            ->label('Nama Koperasi Takeover')
+                            ->prefixIcon('heroicon-o-building-office-2')
+                            ->maxLength(255)
+                            ->inlineLabel()
+                            ->required()
+                            ->visible(function (Forms\Get $get) {
+                                $mitra = $get('lending_mitra_bayar_takeover');
+                                return \App\Models\MitraBayar::find($mitra)?->mitra_nama === 'KOPERASI';
+                            }),
                         Forms\Components\Select::make('lending_produk')
                             ->label('Produk')
                             ->prefixIcon('heroicon-o-briefcase')
@@ -182,20 +218,26 @@ class ProyeksiLendingResource extends Resource
                                 $plafond = floatval(str_replace(',', '', $state));
 
                                 if ($provisiPercent) {
-                                    $set('lending_pot_provisi', ($plafond * $provisiPercent) / 100);
+                                    $set(
+                                        'lending_pot_provisi',
+                                        number_format(($plafond * $provisiPercent) / 100, 2, ',', '.')
+                                    );
                                 } elseif ($provisi) {
                                     $set('lending_pot_provisi_percent', $plafond ? ($provisi / $plafond) * 100 : 0);
                                 }
 
                                 if ($adminPercent) {
-                                    $set('lending_pot_admin', ($plafond * $adminPercent) / 100);
+                                    $set(
+                                        'lending_pot_admin',
+                                        number_format(($plafond * $adminPercent) / 100, 2, ',', '.')
+                                    );
                                 } elseif ($admin) {
                                     $set('lending_pot_admin_percent', $plafond ? ($admin / $plafond) * 100 : 0);
                                 }
                             })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_bunga_percent')
-                            ->label('Bunga (%)')
+                            ->label('Bunga p.a. (%)')
                             ->prefix('%')
                             ->numeric()
                             ->stripCharacters(',')
@@ -220,6 +262,7 @@ class ProyeksiLendingResource extends Resource
                             ->stripCharacters(',')
                             ->numeric()
                             ->required()
+                            ->visible(fn($get) => $get('lending_jenis_pengajuan') === 'TOP UP')
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pelunasan_bunga')
                             ->label('Pelunasan Bunga')
@@ -228,6 +271,7 @@ class ProyeksiLendingResource extends Resource
                             ->stripCharacters(',')
                             ->numeric()
                             ->required()
+                            ->visible(fn($get) => $get('lending_jenis_pengajuan') === 'TOP UP')
                             ->inlineLabel(),
                         Forms\Components\DatePicker::make('lending_tanggal_realisasi')
                             ->label('Tanggal Realisasi')
@@ -267,6 +311,23 @@ class ProyeksiLendingResource extends Resource
                 Forms\Components\Fieldset::make('Potongan dan Saldo')
                     ->columns(1)
                     ->schema([
+                        Forms\Components\TextInput::make('lending_pot_provisi_percent')
+                            ->label('Provisi (%)')
+                            ->prefix('%')
+                            ->required()
+                            ->debounce()
+                            ->reactive()
+                            ->numeric()
+                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
+                                $plafond =  floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set(
+                                    'lending_pot_provisi',
+                                    number_format(($plafond * $state) / 100, 2, ',', '.')
+                                );
+                            })
+                            ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_provisi')
                             ->label('Provisi')
                             ->prefix('Rp ')
@@ -283,18 +344,24 @@ class ProyeksiLendingResource extends Resource
                                 $set('lending_pot_provisi_percent', ($state / $plafond) * 100);
                             })
                             ->inlineLabel(),
-                        Forms\Components\TextInput::make('lending_pot_provisi_percent')
-                            ->label('Provisi (%)')
+                        Forms\Components\TextInput::make('lending_pot_admin_percent')
+                            ->label('Administrasi (%)')
                             ->prefix('%')
-                            ->required()
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters(',')
                             ->debounce()
-                            ->reactive()
-                            ->numeric()
                             ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->reactive()
                             ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
-                                $plafond =  floatval(str_replace(',', '', $get('lending_plafond')));
-                                $set('lending_pot_provisi', ($plafond * $state) / 100);
+                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $state = floatval(str_replace(',', '', $state));
+                                $set(
+                                    'lending_pot_admin',
+                                    number_format(($plafond * $state) / 100, 2, ',', '.')
+                                );
                             })
+                            ->numeric()
+                            ->required()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_admin')
                             ->label('Administrasi')
@@ -308,21 +375,6 @@ class ProyeksiLendingResource extends Resource
                                 $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
                                 $state = floatval(str_replace(',', '', $state));
                                 $set('lending_pot_admin_percent', ($state / $plafond) * 100);
-                            })
-                            ->numeric()
-                            ->required()
-                            ->inlineLabel(),
-                        Forms\Components\TextInput::make('lending_pot_admin_percent')
-                            ->label('Administrasi (%)')
-                            ->prefix('%')
-                            ->mask(RawJs::make('$money($input)'))
-                            ->stripCharacters(',')
-                            ->debounce()
-                            ->disabled(fn($get) => blank($get('lending_plafond')))
-                            ->reactive()
-                            ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
-                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
-                                $set('lending_pot_admin', ($plafond * $state) / 100);
                             })
                             ->numeric()
                             ->required()
@@ -350,7 +402,8 @@ class ProyeksiLendingResource extends Resource
                             ->stripCharacters(',')
                             ->numeric()
                             ->required()
-                            ->visibleOn('view')
+                            ->visible(fn($get) => ProdukLending::find($get('lending_produk'))?->produk_nama === 'DISKONTO')
+                            ->reactive()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_saldo_tab_mengendap_bulan')
                             ->label('Tabungan Mengendap')
