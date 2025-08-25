@@ -17,9 +17,4 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions): void {
         //
     })
-    ->withSchedule(function (Schedule $schedule): void {
-        $schedule
-            ->command('cache:refresh-kredit-kolek')
-            ->dailyAt('05:00');
-    })
     ->create();
