@@ -14,13 +14,14 @@ class LoanToDepositRatioChart extends ChartWidget
     protected static ?int $sort = -7;
 
     public ?string $tanggal = null;
+    public bool $simulated = false;
 
     protected function getData(): array
     {
         $ldrPerKC = BranchOffice::all()
             ->mapWithKeys(function (BranchOffice $branchOffice) {
                 return [
-                    $branchOffice->branch_name => $branchOffice->loanToDepositRatio($this->tanggal),
+                    $branchOffice->branch_name => $branchOffice->loanToDepositRatio($this->tanggal, $this->simulated),
                 ];
             });
         $labels = $ldrPerKC->keys()->toArray();
@@ -48,6 +49,8 @@ class LoanToDepositRatioChart extends ChartWidget
             'yesterday' => $this->tanggal = Carbon::yesterday()->format('Y-m-d'),
             'simulation' => $this->tanggal = Carbon::now()->format('Y-m-d'),
         };
+
+        $this->simulated = $chartType === 'simulation';
     }
 
     protected function getType(): string

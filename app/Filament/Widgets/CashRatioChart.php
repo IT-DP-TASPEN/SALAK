@@ -14,13 +14,14 @@ class CashRatioChart extends ChartWidget
     protected static ?int $sort = -9;
 
     public ?string $tanggal = null;
+    public bool $simulated = false;
 
     protected function getData(): array
     {
         $cashRatioPerKC = BranchOffice::all()
             ->mapWithKeys(function (BranchOffice $branchOffice) {
                 return [
-                    $branchOffice->branch_name => $branchOffice->cashRatio($this->tanggal),
+                    $branchOffice->branch_name => $branchOffice->cashRatio($this->tanggal, $this->simulated),
                 ];
             });
         $labels = $cashRatioPerKC->keys()->toArray();
@@ -48,6 +49,8 @@ class CashRatioChart extends ChartWidget
             'yesterday' => $this->tanggal = Carbon::yesterday()->format('Y-m-d'),
             'simulation' => $this->tanggal = Carbon::now()->format('Y-m-d'),
         };
+
+        $this->simulated = $chartType === 'simulation';
     }
 
     protected function getType(): string

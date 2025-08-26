@@ -12,8 +12,8 @@ use Livewire\Attributes\On;
 class LiquidityStatsOverview extends BaseWidget
 {
     protected static ?int $sort = -10;
-
     public ?string $tanggal = null;
+    public bool $simulated = false;
 
     protected function getColumns(): int
     {
@@ -30,8 +30,8 @@ class LiquidityStatsOverview extends BaseWidget
         $nplPercentage = $totalBakiDebet > 0
             ? ($totalNplBakiDebet / $totalBakiDebet) * 100
             : 0;
-        $cashRatio = BranchOffice::konsolidasiCashRatio($this->tanggal);
-        $ldr = BranchOffice::konsolidasiLDR($this->tanggal);
+        $cashRatio = BranchOffice::konsolidasiCashRatio($this->tanggal, $this->simulated);
+        $ldr = BranchOffice::konsolidasiLDR($this->tanggal, $this->simulated);
 
         $kshtNpl = match (true) {
             $nplPercentage <= 5 => [
@@ -124,5 +124,7 @@ class LiquidityStatsOverview extends BaseWidget
             'yesterday' => $this->tanggal = Carbon::yesterday()->format('Y-m-d'),
             'simulation' => $this->tanggal = Carbon::now()->format('Y-m-d'),
         };
+
+        $this->simulated = $chartType === 'simulation';
     }
 }
