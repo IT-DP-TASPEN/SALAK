@@ -14,6 +14,7 @@ class LiquidityStatsOverview extends BaseWidget
     protected static ?int $sort = -10;
     public ?string $tanggal = null;
     public bool $simulated = false;
+    public bool $efektif = true;
 
     protected function getColumns(): int
     {
@@ -30,7 +31,7 @@ class LiquidityStatsOverview extends BaseWidget
         $nplPercentage = $totalBakiDebet > 0
             ? ($totalNplBakiDebet / $totalBakiDebet) * 100
             : 0;
-        $cashRatio = BranchOffice::konsolidasiCashRatio($this->tanggal, $this->simulated);
+        $cashRatio = BranchOffice::konsolidasiCashRatio($this->tanggal, $this->simulated, $this->efektif);
         $ldr = BranchOffice::konsolidasiLDR($this->tanggal, $this->simulated);
 
         $kshtNpl = match (true) {
@@ -126,5 +127,11 @@ class LiquidityStatsOverview extends BaseWidget
         };
 
         $this->simulated = $chartType === 'simulation';
+    }
+
+    #[On('balanceTypeChanged')]
+    public function handleBalanceTypeChanged(string $balanceType): void
+    {
+        $this->efektif = $balanceType === 'effective';
     }
 }

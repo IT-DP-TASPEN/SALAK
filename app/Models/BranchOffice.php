@@ -45,7 +45,7 @@ class BranchOffice extends BaseModel
         return $this->saldoNeraca(['1.100'], $tanggal)['1.100'];
     }
 
-    public function assetLiquid(?string $tanggal = null, bool $simulated = false): float
+    public function assetLiquid(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
         // TODO: take $tanggal into account
         $giroTab = $this
@@ -55,7 +55,7 @@ class BranchOffice extends BaseModel
 
         $kas = $this->saldoKas($tanggal);
 
-        $ret = $kas + $giroTab - $this->branch_saldo_aba_blokir;
+        $ret = $kas + $giroTab - ($efektif ? $this->branch_saldo_aba_blokir : 0.0);
 
         if ($simulated) {
             $proyeksiLendings = $this->proyeksiLendings()
@@ -114,14 +114,14 @@ class BranchOffice extends BaseModel
         return $bakiDebet / $simpanan * 100;
     }
 
-    public static function konsolidasiCashRatio(?string $tanggal = null, bool $simulated = false): float
+    public static function konsolidasiCashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
         $totalLiquid = 0.0;
         $totalKewajibanLancar = 0.0;
 
-        static::query()->chunkById(200, function ($branches) use ($tanggal, $simulated, &$totalLiquid, &$totalKewajibanLancar) {
+        static::query()->chunkById(200, function ($branches) use ($tanggal, $simulated, $efektif, &$totalLiquid, &$totalKewajibanLancar) {
             foreach ($branches as $branch) {
-                $totalLiquid += $branch->assetLiquid($tanggal, $simulated);
+                $totalLiquid += $branch->assetLiquid($tanggal, $simulated, $efektif);
                 $totalKewajibanLancar += $branch->kewajibanLancar($tanggal);
             }
         });

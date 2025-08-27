@@ -35,6 +35,18 @@ class ChartTypeFilter extends Widget implements HasForms
                         $this->dispatch('chartTypeChanged', $state);
                     })
                     ->selectablePlaceholder(false),
+                Select::make('balance_type')
+                    ->label('Tipe Saldo')
+                    ->options([
+                        'effective' => 'Saldo Efektif',
+                        'book' => 'Saldo Buku',
+                    ])
+                    ->reactive()
+                    ->columnSpanFull()
+                    ->afterStateUpdated(function ($state) {
+                        $this->dispatch('balanceTypeChanged', $state);
+                    })
+                    ->selectablePlaceholder(false),
             ]);
     }
 }
