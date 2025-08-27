@@ -670,8 +670,8 @@ class ProyeksiLendingResource extends Resource
                             }
                         )
                         ->visible(fn(ProyeksiLending $record) => (
-                            auth()->user()?->can('create_proyeksilendingprogress')
-                            || auth()->user()?->can('update_proyeksilendingprogress')
+                            auth()->user()?->can('create_proyeksi::lending::progress')
+                            || auth()->user()?->can('update_proyeksi::lending::progress')
                         ) && $record->approval->approval_status === 'Approved'),
                     Tables\Actions\EditAction::make(),
                     Tables\Actions\DeleteAction::make(),
@@ -684,8 +684,8 @@ class ProyeksiLendingResource extends Resource
                         ->icon('heroicon-o-arrow-path')
                         ->visible(function () {
                             $usr = auth()->user();
-                            return $usr->can('create_proyeksilendingprogress')
-                                || $usr->can('update_proyeksilendingprogress');
+                            return $usr->can('create_proyeksi::lending::progress')
+                                || $usr->can('update_proyeksi::lending::progress');
                         })
                         ->form([
                             Select::make('progress_status')

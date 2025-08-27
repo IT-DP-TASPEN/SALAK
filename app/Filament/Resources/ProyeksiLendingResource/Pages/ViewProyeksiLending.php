@@ -22,7 +22,7 @@ class ViewProyeksiLending extends ViewRecord
             Actions\Action::make('edit')
                 ->label('Edit Lending')
                 ->icon('heroicon-o-pencil-square')
-                ->visible(fn(ProyeksiLending $record) => auth()->user()?->can('update_proyeksilending'))
+                ->visible(fn(ProyeksiLending $record) => auth()->user()?->can('update_proyeksi::lending'))
                 ->url(fn(ProyeksiLending $record): string => ProyeksiLendingResource::getUrl('edit', ['record' => $record])),
             Actions\Action::make('update_progress')
                 ->label('Update Progress')
@@ -53,15 +53,15 @@ class ViewProyeksiLending extends ViewRecord
                     }
                 )
                 ->visible(fn(ProyeksiLending $record) => (
-                    auth()->user()?->can('create_proyeksilendingprogress')
-                    || auth()->user()?->can('update_proyeksilendingprogress')
+                    auth()->user()?->can('create_proyeksi::lending::progress')
+                    || auth()->user()?->can('update_proyeksi::lending::progress')
                 ) && $record->approval->approval_status === 'Approved'),
             Actions\Action::make('approve')
                 ->label('Approve')
                 ->icon('heroicon-o-check')
                 ->visible(
                     fn(ProyeksiLending $record) =>
-                    auth()->user()?->can('create_proyeksilendingapproval')
+                    auth()->user()?->can('create_proyeksi::lending::approval')
                         && (
                             $record->approval === null
                             || $record->approval->approval_status === 'Pending'
@@ -98,7 +98,7 @@ class ViewProyeksiLending extends ViewRecord
                 ->icon('heroicon-o-x-mark')
                 ->visible(
                     fn(ProyeksiLending $record) =>
-                    auth()->user()?->can('create_proyeksilendingapproval')
+                    auth()->user()?->can('create_proyeksi::lending::approval')
                         && (
                             $record->approval === null
                             || $record->approval->approval_status === 'Pending'

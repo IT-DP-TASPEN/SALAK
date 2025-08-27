@@ -33,8 +33,22 @@ class ProyeksiFundingResource extends Resource
                 Forms\Components\Fieldset::make()
                     ->columns(1)
                     ->schema([
+                        Forms\Components\Select::make('funding_agent')
+                            ->label('Agent')
+                            ->prefixIcon('heroicon-o-user-group')
+                            ->relationship(
+                                'agent',
+                                'agent_nama',
+                                fn($query) => $query
+                                    ->where('agent_branch_office', auth()->user()->branchOffice->id)
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\Select::make('funding_jenis')
                             ->label('Jenis Funding')
+                            ->prefixIcon('heroicon-o-currency-dollar')
                             ->options(
                                 function () {
                                     $opts = ProdukFunding::getPossibleEnumValues('produk_jenis');
@@ -47,6 +61,7 @@ class ProyeksiFundingResource extends Resource
                             ->inlineLabel(),
                         Forms\Components\Select::make('funding_produk')
                             ->label('Produk Funding')
+                            ->prefixIcon('heroicon-o-circle-stack')
                             ->disabled(fn(callable $get) => empty($get('funding_jenis')))
                             ->options(
                                 function (callable $get) {
@@ -60,6 +75,7 @@ class ProyeksiFundingResource extends Resource
                             ->inlineLabel(),
                         Forms\Components\Select::make('funding_deposito_jenis')
                             ->label('Jenis Deposito')
+                            ->prefixIcon('heroicon-o-currency-dollar')
                             ->visible(fn(callable $get) => $get('funding_jenis') === 'Deposito')
                             ->options(
                                 function () {
@@ -71,6 +87,7 @@ class ProyeksiFundingResource extends Resource
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('funding_nasabah_nama')
                             ->label('Nama Nasabah')
+                            ->prefixIcon('heroicon-o-user')
                             ->required()
                             ->maxLength(255)
                             ->inlineLabel(),
@@ -120,7 +137,7 @@ class ProyeksiFundingResource extends Resource
                 Tables\Columns\TextColumn::make('branchOffice.branch_name')
                     ->label('Kantor Cabang')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('agent.name')
+                Tables\Columns\TextColumn::make('agent.agent_name')
                     ->label('Agent')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('produk.produk_nama')
@@ -217,7 +234,7 @@ class ProyeksiFundingResource extends Resource
                             ->date('d M Y'),
                         TextEntry::make('branchOffice.branch_name')
                             ->label('Kantor Cabang'),
-                        TextEntry::make('agent.name')
+                        TextEntry::make('agent.agent_nama')
                             ->label('Agent'),
                         TextEntry::make('produk.produk_nama')
                             ->label('Produk'),

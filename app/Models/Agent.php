@@ -29,4 +29,9 @@ class Agent extends Model
     {
         return $this->hasMany(ProyeksiLending::class, 'lending_agent', 'id');
     }
+
+    public function proyeksiFunding(): HasMany
+    {
+        return $this->hasMany(ProyeksiFunding::class, 'funding_agent', 'id');
+    }
 }

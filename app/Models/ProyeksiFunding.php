@@ -41,7 +41,7 @@ class ProyeksiFunding extends BaseModel
 
     public function agent(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'funding_agent', 'id');
+        return $this->belongsTo(Agent::class, 'funding_agent', 'id');
     }
 
     public function produk(): BelongsTo

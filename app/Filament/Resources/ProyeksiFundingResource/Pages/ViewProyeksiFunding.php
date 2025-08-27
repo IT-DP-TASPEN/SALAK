@@ -20,14 +20,14 @@ class ViewProyeksiFunding extends ViewRecord
             Actions\Action::make('edit')
                 ->label('Edit Funding')
                 ->icon('heroicon-o-pencil-square')
-                ->visible(fn(ProyeksiFunding $record) => auth()->user()?->can('update_proyeksifunding'))
+                ->visible(fn(ProyeksiFunding $record) => auth()->user()?->can('update_proyeksi::funding'))
                 ->url(fn(ProyeksiFunding $record): string => ProyeksiFundingResource::getUrl('edit', ['record' => $record])),
             Actions\Action::make('approve')
                 ->label('Approve')
                 ->icon('heroicon-o-check')
                 ->visible(
                     fn(ProyeksiFunding $record) =>
-                    auth()->user()?->can('create_proyeksifundingapproval')
+                    auth()->user()?->can('create_proyeksi::funding::approval')
                         && (
                             $record->approval === null
                             || $record->approval->approval_status === 'Pending'
@@ -64,7 +64,7 @@ class ViewProyeksiFunding extends ViewRecord
                 ->icon('heroicon-o-x-mark')
                 ->visible(
                     fn(ProyeksiFunding $record) =>
-                    auth()->user()?->can('create_proyeksifundingapproval')
+                    auth()->user()?->can('create_proyeksi::funding::approval')
                         && (
                             $record->approval === null
                             || $record->approval->approval_status === 'Pending'

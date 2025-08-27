@@ -68,13 +68,13 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(BranchOffice::class, 'branch_office_id', 'id');
     }
 
-    public function proyeksiLendings(): HasMany
-    {
-        return $this->hasMany(ProyeksiLending::class, 'lending_agent', 'id');
-    }
-
     public function proyeksiLendingApprovals(): HasMany
     {
         return $this->hasMany(ProyeksiLendingApproval::class, 'approval_user', 'id');
+    }
+
+    public function proyeksiFundingApprovals(): HasMany
+    {
+        return $this->hasMany(ProyeksiFundingApproval::class, 'approval_user', 'id');
     }
 }
