@@ -15,7 +15,7 @@ class ProdukLendingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_produklending');
+        return $user->can('view_any_produk::lending');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProdukLendingPolicy
      */
     public function view(User $user, ProdukLending $produkLending): bool
     {
-        return $user->can('view_produklending');
+        return $user->can('view_produk::lending');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProdukLendingPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_produklending');
+        return $user->can('create_produk::lending');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProdukLendingPolicy
      */
     public function update(User $user, ProdukLending $produkLending): bool
     {
-        return $user->can('update_produklending');
+        return $user->can('update_produk::lending');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProdukLendingPolicy
      */
     public function delete(User $user, ProdukLending $produkLending): bool
     {
-        return $user->can('delete_produklending');
+        return $user->can('delete_produk::lending');
     }
 
     /**
@@ -55,7 +55,7 @@ class ProdukLendingPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_produklending');
+        return $user->can('delete_any_produk::lending');
     }
 
     /**
@@ -63,7 +63,7 @@ class ProdukLendingPolicy
      */
     public function forceDelete(User $user, ProdukLending $produkLending): bool
     {
-        return $user->can('force_delete_produklending');
+        return $user->can('force_delete_produk::lending');
     }
 
     /**
@@ -71,7 +71,7 @@ class ProdukLendingPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_produklending');
+        return $user->can('force_delete_any_produk::lending');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProdukLendingPolicy
      */
     public function restore(User $user, ProdukLending $produkLending): bool
     {
-        return $user->can('restore_produklending');
+        return $user->can('restore_produk::lending');
     }
 
     /**
@@ -87,7 +87,7 @@ class ProdukLendingPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_produklending');
+        return $user->can('restore_any_produk::lending');
     }
 
     /**
@@ -95,7 +95,7 @@ class ProdukLendingPolicy
      */
     public function replicate(User $user, ProdukLending $produkLending): bool
     {
-        return $user->can('replicate_produklending');
+        return $user->can('replicate_produk::lending');
     }
 
     /**
@@ -103,6 +103,6 @@ class ProdukLendingPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_produklending');
+        return $user->can('reorder_produk::lending');
     }
 }

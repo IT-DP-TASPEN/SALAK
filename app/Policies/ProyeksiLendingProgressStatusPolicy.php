@@ -15,7 +15,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_proyeksilendingprogressstatus');
+        return $user->can('view_any_proyeksi::lending::progress::status');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function view(User $user, ProyeksiLendingProgressStatus $proyeksiLendingProgressStatus): bool
     {
-        return $user->can('view_proyeksilendingprogressstatus');
+        return $user->can('view_proyeksi::lending::progress::status');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_proyeksilendingprogressstatus');
+        return $user->can('create_proyeksi::lending::progress::status');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function update(User $user, ProyeksiLendingProgressStatus $proyeksiLendingProgressStatus): bool
     {
-        return $user->can('update_proyeksilendingprogressstatus');
+        return $user->can('update_proyeksi::lending::progress::status');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function delete(User $user, ProyeksiLendingProgressStatus $proyeksiLendingProgressStatus): bool
     {
-        return $user->can('delete_proyeksilendingprogressstatus');
+        return $user->can('delete_proyeksi::lending::progress::status');
     }
 
     /**
@@ -55,7 +55,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_proyeksilendingprogressstatus');
+        return $user->can('delete_any_proyeksi::lending::progress::status');
     }
 
     /**
@@ -63,7 +63,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function forceDelete(User $user, ProyeksiLendingProgressStatus $proyeksiLendingProgressStatus): bool
     {
-        return $user->can('force_delete_proyeksilendingprogressstatus');
+        return $user->can('force_delete_proyeksi::lending::progress::status');
     }
 
     /**
@@ -71,7 +71,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_proyeksilendingprogressstatus');
+        return $user->can('force_delete_any_proyeksi::lending::progress::status');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function restore(User $user, ProyeksiLendingProgressStatus $proyeksiLendingProgressStatus): bool
     {
-        return $user->can('restore_proyeksilendingprogressstatus');
+        return $user->can('restore_proyeksi::lending::progress::status');
     }
 
     /**
@@ -87,7 +87,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_proyeksilendingprogressstatus');
+        return $user->can('restore_any_proyeksi::lending::progress::status');
     }
 
     /**
@@ -95,7 +95,7 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function replicate(User $user, ProyeksiLendingProgressStatus $proyeksiLendingProgressStatus): bool
     {
-        return $user->can('replicate_proyeksilendingprogressstatus');
+        return $user->can('replicate_proyeksi::lending::progress::status');
     }
 
     /**
@@ -103,6 +103,6 @@ class ProyeksiLendingProgressStatusPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_proyeksilendingprogressstatus');
+        return $user->can('reorder_proyeksi::lending::progress::status');
     }
 }

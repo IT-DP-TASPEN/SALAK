@@ -15,7 +15,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_proyeksilendingapproval');
+        return $user->can('view_any_proyeksi::lending::approval');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function view(User $user, ProyeksiLendingApproval $proyeksiLendingApproval): bool
     {
-        return $user->can('view_proyeksilendingapproval');
+        return $user->can('view_proyeksi::lending::approval');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_proyeksilendingapproval');
+        return $user->can('create_proyeksi::lending::approval');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function update(User $user, ProyeksiLendingApproval $proyeksiLendingApproval): bool
     {
-        return $user->can('update_proyeksilendingapproval');
+        return $user->can('update_proyeksi::lending::approval');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function delete(User $user, ProyeksiLendingApproval $proyeksiLendingApproval): bool
     {
-        return $user->can('delete_proyeksilendingapproval');
+        return $user->can('delete_proyeksi::lending::approval');
     }
 
     /**
@@ -55,7 +55,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_proyeksilendingapproval');
+        return $user->can('delete_any_proyeksi::lending::approval');
     }
 
     /**
@@ -63,7 +63,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function forceDelete(User $user, ProyeksiLendingApproval $proyeksiLendingApproval): bool
     {
-        return $user->can('force_delete_proyeksilendingapproval');
+        return $user->can('force_delete_proyeksi::lending::approval');
     }
 
     /**
@@ -71,7 +71,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_proyeksilendingapproval');
+        return $user->can('force_delete_any_proyeksi::lending::approval');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function restore(User $user, ProyeksiLendingApproval $proyeksiLendingApproval): bool
     {
-        return $user->can('restore_proyeksilendingapproval');
+        return $user->can('restore_proyeksi::lending::approval');
     }
 
     /**
@@ -87,7 +87,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_proyeksilendingapproval');
+        return $user->can('restore_any_proyeksi::lending::approval');
     }
 
     /**
@@ -95,7 +95,7 @@ class ProyeksiLendingApprovalPolicy
      */
     public function replicate(User $user, ProyeksiLendingApproval $proyeksiLendingApproval): bool
     {
-        return $user->can('replicate_proyeksilendingapproval');
+        return $user->can('replicate_proyeksi::lending::approval');
     }
 
     /**
@@ -103,6 +103,6 @@ class ProyeksiLendingApprovalPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_proyeksilendingapproval');
+        return $user->can('reorder_proyeksi::lending::approval');
     }
 }

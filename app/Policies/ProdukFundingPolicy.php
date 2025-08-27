@@ -15,7 +15,7 @@ class ProdukFundingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_produkfunding');
+        return $user->can('view_any_produk::funding');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProdukFundingPolicy
      */
     public function view(User $user, ProdukFunding $produkFunding): bool
     {
-        return $user->can('view_produkfunding');
+        return $user->can('view_produk::funding');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProdukFundingPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_produkfunding');
+        return $user->can('create_produk::funding');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProdukFundingPolicy
      */
     public function update(User $user, ProdukFunding $produkFunding): bool
     {
-        return $user->can('update_produkfunding');
+        return $user->can('update_produk::funding');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProdukFundingPolicy
      */
     public function delete(User $user, ProdukFunding $produkFunding): bool
     {
-        return $user->can('delete_produkfunding');
+        return $user->can('delete_produk::funding');
     }
 
     /**
@@ -55,7 +55,7 @@ class ProdukFundingPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_produkfunding');
+        return $user->can('delete_any_produk::funding');
     }
 
     /**
@@ -63,7 +63,7 @@ class ProdukFundingPolicy
      */
     public function forceDelete(User $user, ProdukFunding $produkFunding): bool
     {
-        return $user->can('force_delete_produkfunding');
+        return $user->can('force_delete_produk::funding');
     }
 
     /**
@@ -71,7 +71,7 @@ class ProdukFundingPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_produkfunding');
+        return $user->can('force_delete_any_produk::funding');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProdukFundingPolicy
      */
     public function restore(User $user, ProdukFunding $produkFunding): bool
     {
-        return $user->can('restore_produkfunding');
+        return $user->can('restore_produk::funding');
     }
 
     /**
@@ -87,7 +87,7 @@ class ProdukFundingPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_produkfunding');
+        return $user->can('restore_any_produk::funding');
     }
 
     /**
@@ -95,7 +95,7 @@ class ProdukFundingPolicy
      */
     public function replicate(User $user, ProdukFunding $produkFunding): bool
     {
-        return $user->can('replicate_produkfunding');
+        return $user->can('replicate_produk::funding');
     }
 
     /**
@@ -103,6 +103,6 @@ class ProdukFundingPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_produkfunding');
+        return $user->can('reorder_produk::funding');
     }
 }

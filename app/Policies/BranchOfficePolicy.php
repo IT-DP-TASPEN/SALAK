@@ -15,7 +15,7 @@ class BranchOfficePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_branchoffice');
+        return $user->can('view_any_branch::office');
     }
 
     /**
@@ -23,7 +23,7 @@ class BranchOfficePolicy
      */
     public function view(User $user, BranchOffice $branchOffice): bool
     {
-        return $user->can('view_branchoffice');
+        return $user->can('view_branch::office');
     }
 
     /**
@@ -31,7 +31,7 @@ class BranchOfficePolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_branchoffice');
+        return $user->can('create_branch::office');
     }
 
     /**
@@ -39,7 +39,7 @@ class BranchOfficePolicy
      */
     public function update(User $user, BranchOffice $branchOffice): bool
     {
-        return $user->can('update_branchoffice');
+        return $user->can('update_branch::office');
     }
 
     /**
@@ -47,7 +47,7 @@ class BranchOfficePolicy
      */
     public function delete(User $user, BranchOffice $branchOffice): bool
     {
-        return $user->can('delete_branchoffice');
+        return $user->can('delete_branch::office');
     }
 
     /**
@@ -55,7 +55,7 @@ class BranchOfficePolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_branchoffice');
+        return $user->can('delete_any_branch::office');
     }
 
     /**
@@ -63,7 +63,7 @@ class BranchOfficePolicy
      */
     public function forceDelete(User $user, BranchOffice $branchOffice): bool
     {
-        return $user->can('force_delete_branchoffice');
+        return $user->can('force_delete_branch::office');
     }
 
     /**
@@ -71,7 +71,7 @@ class BranchOfficePolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_branchoffice');
+        return $user->can('force_delete_any_branch::office');
     }
 
     /**
@@ -79,7 +79,7 @@ class BranchOfficePolicy
      */
     public function restore(User $user, BranchOffice $branchOffice): bool
     {
-        return $user->can('restore_branchoffice');
+        return $user->can('restore_branch::office');
     }
 
     /**
@@ -87,7 +87,7 @@ class BranchOfficePolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_branchoffice');
+        return $user->can('restore_any_branch::office');
     }
 
     /**
@@ -95,7 +95,7 @@ class BranchOfficePolicy
      */
     public function replicate(User $user, BranchOffice $branchOffice): bool
     {
-        return $user->can('replicate_branchoffice');
+        return $user->can('replicate_branch::office');
     }
 
     /**
@@ -103,6 +103,6 @@ class BranchOfficePolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_branchoffice');
+        return $user->can('reorder_branch::office');
     }
 }

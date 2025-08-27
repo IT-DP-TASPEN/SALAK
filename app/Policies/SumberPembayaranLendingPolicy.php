@@ -15,7 +15,7 @@ class SumberPembayaranLendingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_sumberpembayaranlending');
+        return $user->can('view_any_sumber::pembayaran::lending');
     }
 
     /**
@@ -23,7 +23,7 @@ class SumberPembayaranLendingPolicy
      */
     public function view(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
     {
-        return $user->can('view_sumberpembayaranlending');
+        return $user->can('view_sumber::pembayaran::lending');
     }
 
     /**
@@ -31,7 +31,7 @@ class SumberPembayaranLendingPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_sumberpembayaranlending');
+        return $user->can('create_sumber::pembayaran::lending');
     }
 
     /**
@@ -39,7 +39,7 @@ class SumberPembayaranLendingPolicy
      */
     public function update(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
     {
-        return $user->can('update_sumberpembayaranlending');
+        return $user->can('update_sumber::pembayaran::lending');
     }
 
     /**
@@ -47,7 +47,7 @@ class SumberPembayaranLendingPolicy
      */
     public function delete(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
     {
-        return $user->can('delete_sumberpembayaranlending');
+        return $user->can('delete_sumber::pembayaran::lending');
     }
 
     /**
@@ -55,7 +55,7 @@ class SumberPembayaranLendingPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_sumberpembayaranlending');
+        return $user->can('delete_any_sumber::pembayaran::lending');
     }
 
     /**
@@ -63,7 +63,7 @@ class SumberPembayaranLendingPolicy
      */
     public function forceDelete(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
     {
-        return $user->can('force_delete_sumberpembayaranlending');
+        return $user->can('force_delete_sumber::pembayaran::lending');
     }
 
     /**
@@ -71,7 +71,7 @@ class SumberPembayaranLendingPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_sumberpembayaranlending');
+        return $user->can('force_delete_any_sumber::pembayaran::lending');
     }
 
     /**
@@ -79,7 +79,7 @@ class SumberPembayaranLendingPolicy
      */
     public function restore(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
     {
-        return $user->can('restore_sumberpembayaranlending');
+        return $user->can('restore_sumber::pembayaran::lending');
     }
 
     /**
@@ -87,7 +87,7 @@ class SumberPembayaranLendingPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_sumberpembayaranlending');
+        return $user->can('restore_any_sumber::pembayaran::lending');
     }
 
     /**
@@ -95,7 +95,7 @@ class SumberPembayaranLendingPolicy
      */
     public function replicate(User $user, SumberPembayaranLending $sumberPembayaranLending): bool
     {
-        return $user->can('replicate_sumberpembayaranlending');
+        return $user->can('replicate_sumber::pembayaran::lending');
     }
 
     /**
@@ -103,6 +103,6 @@ class SumberPembayaranLendingPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_sumberpembayaranlending');
+        return $user->can('reorder_sumber::pembayaran::lending');
     }
 }

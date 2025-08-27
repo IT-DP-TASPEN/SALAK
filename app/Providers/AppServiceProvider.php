@@ -20,12 +20,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        FilamentShield::configurePermissionIdentifierUsing(
-            fn($resource) => str($resource::getModel())
-                ->afterLast('\\')
-                ->lower()
-                ->snake()
-                ->toString()
-        );
+        //
     }
 }

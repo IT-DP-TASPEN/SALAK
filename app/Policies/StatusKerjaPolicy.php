@@ -15,7 +15,7 @@ class StatusKerjaPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_statuskerja');
+        return $user->can('view_any_status::kerja');
     }
 
     /**
@@ -23,7 +23,7 @@ class StatusKerjaPolicy
      */
     public function view(User $user, StatusKerja $statusKerja): bool
     {
-        return $user->can('view_statuskerja');
+        return $user->can('view_status::kerja');
     }
 
     /**
@@ -31,7 +31,7 @@ class StatusKerjaPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_statuskerja');
+        return $user->can('create_status::kerja');
     }
 
     /**
@@ -39,7 +39,7 @@ class StatusKerjaPolicy
      */
     public function update(User $user, StatusKerja $statusKerja): bool
     {
-        return $user->can('update_statuskerja');
+        return $user->can('update_status::kerja');
     }
 
     /**
@@ -47,7 +47,7 @@ class StatusKerjaPolicy
      */
     public function delete(User $user, StatusKerja $statusKerja): bool
     {
-        return $user->can('delete_statuskerja');
+        return $user->can('delete_status::kerja');
     }
 
     /**
@@ -55,7 +55,7 @@ class StatusKerjaPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_statuskerja');
+        return $user->can('delete_any_status::kerja');
     }
 
     /**
@@ -63,7 +63,7 @@ class StatusKerjaPolicy
      */
     public function forceDelete(User $user, StatusKerja $statusKerja): bool
     {
-        return $user->can('force_delete_statuskerja');
+        return $user->can('force_delete_status::kerja');
     }
 
     /**
@@ -71,7 +71,7 @@ class StatusKerjaPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_statuskerja');
+        return $user->can('force_delete_any_status::kerja');
     }
 
     /**
@@ -79,7 +79,7 @@ class StatusKerjaPolicy
      */
     public function restore(User $user, StatusKerja $statusKerja): bool
     {
-        return $user->can('restore_statuskerja');
+        return $user->can('restore_status::kerja');
     }
 
     /**
@@ -87,7 +87,7 @@ class StatusKerjaPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_statuskerja');
+        return $user->can('restore_any_status::kerja');
     }
 
     /**
@@ -95,7 +95,7 @@ class StatusKerjaPolicy
      */
     public function replicate(User $user, StatusKerja $statusKerja): bool
     {
-        return $user->can('replicate_statuskerja');
+        return $user->can('replicate_status::kerja');
     }
 
     /**
@@ -103,6 +103,6 @@ class StatusKerjaPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_statuskerja');
+        return $user->can('reorder_status::kerja');
     }
 }

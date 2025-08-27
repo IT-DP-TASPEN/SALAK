@@ -15,7 +15,7 @@ class MitraBayarPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_mitrabayar');
+        return $user->can('view_any_mitra::bayar');
     }
 
     /**
@@ -23,7 +23,7 @@ class MitraBayarPolicy
      */
     public function view(User $user, MitraBayar $mitraBayar): bool
     {
-        return $user->can('view_mitrabayar');
+        return $user->can('view_mitra::bayar');
     }
 
     /**
@@ -31,7 +31,7 @@ class MitraBayarPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_mitrabayar');
+        return $user->can('create_mitra::bayar');
     }
 
     /**
@@ -39,7 +39,7 @@ class MitraBayarPolicy
      */
     public function update(User $user, MitraBayar $mitraBayar): bool
     {
-        return $user->can('update_mitrabayar');
+        return $user->can('update_mitra::bayar');
     }
 
     /**
@@ -47,7 +47,7 @@ class MitraBayarPolicy
      */
     public function delete(User $user, MitraBayar $mitraBayar): bool
     {
-        return $user->can('delete_mitrabayar');
+        return $user->can('delete_mitra::bayar');
     }
 
     /**
@@ -55,7 +55,7 @@ class MitraBayarPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_mitrabayar');
+        return $user->can('delete_any_mitra::bayar');
     }
 
     /**
@@ -63,7 +63,7 @@ class MitraBayarPolicy
      */
     public function forceDelete(User $user, MitraBayar $mitraBayar): bool
     {
-        return $user->can('force_delete_mitrabayar');
+        return $user->can('force_delete_mitra::bayar');
     }
 
     /**
@@ -71,7 +71,7 @@ class MitraBayarPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_mitrabayar');
+        return $user->can('force_delete_any_mitra::bayar');
     }
 
     /**
@@ -79,7 +79,7 @@ class MitraBayarPolicy
      */
     public function restore(User $user, MitraBayar $mitraBayar): bool
     {
-        return $user->can('restore_mitrabayar');
+        return $user->can('restore_mitra::bayar');
     }
 
     /**
@@ -87,7 +87,7 @@ class MitraBayarPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_mitrabayar');
+        return $user->can('restore_any_mitra::bayar');
     }
 
     /**
@@ -95,7 +95,7 @@ class MitraBayarPolicy
      */
     public function replicate(User $user, MitraBayar $mitraBayar): bool
     {
-        return $user->can('replicate_mitrabayar');
+        return $user->can('replicate_mitra::bayar');
     }
 
     /**
@@ -103,6 +103,6 @@ class MitraBayarPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_mitrabayar');
+        return $user->can('reorder_mitra::bayar');
     }
 }

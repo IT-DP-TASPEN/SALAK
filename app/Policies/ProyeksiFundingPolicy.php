@@ -15,7 +15,7 @@ class ProyeksiFundingPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_proyeksifunding');
+        return $user->can('view_any_proyeksi::funding');
     }
 
     /**
@@ -23,7 +23,7 @@ class ProyeksiFundingPolicy
      */
     public function view(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
-        return $user->can('view_proyeksifunding');
+        return $user->can('view_proyeksi::funding');
     }
 
     /**
@@ -31,7 +31,7 @@ class ProyeksiFundingPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_proyeksifunding');
+        return $user->can('create_proyeksi::funding');
     }
 
     /**
@@ -39,7 +39,7 @@ class ProyeksiFundingPolicy
      */
     public function update(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
-        return $user->can('update_proyeksifunding');
+        return $user->can('update_proyeksi::funding');
     }
 
     /**
@@ -47,7 +47,7 @@ class ProyeksiFundingPolicy
      */
     public function delete(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
-        return $user->can('delete_proyeksifunding');
+        return $user->can('delete_proyeksi::funding');
     }
 
     /**
@@ -55,7 +55,7 @@ class ProyeksiFundingPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_proyeksifunding');
+        return $user->can('delete_any_proyeksi::funding');
     }
 
     /**
@@ -63,7 +63,7 @@ class ProyeksiFundingPolicy
      */
     public function forceDelete(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
-        return $user->can('force_delete_proyeksifunding');
+        return $user->can('force_delete_proyeksi::funding');
     }
 
     /**
@@ -71,7 +71,7 @@ class ProyeksiFundingPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_proyeksifunding');
+        return $user->can('force_delete_any_proyeksi::funding');
     }
 
     /**
@@ -79,7 +79,7 @@ class ProyeksiFundingPolicy
      */
     public function restore(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
-        return $user->can('restore_proyeksifunding');
+        return $user->can('restore_proyeksi::funding');
     }
 
     /**
@@ -87,7 +87,7 @@ class ProyeksiFundingPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_proyeksifunding');
+        return $user->can('restore_any_proyeksi::funding');
     }
 
     /**
@@ -95,7 +95,7 @@ class ProyeksiFundingPolicy
      */
     public function replicate(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
-        return $user->can('replicate_proyeksifunding');
+        return $user->can('replicate_proyeksi::funding');
     }
 
     /**
@@ -103,6 +103,6 @@ class ProyeksiFundingPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_proyeksifunding');
+        return $user->can('reorder_proyeksi::funding');
     }
 }

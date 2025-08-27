@@ -15,7 +15,7 @@ class StatusDapemPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_statusdapem');
+        return $user->can('view_any_status::dapem');
     }
 
     /**
@@ -23,7 +23,7 @@ class StatusDapemPolicy
      */
     public function view(User $user, StatusDapem $statusDapem): bool
     {
-        return $user->can('view_statusdapem');
+        return $user->can('view_status::dapem');
     }
 
     /**
@@ -31,7 +31,7 @@ class StatusDapemPolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_statusdapem');
+        return $user->can('create_status::dapem');
     }
 
     /**
@@ -39,7 +39,7 @@ class StatusDapemPolicy
      */
     public function update(User $user, StatusDapem $statusDapem): bool
     {
-        return $user->can('update_statusdapem');
+        return $user->can('update_status::dapem');
     }
 
     /**
@@ -47,7 +47,7 @@ class StatusDapemPolicy
      */
     public function delete(User $user, StatusDapem $statusDapem): bool
     {
-        return $user->can('delete_statusdapem');
+        return $user->can('delete_status::dapem');
     }
 
     /**
@@ -55,7 +55,7 @@ class StatusDapemPolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_statusdapem');
+        return $user->can('delete_any_status::dapem');
     }
 
     /**
@@ -63,7 +63,7 @@ class StatusDapemPolicy
      */
     public function forceDelete(User $user, StatusDapem $statusDapem): bool
     {
-        return $user->can('force_delete_statusdapem');
+        return $user->can('force_delete_status::dapem');
     }
 
     /**
@@ -71,7 +71,7 @@ class StatusDapemPolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_statusdapem');
+        return $user->can('force_delete_any_status::dapem');
     }
 
     /**
@@ -79,7 +79,7 @@ class StatusDapemPolicy
      */
     public function restore(User $user, StatusDapem $statusDapem): bool
     {
-        return $user->can('restore_statusdapem');
+        return $user->can('restore_status::dapem');
     }
 
     /**
@@ -87,7 +87,7 @@ class StatusDapemPolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_statusdapem');
+        return $user->can('restore_any_status::dapem');
     }
 
     /**
@@ -95,7 +95,7 @@ class StatusDapemPolicy
      */
     public function replicate(User $user, StatusDapem $statusDapem): bool
     {
-        return $user->can('replicate_statusdapem');
+        return $user->can('replicate_status::dapem');
     }
 
     /**
@@ -103,6 +103,6 @@ class StatusDapemPolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_statusdapem');
+        return $user->can('reorder_status::dapem');
     }
 }
