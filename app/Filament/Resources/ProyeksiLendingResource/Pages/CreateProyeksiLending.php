@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\ProyeksiLendingResource\Pages;
 
 use App\Filament\Resources\ProyeksiLendingResource;
+use App\Models\Agent;
 use App\Models\ProdukLending;
 use Carbon\Carbon;
 use Filament\Actions;
@@ -17,8 +18,8 @@ class CreateProyeksiLending extends CreateRecord
         $produk = ProdukLending::find($data['lending_produk'])?->produk_nama ?? '';
 
         $data['lending_tanggal'] = Carbon::today()->toDateString();
-        $data['lending_agent'] = auth()->id();
-        $data['lending_kantor'] = auth()->user()->branchOffice->id;
+        $agent = Agent::findOrFail($data['lending_agent']);
+        $data['lending_kantor'] = $agent->branchOffice->id;
 
         $data['lending_tanggal_jatuh_tempo'] = Carbon::parse($data['lending_tanggal_realisasi'])
             ->addMonths((int)$data['lending_jkw'])

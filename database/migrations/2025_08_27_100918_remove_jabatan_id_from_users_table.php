@@ -12,13 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table
-                ->foreignId('branch_office_id')
-                ->after('email_verified_at')
-                ->nullable()
-                ->constrained('branch_offices')
-                ->nullOnDelete()
-                ->comment('ID of the branch office the user belongs to');
+            $table->dropForeign(['jabatan_id']);
+            $table->dropColumn('jabatan_id');
         });
     }
 
@@ -28,8 +23,11 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            $table->dropForeign(['branch_office_id']);
-            $table->dropColumn('branch_office_id');
+            $table->foreignId('jabatan_id')
+                ->nullable()
+                ->constrained('jabatans')
+                ->onDelete('set null')
+                ->after('branch_office_id');
         });
     }
 };

@@ -121,6 +121,19 @@ class ProyeksiLendingResource extends Resource
                 Forms\Components\Fieldset::make('Informasi Lending')
                     ->columns(1)
                     ->schema([
+                        Forms\Components\Select::make('lending_agent')
+                            ->label('Agent')
+                            ->prefixIcon('heroicon-o-user-group')
+                            ->relationship(
+                                'agent',
+                                'agent_nama',
+                                fn($query) => $query
+                                    ->where('agent_branch_office', auth()->user()->branchOffice->id)
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->required()
+                            ->inlineLabel(),
                         Forms\Components\Select::make('lending_jenis_pengajuan')
                             ->label('Jenis Pengajuan')
                             ->prefixIcon('heroicon-o-document-text')
@@ -561,7 +574,7 @@ class ProyeksiLendingResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('branchOffice.branch_name')
                     ->label('Kantor Cabang'),
-                Tables\Columns\TextColumn::make('agent.name')
+                Tables\Columns\TextColumn::make('agent.agent_nama')
                     ->label('AO/Marketing')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('lending_nama_debitur')
@@ -786,7 +799,7 @@ class ProyeksiLendingResource extends Resource
                     ->collapsible()
                     ->schema([
                         TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
-                        TextEntry::make('agent.name')->label('AO/Marketing')->icon('heroicon-o-user-group'),
+                        TextEntry::make('agent.agent_nama')->label('AO/Marketing')->icon('heroicon-o-user-group'),
                         TextEntry::make('approval.approval_status')
                             ->label('Status Approval')
                             ->badge()
