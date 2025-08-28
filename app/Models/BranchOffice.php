@@ -35,6 +35,11 @@ class BranchOffice extends BaseModel
         return $this->hasMany(DataAbaMaster::class, 'aba_kantor', 'branch_code');
     }
 
+    public function transaksiABA(): HasMany
+    {
+        return $this->hasMany(DataAbaTrans::class, 'trans_kantor', 'branch_code');
+    }
+
     public function saldoAbpTabungan(?string $tanggal = null): float
     {
         return $this->saldoNeraca(['1.240.10'], $tanggal)['1.240.10'];
@@ -48,10 +53,22 @@ class BranchOffice extends BaseModel
     public function assetLiquid(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
         // TODO: take $tanggal into account
-        $giroTab = $this
-            ->penempatanABA()
+        // $giroTab = $this
+        //     ->penempatanABA()
+        //     ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
+        //     ->sum('aba_saldo_efektif');
+
+        $giroTab = DB::connection('mso-backup')
+            ->table('data_aba_master')
+            ->where('aba_kantor', $this->branch_code)
             ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
             ->sum('aba_saldo_efektif');
+
+        $giroTab += $this->transaksiABA()
+            ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
+            ->whereRaw('trans_reg_date = CURDATE()')
+            ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
+            ->value('saldo') ?? 0;
 
         $kas = $this->saldoKas($tanggal);
 

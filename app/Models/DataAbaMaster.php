@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class DataAbaMaster extends Model
 {
@@ -16,5 +17,10 @@ class DataAbaMaster extends Model
     public function branchOffice(): BelongsTo
     {
         return $this->belongsTo(BranchOffice::class, 'aba_kantor', 'branch_code');
+    }
+
+    public function abaTrans(): HasMany
+    {
+        return $this->hasMany(DataAbaTrans::class, 'trans_rekening', 'aba_kode');
     }
 }
