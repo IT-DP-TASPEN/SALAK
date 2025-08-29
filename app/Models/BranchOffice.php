@@ -76,11 +76,13 @@ class BranchOffice extends BaseModel
 
         if ($simulated) {
             $proyeksiLendings = $this->proyeksiLendings()
+                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                 ->whereRaw('lending_tanggal = CURDATE()')
                 ->sum('lending_booking_bersih');
             $ret -= $proyeksiLendings;
 
             $proyeksiFunding = $this->proyeksiFundings()
+                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                 ->whereRaw('funding_tanggal = CURDATE()')
                 ->sum('funding_nominal_bersih');
             $ret += $proyeksiFunding;
@@ -118,6 +120,7 @@ class BranchOffice extends BaseModel
         $bakiDebet = $res['1.130.1']; // kredit yang diberikan
         if ($simulated) {
             $proyeksiLendings = $this->proyeksiLendings()
+                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                 ->whereRaw('lending_tanggal = CURDATE()')
                 ->sum('lending_booking_bersih');
             $bakiDebet += $proyeksiLendings;
@@ -157,6 +160,7 @@ class BranchOffice extends BaseModel
                 $totalBakiDebet += $res['1.130.1'];
                 if ($simulated) {
                     $proyeksiLendings = $branch->proyeksiLendings()
+                        ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                         ->whereRaw('lending_tanggal = CURDATE()')
                         ->sum('lending_booking_bersih');
                     $totalBakiDebet += $proyeksiLendings;
