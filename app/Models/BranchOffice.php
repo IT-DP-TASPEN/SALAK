@@ -135,14 +135,20 @@ class BranchOffice extends BaseModel
         $res = $this->saldoNeraca(['1.130.1', '1.210', '1.220'], $tanggal);
 
         $bakiDebet = $res['1.130.1']; // kredit yang diberikan
+        $simpanan = $res['1.210'] + $res['1.220']; // total simpanan (tabungan + deposito)
         if ($simulated) {
             $proyeksiLendings = $this->proyeksiLendings()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                 ->whereRaw('lending_tanggal = CURDATE()')
                 ->sum('lending_booking_bersih');
             $bakiDebet += $proyeksiLendings;
+
+            $proyeksiFundings = $this->proyeksiFundings()
+                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
+                ->whereRaw('funding_tanggal = CURDATE()')
+                ->sum('funding_nominal_bersih');
+            $simpanan += $proyeksiFundings;
         }
-        $simpanan = $res['1.210'] + $res['1.220']; // total simpanan (tabungan + deposito)
 
         if ($simpanan === 0.0) {
             return 0.0;
