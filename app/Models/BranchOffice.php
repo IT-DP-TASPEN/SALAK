@@ -58,23 +58,40 @@ class BranchOffice extends BaseModel
         //     ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
         //     ->sum('aba_saldo_efektif');
 
-        $giroTab = DB::connection('mso-backup')
-            ->table('data_aba_master')
-            ->where('aba_kantor', $this->branch_code)
-            ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
-            ->sum('aba_saldo_efektif');
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        $isPast = Carbon::today()->gt($asOf);
+        $tanggal = $asOf->toDateString();
+        if ($isPast) {
+            $giroTab = DB::connection('mso-backup')
+                ->table('data_aba_master')
+                ->where('aba_kantor', $this->branch_code)
+                ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
+                ->selectRaw('SUM(HitungAbaSaldoEfektif(aba_kode, ?)) AS saldo', [$tanggal])
+                ->value('saldo') ?? 0;
+        } else {
+            $giroTab = DB::connection('mso-backup')
+                ->table('data_aba_master')
+                ->where('aba_kantor', $this->branch_code)
+                ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
+                ->sum('aba_saldo_efektif');
 
-        $giroTab += $this->transaksiABA()
-            ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
-            ->whereRaw('trans_reg_date = CURDATE()')
-            ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
-            ->value('saldo') ?? 0;
+            $giroTab += $this->transaksiABA()
+                ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
+                ->when(
+                    $isPast,
+                    fn($q) => $q->whereRaw('trans_reg_date <= ?', [$tanggal]),
+                    fn($q) => $q->whereRaw('trans_reg_date = CURDATE()')
+                )
+                // ->whereRaw('trans_reg_date = CURDATE()')
+                ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
+                ->value('saldo') ?? 0;
+        }
 
         $kas = $this->saldoKas($tanggal);
 
         $ret = $kas + $giroTab - ($efektif ? $this->branch_saldo_aba_blokir : 0.0);
 
-        if ($simulated) {
+        if ($simulated && !$isPast) {
             $proyeksiLendings = $this->proyeksiLendings()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                 ->whereRaw('lending_tanggal = CURDATE()')
