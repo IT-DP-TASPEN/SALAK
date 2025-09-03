@@ -27,8 +27,9 @@ class RefreshCashRatioHistory extends Command
      */
     public function handle()
     {
-        $startDate = Carbon::parse('2025-08-01');
-        $endDate = Carbon::today();
+        $endDate = Carbon::yesterday();
+        $startDate = $endDate->copy()->subMonth();
+
         $dates = [];
         for ($date = $startDate; $date->lte($endDate); $date->addDay()) {
             $dates[] = $date->format('Y-m-d');
