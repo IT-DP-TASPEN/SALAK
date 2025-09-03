@@ -137,7 +137,7 @@ class ProyeksiFundingResource extends Resource
                 Tables\Columns\TextColumn::make('branchOffice.branch_name')
                     ->label('Kantor Cabang')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('agent.agent_name')
+                Tables\Columns\TextColumn::make('agent.agent_nama')
                     ->label('Agent')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('produk.produk_nama')
