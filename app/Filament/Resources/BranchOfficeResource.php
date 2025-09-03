@@ -78,6 +78,15 @@ class BranchOfficeResource extends Resource
                     ->getStateUsing(fn(BranchOffice $record) => ceil($record->kewajibanLancar()))
                     ->money('IDR', 0, 'id_ID')
                     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('npl')
+                    ->label('NPL')
+                    ->getStateUsing(fn(BranchOffice $record) => number_format($record->npl(), 2, ',', '.') . '%')
+                    ->summarize(
+                        Summarizer::make()
+                            ->label('Konsolidasi NPL')
+                            ->using(fn() => number_format(BranchOffice::konsolidasiNPL(), 2, ',', '.') . '%')
+                    )
+                    ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('cash_ratio')
                     ->label('Cash Ratio')
                     ->getStateUsing(fn(BranchOffice $record) => number_format($record->cashRatio(), 2, ',', '.') . '%')

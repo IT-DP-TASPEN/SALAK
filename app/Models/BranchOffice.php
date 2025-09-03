@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
 class BranchOffice extends BaseModel
@@ -95,6 +96,38 @@ class BranchOffice extends BaseModel
         }
 
         return $ret;
+    }
+
+    public function npl(): float
+    {
+        $kolek = Cache::get('dashboard:kolek', []);
+        $totalBakiDebet = array_sum(array_column($kolek, 'baki_debet'));
+        $npl = array_filter(
+            $kolek,
+            fn($item) =>
+            !in_array($item->kolek, ['L', 'DP']) && $item->kantor === $this->branch_code
+        );
+        $totalNPL = array_sum(array_column($npl, 'baki_debet'));
+        if ($totalBakiDebet === 0) {
+            return 0.0;
+        }
+        return $totalNPL / $totalBakiDebet * 100;
+    }
+
+    public static function konsolidasiNPL(): float
+    {
+        $kolek = Cache::get('dashboard:kolek', []);
+        $totalBakiDebet = array_sum(array_column($kolek, 'baki_debet'));
+        $npl = array_filter(
+            $kolek,
+            fn($item) =>
+            !in_array($item->kolek, ['L', 'DP'])
+        );
+        $totalNPL = array_sum(array_column($npl, 'baki_debet'));
+        if ($totalBakiDebet === 0) {
+            return 0.0;
+        }
+        return $totalNPL / $totalBakiDebet * 100;
     }
 
     public function kewajibanLancar(?string $tanggal = null): float
