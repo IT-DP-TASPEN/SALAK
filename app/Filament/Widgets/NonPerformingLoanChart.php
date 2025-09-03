@@ -51,6 +51,12 @@ class NonPerformingLoanChart extends ChartWidget
     {
         return [
             'indexAxis' => 'y',
+            'scales' => [
+                'x' => [
+                    'suggestedMin' => 0,
+                    'suggestedMax' => 5,
+                ],
+            ]
         ];
     }
 }
