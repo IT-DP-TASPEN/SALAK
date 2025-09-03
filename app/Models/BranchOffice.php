@@ -60,27 +60,21 @@ class BranchOffice extends BaseModel
 
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
         $isPast = Carbon::today()->gt($asOf);
-        $tanggal = $asOf->toDateString();
-        if ($isPast) {
-            $giroTab = DB::connection('mso-backup')
-                ->table('data_aba_master')
-                ->where('aba_kantor', $this->branch_code)
-                ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
-                ->selectRaw('SUM(HitungAbaSaldoEfektif(aba_kode, ?)) AS saldo', [$tanggal])
-                ->value('saldo') ?? 0;
-        } else {
-            $giroTab = DB::connection('mso-backup')
-                ->table('data_aba_master')
-                ->where('aba_kantor', $this->branch_code)
-                ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
-                ->sum('aba_saldo_efektif');
-        }
 
-        $giroTab += $this->transaksiABA()
-            ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
-            ->whereRaw('trans_reg_date = ?', [$tanggal])
-            ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
+        $giroTab = DB::connection('mso-backup')
+            ->table('data_aba_master')
+            ->where('aba_kantor', $this->branch_code)
+            ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
+            ->selectRaw('SUM(HitungAbaSaldoEfektif(aba_kode, ?)) AS saldo', [$asOf->toDateString()])
             ->value('saldo') ?? 0;
+
+        if ($asOf->isToday()) {
+            $giroTab += $this->transaksiABA()
+                ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
+                ->whereRaw('trans_reg_date = ?', [$asOf->toDateString()])
+                ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
+                ->value('saldo') ?? 0;
+        }
 
         $kas = $this->saldoKas($tanggal);
 
