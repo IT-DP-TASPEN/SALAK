@@ -22,3 +22,10 @@ Schedule::command('cache:refresh-cash-ratio-history')
     ->runInBackground()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/schedule.log'));
+
+Schedule::command('cache:refresh-loan-to-deposit-ratio-history')
+    ->dailyAt('05:00')
+    ->onOneServer()
+    ->runInBackground()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/schedule.log'));
