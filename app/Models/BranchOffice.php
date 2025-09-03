@@ -74,18 +74,18 @@ class BranchOffice extends BaseModel
                 ->where('aba_kantor', $this->branch_code)
                 ->whereIn('aba_jenis', [10, 20]) // giro & tabungan umum
                 ->sum('aba_saldo_efektif');
-
-            $giroTab += $this->transaksiABA()
-                ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
-                ->when(
-                    $isPast,
-                    fn($q) => $q->whereRaw('trans_reg_date <= ?', [$tanggal]),
-                    fn($q) => $q->whereRaw('trans_reg_date = CURDATE()')
-                )
-                // ->whereRaw('trans_reg_date = CURDATE()')
-                ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
-                ->value('saldo') ?? 0;
         }
+
+        $giroTab += $this->transaksiABA()
+            ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
+            ->when(
+                $isPast,
+                fn($q) => $q->whereRaw('trans_reg_date <= ?', [$tanggal]),
+                fn($q) => $q->whereRaw('trans_reg_date = CURDATE()')
+            )
+            // ->whereRaw('trans_reg_date = CURDATE()')
+            ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
+            ->value('saldo') ?? 0;
 
         $kas = $this->saldoKas($tanggal);
 
@@ -136,6 +136,7 @@ class BranchOffice extends BaseModel
 
         $bakiDebet = $res['1.130.1']; // kredit yang diberikan
         $simpanan = $res['1.210'] + $res['1.220']; // total simpanan (tabungan + deposito)
+
         if ($simulated) {
             $proyeksiLendings = $this->proyeksiLendings()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
