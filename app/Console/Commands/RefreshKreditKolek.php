@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -27,21 +28,17 @@ class RefreshKreditKolek extends Command
      */
     public function handle()
     {
+        $asOf = Carbon::today()->toDateString();
+
         $data = DB::connection('mso-backup')
             ->select("
                 SELECT
-                    t.kre_kantor AS kantor,
-                    t.kre_baki_debet AS baki_debet,
-                    t.kolek AS kolek
-                FROM (
-                    SELECT 
-                        kre_kantor,
-                        kre_baki_debet,
-                        HitungKreditKolek(kre_rekening, CURDATE()) AS kolek
-                    FROM data_kredit_master
-                    WHERE kre_status = 2
-                ) t;
-            ");
+                    kre_kantor AS kantor,
+                    kre_baki_debet AS baki_debet,
+                    HitungKreditKolek(kre_rekening, ?) AS kolek
+                FROM data_kredit_master
+                WHERE kre_status = 2;
+            ", [$asOf]);
 
         Cache::put('dashboard:kolek', $data, now()->addDay());
 
