@@ -43,7 +43,7 @@ class DataAbaMasterRelationManager extends RelationManager
                 Tables\Columns\TextColumn::make('aba_alias')
                     ->label('Bank')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('aba_rekening')
+                Tables\Columns\TextColumn::make('aba_kode')
                     ->label('Rekening'),
                 Tables\Columns\TextColumn::make('aba_jenis')
                     ->label('Jenis')
