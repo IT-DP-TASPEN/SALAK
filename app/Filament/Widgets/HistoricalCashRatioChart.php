@@ -10,8 +10,8 @@ use Illuminate\Support\Facades\Cache;
 class HistoricalCashRatioChart extends ChartWidget
 {
     protected int|string|array $columnSpan = 'full';
-
     protected static ?string $heading = 'Cash Ratio (Historical)';
+    protected static ?int $sort = -8;
 
     protected function getData(): array
     {
