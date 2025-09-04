@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
 class ProyeksiFundingResource extends Resource
 {
@@ -177,12 +179,18 @@ class ProyeksiFundingResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                DateRangeFilter::make('funding_tanggal')
+                    ->label('Tanggal')
+                    ->alwaysShowCalendar()
+                    ->autoApply()
+                    ->withIndicator()
+                    ->useRangeLabels(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
+                ExportBulkAction::make(),
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),

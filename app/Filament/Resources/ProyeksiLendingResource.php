@@ -25,6 +25,9 @@ use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Tables\Enums\ActionsPosition;
 use Illuminate\Support\Facades\DB;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ProyeksiLendingResource extends Resource
 {
@@ -637,7 +640,12 @@ class ProyeksiLendingResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                DateRangeFilter::make('lending_tanggal')
+                    ->label('Tanggal')
+                    ->alwaysShowCalendar()
+                    ->autoApply()
+                    ->withIndicator()
+                    ->useRangeLabels(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
@@ -678,6 +686,11 @@ class ProyeksiLendingResource extends Resource
                 ]),
             ])
             ->bulkActions([
+                ExportBulkAction::make()
+                    ->exports([
+                        ExcelExport::make()
+                            ->fromForm(),
+                    ]),
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\BulkAction::make('bulk_update_progress')
                         ->label('Update selected progress')
