@@ -277,4 +277,9 @@ class BranchOffice extends BaseModel
 
         return $rows->toArray();
     }
+
+    public function fincloudSaldoNeraca(): HasMany
+    {
+        return $this->hasMany(SaldoNeraca::class, 'cabang', 'id');
+    }
 }

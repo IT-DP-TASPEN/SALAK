@@ -35,6 +35,12 @@ class BranchOfficeResource extends Resource
                     ->maxLength(2)
                     ->columnSpanFull()
                     ->inlineLabel(),
+                Forms\Components\TextInput::make('branch_code_fincloud')
+                    ->label('Kode Cabang (Fincloud)')
+                    ->required()
+                    ->maxLength(3)
+                    ->columnSpanFull()
+                    ->inlineLabel(),
                 Forms\Components\TextInput::make('branch_name')
                     ->label('Nama Cabang')
                     ->required()
@@ -60,6 +66,9 @@ class BranchOfficeResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('branch_code')
                     ->label('Kode Cabang')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('branch_code_fincloud')
+                    ->label('Kode Cabang (Fincloud)')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('branch_name')
                     ->label('Nama Cabang')
