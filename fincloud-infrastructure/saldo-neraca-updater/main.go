@@ -13,13 +13,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/joho/godotenv"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
 const (
+	batchSize = 200
 	baseURL   = "http://172.22.80.24/fincloud-taspen"
 	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0"
-	dbSource  = "production:@DwiPrana321@tcp(172.116.31.2:3306)/salak"
 )
 
 type LoginResponse struct {
@@ -60,6 +62,12 @@ type SaldoNeraca struct {
 }
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error loading .env file: %v\n", err)
+		return
+	}
+
 	db, err := connectDB()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error connecting to database: %v\n", err)
@@ -76,7 +84,8 @@ func main() {
 			return
 		}
 	} else {
-		*dateStr = time.Now().Format("2006-01-02")
+		yesterday := time.Now().AddDate(0, 0, -1)
+		*dateStr = yesterday.Format("2006-01-02")
 	}
 
 	date, err := time.Parse("2006-01-02", *dateStr)
@@ -117,6 +126,8 @@ func main() {
 
 	resCh := make(chan saldoResult, len(kcList))
 	wg := sync.WaitGroup{}
+
+	fmt.Printf("Fetching saldo neraca for date: %s\n", date.Format("2006-01-02"))
 
 	for _, kc := range kcList {
 		wg.Go(func() {
@@ -167,13 +178,20 @@ func main() {
 }
 
 func connectDB() (*sql.DB, error) {
-	db, err := sql.Open("mysql", dbSource)
+	db, err := sql.Open("mysql", os.Getenv("DB_SOURCE"))
 	if err != nil {
 		return nil, err
 	}
+
 	if err = db.Ping(); err != nil {
 		return nil, err
 	}
+
+	// Pool tuning for higher throughput
+	db.SetMaxOpenConns(20)
+	db.SetMaxIdleConns(10)
+	db.SetConnMaxLifetime(30 * time.Minute)
+
 	return db, nil
 }
 
@@ -184,43 +202,79 @@ func insertOrUpdateSaldo(db *sql.DB, date, branch string, saldo SaldoNeraca) err
 		s = strings.ReplaceAll(s, ">", "")
 		return strings.TrimSpace(s)
 	}
-	for _, record := range saldo.Data.Result {
-		record.SaldoAwal = sanitize(record.SaldoAwal)
-		record.MutasiDebit = sanitize(record.MutasiDebit)
-		record.MutasiKredit = sanitize(record.MutasiKredit)
-		record.SaldoAkhir = sanitize(record.SaldoAkhir)
 
-		var exists bool
-		err := db.QueryRow(
-			"SELECT EXISTS(SELECT 1 FROM saldo_neracas WHERE tanggal = ? AND cabang = ? AND noakun = ?)",
-			date, branch, record.NoAkun,
-		).Scan(&exists)
-		if err != nil {
-			return fmt.Errorf("error checking existence: %w", err)
+	if len(saldo.Data.Result) == 0 {
+		return nil
+	}
+
+	now := time.Now()
+
+	// Pre-sanitize and stage rows
+	type row struct {
+		Cabang, Tanggal, NoAkun, NamaAkun, SaldoAwal, MutasiDebit, MutasiKredit, SaldoAkhir string
+		CreatedAt, UpdatedAt                                                                time.Time
+	}
+	rows := make([]row, 0, len(saldo.Data.Result))
+	for _, r := range saldo.Data.Result {
+		rows = append(rows, row{
+			Cabang:       branch,
+			Tanggal:      date,
+			NoAkun:       r.NoAkun,
+			NamaAkun:     r.NamaAkun,
+			SaldoAwal:    sanitize(r.SaldoAwal),
+			MutasiDebit:  sanitize(r.MutasiDebit),
+			MutasiKredit: sanitize(r.MutasiKredit),
+			SaldoAkhir:   sanitize(r.SaldoAkhir),
+			CreatedAt:    now,
+			UpdatedAt:    now,
+		})
+	}
+
+	for i := 0; i < len(rows); i += batchSize {
+		end := min(i+batchSize, len(rows))
+
+		var sb strings.Builder
+		sb.WriteString(`INSERT INTO saldo_neracas
+            (cabang, tanggal, noakun, namaakun, saldoawal, mutasidebit, mutasikredit, saldoakhir, created_at, updated_at)
+            VALUES `)
+
+		placeholders := make([]string, 0, end-i)
+		args := make([]any, 0, (end-i)*10)
+
+		for _, r := range rows[i:end] {
+			placeholders = append(placeholders, "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+			args = append(args,
+				r.Cabang, r.Tanggal, r.NoAkun, r.NamaAkun,
+				r.SaldoAwal, r.MutasiDebit, r.MutasiKredit, r.SaldoAkhir,
+				r.CreatedAt, r.UpdatedAt,
+			)
 		}
 
-		if exists {
-			_, err = db.Exec(
-				`UPDATE saldo_neracas
-				 SET namaakun = ?, saldoawal = ?, mutasidebit = ?, mutasikredit = ?, saldoakhir = ?, updated_at = NOW()
-				 WHERE tanggal = ? AND cabang = ? AND noakun = ?`,
-				record.NamaAkun, record.SaldoAwal, record.MutasiDebit, record.MutasiKredit, record.SaldoAkhir,
-				date, branch, record.NoAkun,
-			)
-			if err != nil {
-				return fmt.Errorf("error updating record: %w", err)
-			}
-		} else {
-			_, err = db.Exec(
-				`INSERT INTO saldo_neracas (cabang, tanggal, noakun, namaakun, saldoawal, mutasidebit, mutasikredit, saldoakhir, created_at, updated_at)
-				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-				branch, date, record.NoAkun, record.NamaAkun, record.SaldoAwal, record.MutasiDebit, record.MutasiKredit, record.SaldoAkhir, time.Now(), time.Now(),
-			)
-			if err != nil {
-				return fmt.Errorf("error inserting record: %w", err)
-			}
+		sb.WriteString(strings.Join(placeholders, ","))
+		sb.WriteString(`
+            ON DUPLICATE KEY UPDATE
+                namaakun = VALUES(namaakun),
+                saldoawal = VALUES(saldoawal),
+                mutasidebit = VALUES(mutasidebit),
+                mutasikredit = VALUES(mutasikredit),
+                saldoakhir = VALUES(saldoakhir),
+                updated_at = VALUES(updated_at)`)
+
+		tx, err := db.Begin()
+		if err != nil {
+			return fmt.Errorf("begin tx: %w", err)
+		}
+
+		if _, err := tx.Exec(sb.String(), args...); err != nil {
+			_ = tx.Rollback()
+			return fmt.Errorf("bulk upsert: %w", err)
+		}
+
+		if err := tx.Commit(); err != nil {
+			return fmt.Errorf("commit tx: %w", err)
 		}
 	}
+
 	return nil
 }
 
