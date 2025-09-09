@@ -1,0 +1,346 @@
+package main
+
+import (
+	"bufio"
+	"database/sql"
+	"encoding/json"
+	"flag"
+	"fmt"
+	"net/http"
+	"net/url"
+	"os"
+	"strings"
+	"sync"
+	"time"
+
+	_ "github.com/go-sql-driver/mysql"
+)
+
+const (
+	baseURL   = "http://172.22.80.24/fincloud-taspen"
+	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0"
+	dbSource  = "production:@DwiPrana321@tcp(172.116.31.2:3306)/salak"
+)
+
+type LoginResponse struct {
+	Data struct {
+		Result struct {
+			IdleTimeout  int64  `json:"idletimeout"`
+			IdleWarning  int64  `json:"idlewarning"`
+			LocationID   string `json:"locationid"`
+			LocationName string `json:"locationname"`
+			RoleID       string `json:"roleid"`
+			RoleName     string `json:"rolename"`
+			SessionID    string `json:"sessionid"`
+		} `json:"result"`
+	} `json:"data"`
+	Error *struct {
+		System string `json:"system"`
+		// User   string `json:"user"`
+	} `json:"error,omitempty"`
+	Status string `json:"status"`
+}
+
+type SaldoNeraca struct {
+	Data struct {
+		Result []struct {
+			Cabang       string `json:"cabang"`
+			NoAkun       string `json:"noakun"`
+			NamaAkun     string `json:"namaakun"`
+			SaldoAwal    string `json:"saldoawal"`
+			MutasiDebit  string `json:"mutasidebit"`
+			MutasiKredit string `json:"mutasikredit"`
+			SaldoAkhir   string `json:"saldoakhir"`
+		} `json:"result"`
+		PageSize   int64  `json:"pageSize"`
+		PageNumber int64  `json:"pageNumber"`
+		RowCount   string `json:"rowCount"`
+	} `json:"data"`
+	Status string `json:"status"`
+}
+
+func main() {
+	db, err := connectDB()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error connecting to database: %v\n", err)
+		return
+	}
+	defer db.Close()
+
+	dateStr := flag.String("date", "", "Date for saldo neraca in YYYY-MM-DD format (default: today)")
+	flag.Parse()
+
+	if *dateStr != "" {
+		if _, err := time.Parse("2006-01-02", *dateStr); err != nil {
+			fmt.Fprintf(os.Stderr, "Invalid date format: %v\n", err)
+			return
+		}
+	} else {
+		*dateStr = time.Now().Format("2006-01-02")
+	}
+
+	date, err := time.Parse("2006-01-02", *dateStr)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error parsing date: %v\n", err)
+		return
+	}
+
+	username, password, err := getCredentials()
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error getting credentials: %v\n", err)
+		return
+	}
+
+	loginResp, err := login(username, password)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error during login: %v\n", err)
+		return
+	}
+
+	fmt.Printf(
+		"Logged in as %s (Role: %s - %s)\n",
+		username,
+		loginResp.Data.Result.LocationName,
+		loginResp.Data.Result.RoleName,
+	)
+
+	kcList := make([]string, 8)
+	for i := range kcList {
+		kcList[i] = fmt.Sprintf("%03d", i+1)
+	}
+
+	type saldoResult struct {
+		branch      string
+		saldoNeraca SaldoNeraca
+		err         error
+	}
+
+	resCh := make(chan saldoResult, len(kcList))
+	wg := sync.WaitGroup{}
+
+	for _, kc := range kcList {
+		wg.Go(func() {
+			saldo, err := fetchSaldoNeraca(loginResp.Data.Result.SessionID, kc, date)
+			if err != nil {
+				resCh <- saldoResult{branch: kc, err: err}
+				return
+			}
+			resCh <- saldoResult{branch: kc, saldoNeraca: saldo}
+		})
+	}
+
+	go func() {
+		wg.Wait()
+		close(resCh)
+	}()
+
+	for res := range resCh {
+		if res.err != nil {
+			fmt.Fprintf(
+				os.Stderr,
+				"Error fetching saldo neraca for branch %s: %v\n",
+				res.branch,
+				res.err,
+			)
+			continue
+		}
+
+		branch := res.branch
+		if len(res.saldoNeraca.Data.Result) > 0 &&
+			res.saldoNeraca.Data.Result[0].Cabang != "" {
+			branch = res.saldoNeraca.Data.Result[0].Cabang
+		}
+
+		fmt.Printf("Branch %s - Retrieved %d records\n", branch, len(res.saldoNeraca.Data.Result))
+		err = insertOrUpdateSaldo(db, date.Format("2006-01-02"), res.branch, res.saldoNeraca)
+		if err != nil {
+			fmt.Fprintf(
+				os.Stderr,
+				"Error inserting/updating saldo neraca for branch %s: %v\n",
+				branch,
+				err,
+			)
+			continue
+		}
+		fmt.Printf("Branch %s - Successfully inserted/updated records\n", branch)
+	}
+}
+
+func connectDB() (*sql.DB, error) {
+	db, err := sql.Open("mysql", dbSource)
+	if err != nil {
+		return nil, err
+	}
+	if err = db.Ping(); err != nil {
+		return nil, err
+	}
+	return db, nil
+}
+
+func insertOrUpdateSaldo(db *sql.DB, date, branch string, saldo SaldoNeraca) error {
+	sanitize := func(s string) string {
+		s = strings.ReplaceAll(s, ",", "")
+		s = strings.ReplaceAll(s, "<", "")
+		s = strings.ReplaceAll(s, ">", "")
+		return strings.TrimSpace(s)
+	}
+	for _, record := range saldo.Data.Result {
+		record.SaldoAwal = sanitize(record.SaldoAwal)
+		record.MutasiDebit = sanitize(record.MutasiDebit)
+		record.MutasiKredit = sanitize(record.MutasiKredit)
+		record.SaldoAkhir = sanitize(record.SaldoAkhir)
+
+		var exists bool
+		err := db.QueryRow(
+			"SELECT EXISTS(SELECT 1 FROM saldo_neracas WHERE tanggal = ? AND cabang = ? AND noakun = ?)",
+			date, branch, record.NoAkun,
+		).Scan(&exists)
+		if err != nil {
+			return fmt.Errorf("error checking existence: %w", err)
+		}
+
+		if exists {
+			_, err = db.Exec(
+				`UPDATE saldo_neracas
+				 SET namaakun = ?, saldoawal = ?, mutasidebit = ?, mutasikredit = ?, saldoakhir = ?, updated_at = NOW()
+				 WHERE tanggal = ? AND cabang = ? AND noakun = ?`,
+				record.NamaAkun, record.SaldoAwal, record.MutasiDebit, record.MutasiKredit, record.SaldoAkhir,
+				date, branch, record.NoAkun,
+			)
+			if err != nil {
+				return fmt.Errorf("error updating record: %w", err)
+			}
+		} else {
+			_, err = db.Exec(
+				`INSERT INTO saldo_neracas (cabang, tanggal, noakun, namaakun, saldoawal, mutasidebit, mutasikredit, saldoakhir, created_at, updated_at)
+				 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+				branch, date, record.NoAkun, record.NamaAkun, record.SaldoAwal, record.MutasiDebit, record.MutasiKredit, record.SaldoAkhir, time.Now(), time.Now(),
+			)
+			if err != nil {
+				return fmt.Errorf("error inserting record: %w", err)
+			}
+		}
+	}
+	return nil
+}
+
+func getCredentials() (string, string, error) {
+	username := os.Getenv("FINCLOUD_USERNAME")
+	if username == "" {
+		input, err := askInput("Enter username: ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading username: %v\n", err)
+			return "", "", err
+		}
+		username = strings.TrimSpace(input)
+	}
+
+	password := os.Getenv("FINCLOUD_PASSWORD")
+	if password == "" {
+		input, err := askInput("Enter password: ")
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "Error reading password: %v\n", err)
+			return "", "", err
+		}
+		password = strings.TrimSpace(input)
+	}
+
+	return username, password, nil
+}
+
+func askInput(prompt string) (string, error) {
+	fmt.Print(prompt)
+	reader := bufio.NewReader(os.Stdin)
+	input, err := reader.ReadString('\n')
+	if err != nil {
+		return "", err
+	}
+	return input, nil
+}
+
+func login(username, password string) (LoginResponse, error) {
+	form := url.Values{}
+	form.Add("locationid", "001") // Kantor Pusat Operasional
+	form.Add("roleid", "R-0004")  // Back Office
+	form.Add("username", username)
+	form.Add("pwd", password)
+
+	req, err := http.NewRequest("POST", baseURL+"/admin/access/login", strings.NewReader(form.Encode()))
+	if err != nil {
+		return LoginResponse{}, err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("User-Agent", userAgent)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return LoginResponse{}, fmt.Errorf("login failed: %s", resp.Status)
+	}
+
+	var result LoginResponse
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return LoginResponse{}, err
+	}
+
+	if result.Status != "ok" {
+		if result.Error != nil {
+			return LoginResponse{}, fmt.Errorf("login error: %s", result.Error.System)
+		}
+		return LoginResponse{}, fmt.Errorf("login failed with unknown error")
+	}
+
+	return result, nil
+}
+
+func fetchSaldoNeraca(sessionId, branchOffice string, date time.Time) (SaldoNeraca, error) {
+	req, err := http.NewRequest(
+		"GET",
+		baseURL+"/bukuBesar/laporan/neracasaldo/cari",
+		nil,
+	)
+	if err != nil {
+		return SaldoNeraca{}, err
+	}
+
+	q := req.URL.Query()
+	q.Add("cabang", branchOffice)
+	q.Add("pagenumber", "0")
+	q.Add("pagesize", "50000")
+	q.Add("rowcount", "0")
+	q.Add("tanggal", date.Format("2006-01-02"))
+	q.Add("tgl", time.Now().Format("2006-01-02"))
+	req.URL.RawQuery = q.Encode()
+
+	req.Header.Set("User-Agent", userAgent)
+	req.Header.Set("sessionid", sessionId)
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return SaldoNeraca{}, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return SaldoNeraca{}, fmt.Errorf("failed to fetch saldo neraca: %s", resp.Status)
+	}
+
+	var result SaldoNeraca
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return SaldoNeraca{}, err
+	}
+
+	if result.Status != "ok" {
+		return SaldoNeraca{}, fmt.Errorf("failed to fetch saldo neraca with unknown error")
+	}
+
+	return result, nil
+}
