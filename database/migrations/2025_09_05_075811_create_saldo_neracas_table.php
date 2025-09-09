@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('saldo_neracas', function (Blueprint $table) {
             $table->id();
-            $table->string('cabang');
+            $table->char('cabang', 3);
             $table->date('tanggal');
             $table->string('noakun');
             $table->string('namaakun');
@@ -22,6 +22,8 @@ return new class extends Migration
             $table->decimal('mutasikredit', 15, 2);
             $table->decimal('saldoakhir', 15, 2);
             $table->timestamps();
+
+            $table->foreign('cabang')->references('branch_code_fincloud')->on('branch_offices')->onDelete('cascade');
         });
     }
 
