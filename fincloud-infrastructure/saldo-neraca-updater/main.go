@@ -234,9 +234,12 @@ func insertOrUpdateSaldo(db *sql.DB, date, branch string, saldo SaldoNeraca) err
 		end := min(i+batchSize, len(rows))
 
 		var sb strings.Builder
-		sb.WriteString(`INSERT INTO saldo_neracas
-            (cabang, tanggal, noakun, namaakun, saldoawal, mutasidebit, mutasikredit, saldoakhir, created_at, updated_at)
-            VALUES `)
+		sb.WriteString(`INSERT INTO `)
+		sb.WriteString(os.Getenv("TABLE_SOURCE"))
+		sb.WriteString(`
+			(cabang, tanggal, noakun, namaakun, saldoawal, mutasidebit, mutasikredit, saldoakhir, created_at, updated_at)
+			VALUES `,
+		)
 
 		placeholders := make([]string, 0, end-i)
 		args := make([]any, 0, (end-i)*10)
