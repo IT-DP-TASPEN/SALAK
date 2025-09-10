@@ -271,7 +271,7 @@ class BranchOffice extends BaseModel
             )
             ->where('neraca_kantor', $this->branch_code)
             ->whereIn('perk_kode', $kodePerkiraanList)
-            ->where('neraca_tanggal', '<', $tanggal)
+            ->where('neraca_tanggal', '<=', $tanggal)
             ->groupBy('sandip_pos')
             ->pluck('saldo', 'perk_kode');
 
