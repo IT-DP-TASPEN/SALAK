@@ -271,7 +271,7 @@ class BranchOffice extends BaseModel
             )
             ->where('neraca_kantor', $this->branch_code)
             ->whereIn('perk_kode', $kodePerkiraanList)
-            ->where('neraca_tanggal', '<=', $tanggal)
+            ->where('neraca_tanggal', '<', $tanggal)
             ->groupBy('sandip_pos')
             ->pluck('saldo', 'perk_kode');
 
@@ -280,6 +280,168 @@ class BranchOffice extends BaseModel
 
     public function fincloudSaldoNeraca(): HasMany
     {
-        return $this->hasMany(SaldoNeraca::class, 'cabang', 'id');
+        return $this->hasMany(SaldoNeraca::class, 'cabang', 'branch_code_fincloud');
+    }
+
+    public function fincloudSaldoKas(?string $tanggal): float
+    {
+        $neraca = $this
+            ->fincloudSaldoNeraca()
+            ->where('noakun', '1011000') // cash
+            ->where('tanggal', $tanggal ?? Carbon::today()->toDateString())
+            ->first();
+        return $neraca->saldoakhir ?? 0.0;
+    }
+
+    public function fincloudBakiDebet(?string $tanggal): float
+    {
+        $neraca = $this
+            ->fincloudSaldoNeraca()
+            ->where('noakun', '121') // loan receivable
+            ->where('tanggal', $tanggal ?? Carbon::today()->toDateString())
+            ->first();
+        return $neraca->saldoakhir ?? 0.0;
+    }
+
+    public function fincloudKewajibanLancar(?string $tanggal): float
+    {
+        $neraca = $this
+            ->fincloudSaldoNeraca()
+            ->whereIn('noakun', [
+                '210',     // Tax Payable
+                '2011008', // Deposit - Interest Due
+                '2011001', // Deposit - Third Parties
+                '2011004', // Debtor Customer Deposit / Temporary
+                '2011005', // Taspen Pension Customer Deposits
+                '2011006', // Deposits for Retired Civil Servants
+                '2011007', // DP Taspen Pension Deposit
+                '2081002', // Deposit - Premium Deposit
+                '2081003', // Deposit - Non-formal BPJSTK Premium for BPR DP TASPEN Customers
+                '2011009', // Other Deposits - Credit Marketing Fee
+                '2011010', // Other Deposits - Others
+                '2212101', // Savings Saving Account - main
+                '2212102', // Savings Pension ASN
+                '2212103', // Savings Pension Taspen
+                '2212104', // Savings Simpel
+                '2212105', // Savings Friend
+                '2212106', // Savings SISETO
+                '2212107', // Savings IBADAH
+                '2212108', // Savings QURBAN
+                '2212109', // Savings TOUR
+                '2212110', // Savings EMAS
+                '2312200', // Time Deposit 01
+                '2312201', // Time Deposit 02
+            ])
+            ->where('tanggal', $tanggal ?? Carbon::today()->toDateString())
+            ->get();
+        return $neraca->sum('saldoakhir');
+    }
+
+    public function fincloudAbaGiro(?string $tanggal): float
+    {
+        $neraca = $this
+            ->fincloudSaldoNeraca()
+            ->whereIn('noakun', [
+                '1111010', // Current Account BCA
+                '1111011', // Current Account Danamon
+                '1111012', // Current Account Mandiri
+                '1111013', // Current Account Permata
+                '1111014', // Current Account BPD Banten
+                '1111015', // Current Account Mayapada
+                '1111016', // Current Account J - trust
+                '1111018', // Current Account Permata BTB
+                '1111019', // Current Account BNI
+                '1111020', // Current Account BRI
+                '1111021', // Current Account BPD Jabar
+                '1111022', // Current Account BRI
+                '1111023', // Current Account Mandiri Taspen
+                '1111024', // Current Account Mandiri Taspen
+                '1111025', // Current Account BPR Jabar
+                '1111026', // Current Account BWS
+                '1111027', // Current Account DKI
+                '1111028', // Current Account BSI
+                '1111029', // Current Account BTN
+                '1111030', // Current Account Maybank Indonesia
+                '1111031', // Current Account Aladin Syariah
+                '1111032', // Current Account Maybank Indonesia
+                '1111033', // Current Account BRI
+                '1111034', // Current Account Niaga
+                '1111035', // Current Account Mandiri
+                '1111036', // Current Account Mandiri
+                '1111037', // Current Account BRI
+                '1111038', // Current Account BRI
+                '1111039', // Current Account Mandiri
+                '1111040', // Current Account Mandiri
+                '1111041', // Current Account BRI
+                '1111042', // Current Account Mandiri
+                '1111043', // Current Account BRI
+                '1111044', // Current Account Mandiri
+                '1111045', // Current Account BRI
+                '1111046', // Current Account BPD Jabar
+                '1111047', // Current Account BPD Jabar
+                '1111048', // Current Account BRI
+            ])
+            ->where('tanggal', $tanggal ?? Carbon::today()->toDateString())
+            ->get();
+        return $neraca->sum('saldoakhir');
+    }
+
+    public function fincloudAbaTabungan(?string $tanggal): float
+    {
+        $neraca = $this
+            ->fincloudSaldoNeraca()
+            ->whereIn('noakun', [
+                '1121100', // Savings Account BCA
+                '1121101', // Savings Account Danamon
+                '1121102', // Savings Account Mandiri
+                '1121103', // Savings Account Permata
+                '1121104', // Savings Account BPD Banten
+                '1121105', // Savings Account Mayapada
+                '1121106', // Savings Account J-trust
+                '1121107', // Savings Account Perkreditan Rakyat Karyajatnika Sadaya
+                '1121108', // Savings Account Permata BTB
+                '1121109', // Savings Account PT BPRS Mulia Berkah Abadi
+                '1121110', // Savings Account PT BPR Lestari Bali
+                '1121111', // Savings Account PT BPR Ulima Djumpa Marom
+                '1121112', // Savings Account BRI
+            ])
+            ->where('tanggal', $tanggal ?? Carbon::today()->toDateString())
+            ->get();
+        return $neraca->sum('saldoakhir');
+    }
+
+    public function fincloudAssetLiquid(?string $tanggal = null, bool $simulated = false): float
+    {
+        $kas = $this->fincloudSaldoKas($tanggal);
+        $abaGiro = $this->fincloudAbaGiro($tanggal);
+        $abaTabungan = $this->fincloudAbaTabungan($tanggal);
+
+        $ret = $kas + $abaGiro + $abaTabungan - $this->branch_saldo_aba_blokir;
+
+        if ($simulated) {
+            $proyeksiLendings = $this->proyeksiLendings()
+                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
+                ->whereRaw('lending_tanggal = CURDATE()')
+                ->sum('lending_booking_bersih');
+            $ret -= $proyeksiLendings;
+
+            $proyeksiFunding = $this->proyeksiFundings()
+                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
+                ->whereRaw('funding_tanggal = CURDATE()')
+                ->sum('funding_nominal_bersih');
+            $ret += $proyeksiFunding;
+        }
+
+        return $ret;
+    }
+
+    public function fincloudCashRatio(?string $tanggal = null, bool $simulated = false): float
+    {
+        $assetLiquid = $this->fincloudAssetLiquid($tanggal, $simulated);
+        $kewajibanLancar = $this->fincloudKewajibanLancar($tanggal);
+        if ($kewajibanLancar === 0.0) {
+            return 0.0;
+        }
+        return $assetLiquid / $kewajibanLancar * 100;
     }
 }

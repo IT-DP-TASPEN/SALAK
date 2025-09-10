@@ -20,6 +20,6 @@ class SaldoNeraca extends Model
 
     public function branchOffice(): BelongsTo
     {
-        return $this->belongsTo(BranchOffice::class, 'cabang', 'id');
+        return $this->belongsTo(BranchOffice::class, 'cabang', 'branch_code_fincloud');
     }
 }
