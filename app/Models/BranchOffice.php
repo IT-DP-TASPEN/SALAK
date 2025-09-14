@@ -41,6 +41,11 @@ class BranchOffice extends BaseModel
         return $this->hasMany(DataAbaTrans::class, 'trans_kantor', 'branch_code');
     }
 
+    public function cashFlows(): HasMany
+    {
+        return $this->hasMany(CashFlow::class, 'cash_kantor', 'id');
+    }
+
     public function saldoAbpTabungan(?string $tanggal = null): float
     {
         return $this->saldoNeraca(['1.240.10'], $tanggal)['1.240.10'];

@@ -63,6 +63,16 @@ class User extends Authenticatable implements FilamentUser
         return true;
     }
 
+    public function isKantorPusatEmployee(): bool
+    {
+        return $this->branchOffice->id === '00';
+    }
+
+    public function cashFlows(): HasMany
+    {
+        return $this->hasMany(CashFlow::class, 'cash_user', 'id');
+    }
+
     public function branchOffice(): BelongsTo
     {
         return $this->belongsTo(BranchOffice::class, 'branch_office_id', 'id');
