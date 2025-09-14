@@ -8,12 +8,16 @@ use App\Models\CashFlow;
 use App\Models\CashFlowKind;
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
+use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\RawJs;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class CashFlowResource extends Resource
 {
@@ -112,6 +116,14 @@ class CashFlowResource extends Resource
     {
         return $table
             ->columns([
+                Tables\Columns\TextColumn::make('approval.approval_status')
+                    ->label('Status')
+                    ->badge()
+                    ->colors([
+                        'primary' => 'Pending',
+                        'success' => 'Approved',
+                        'danger' => 'Rejected',
+                    ]),
                 Tables\Columns\TextColumn::make('kind.kind_name')
                     ->label('Jenis')
                     ->sortable()
@@ -142,7 +154,12 @@ class CashFlowResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                DateRangeFilter::make('cash_tanggal')
+                    ->label('Tanggal')
+                    ->alwaysShowCalendar()
+                    ->autoApply()
+                    ->withIndicator()
+                    ->useRangeLabels(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -151,7 +168,9 @@ class CashFlowResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('cash_tanggal', 'desc')
+            ->recordUrl(fn(CashFlow $record) => static::getUrl('view', ['record' => $record]));
     }
 
     public static function getRelations(): array
@@ -167,6 +186,46 @@ class CashFlowResource extends Resource
             'index' => Pages\ListCashFlows::route('/'),
             'create' => Pages\CreateCashFlow::route('/create'),
             'edit' => Pages\EditCashFlow::route('/{record}/edit'),
+            'view' => Pages\ViewCashFlow::route('/{record}'),
         ];
+    }
+
+    public static function infolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->schema([
+                Section::make('Detail')
+                    ->schema([
+                        TextEntry::make('approval.approval_status')
+                            ->label('Status Approval')
+                            ->badge()
+                            ->colors([
+                                'primary' => 'Pending',
+                                'success' => 'Approved',
+                                'danger' => 'Rejected',
+                            ]),
+                        TextEntry::make('kind.kind_name')
+                            ->label('Jenis'),
+                        TextEntry::make('branchOffice.branch_name')
+                            ->label('Kantor'),
+                        TextEntry::make('user.name')
+                            ->label('User'),
+                        TextEntry::make('cash_tanggal')
+                            ->label('Tanggal')
+                            ->date('d M Y'),
+                        TextEntry::make('cash_keterangan')
+                            ->label('Keterangan'),
+                        TextEntry::make('cash_jumlah')
+                            ->label('Jumlah')
+                            ->money('IDR', 0, 'id_ID'),
+                        TextEntry::make('created_at')
+                            ->label('Dibuat pada')
+                            ->dateTime(),
+                        TextEntry::make('updated_at')
+                            ->label('Terakhir diperbarui')
+                            ->dateTime(),
+                    ])
+                    ->columns(2),
+            ]);
     }
 }

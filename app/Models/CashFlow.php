@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class CashFlow extends Model
 {
@@ -15,6 +16,23 @@ class CashFlow extends Model
         'cash_keterangan',
         'cash_jumlah',
     ];
+
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::created(function ($cashflow) {
+            $approval = new CashFlowApproval();
+            $approval->approval_cash_flow = $cashflow->id;
+            $approval->approval_status = 'Pending';
+            $approval->save();
+        });
+    }
+
+    public function approval(): HasOne
+    {
+        return $this->hasOne(CashFlowApproval::class, 'approval_cash_flow', 'id');
+    }
 
     public function kind(): BelongsTo
     {
