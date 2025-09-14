@@ -239,6 +239,14 @@ class ProyeksiFundingResource extends Resource
                 Section::make('Informasi Funding')
                     ->columns(2)
                     ->schema([
+                        TextEntry::make('approval.approval_status')
+                            ->label('Status Approval')
+                            ->badge()
+                            ->colors([
+                                'primary' => 'Pending',
+                                'success' => 'Approved',
+                                'danger' => 'Rejected',
+                            ]),
                         TextEntry::make('funding_tanggal')
                             ->label('Tanggal')
                             ->date('d M Y'),
@@ -257,8 +265,15 @@ class ProyeksiFundingResource extends Resource
                             ->label('Nominal')
                             ->money('IDR', 0, 'id_ID'),
                         TextEntry::make('funding_nominal_bersih')
+                            ->visible(fn(ProyeksiFunding $record) => $record->funding_deposito_jenis === 'Cair Tanam')
                             ->label('Nominal Bersih')
                             ->money('IDR', 0, 'id_ID'),
+                        TextEntry::make('created_at')
+                            ->label('Dibuat pada')
+                            ->dateTime(),
+                        TextEntry::make('updated_at')
+                            ->label('Terakhir diperbarui')
+                            ->dateTime(),
                     ]),
             ]);
     }
