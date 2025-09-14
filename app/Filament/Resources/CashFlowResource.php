@@ -18,8 +18,9 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 class CashFlowResource extends Resource
 {
     protected static ?string $model = CashFlow::class;
-
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationGroup = 'Cash Flow';
+    protected static ?string $navigationLabel = 'Cash Flow';
+    protected static ?string $navigationIcon = 'heroicon-o-banknotes';
 
     public static function form(Form $form): Form
     {
