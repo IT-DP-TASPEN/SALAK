@@ -46,7 +46,9 @@ class CashFlowResource extends Resource
                         if (!$kind_type) {
                             return [];
                         }
-                        return CashFlowKind::where('kind_type', $kind_type)->pluck('kind_name', 'id');
+                        return CashFlowKind::where('kind_type', $kind_type)
+                            ->when(!auth()->user()->isKantorPusatEmployee(), fn($q) => $q->where('kind_pusat_only', false))
+                            ->pluck('kind_name', 'id');
                     })
                     ->disabled(fn(callable $get) => !$get('cash_kind_type'))
                     ->columnSpanFull()
