@@ -444,4 +444,19 @@ class BranchOffice extends BaseModel
         }
         return $assetLiquid / $kewajibanLancar * 100;
     }
+
+    public static function fincloudKonsolidasiCashRatio(?string $tanggal = null, bool $simulated = false): float
+    {
+        $totalLiquid = 0.0;
+        $totalKewajibanLancar = 0.0;
+
+        static::query()->chunkById(200, function ($branches) use ($tanggal, $simulated, &$totalLiquid, &$totalKewajibanLancar) {
+            foreach ($branches as $branch) {
+                $totalLiquid += $branch->fincloudAssetLiquid($tanggal, $simulated);
+                $totalKewajibanLancar += $branch->fincloudKewajibanLancar($tanggal);
+            }
+        });
+
+        return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
+    }
 }
