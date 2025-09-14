@@ -86,6 +86,7 @@ class ProyeksiFundingResource extends Resource
                                 }
                             )
                             ->required()
+                            ->reactive()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('funding_nasabah_nama')
                             ->label('Nama Nasabah')
@@ -114,6 +115,7 @@ class ProyeksiFundingResource extends Resource
                             ->stripCharacters(',')
                             ->debounce()
                             ->numeric()
+                            ->visible(fn(callable $get) => $get('funding_deposito_jenis') === 'Cair Tanam')
                             ->required()
                             ->inlineLabel(),
                     ])
