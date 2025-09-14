@@ -38,24 +38,48 @@ class CashFlowResource extends Resource
                             })
                             ->columnSpanFull()
                             ->inlineLabel()
-                            ->dehydrated()
                             ->reactive()
+                            ->dehydrated(false) // helper field; do not save to DB
                             ->required(),
                         Forms\Components\Select::make('cash_kind')
                             ->label('Jenis')
                             ->prefixIcon('heroicon-o-tag')
-                            ->options(function (callable $get) {
-                                $kind_type = $get('cash_kind_type');
-                                if (!$kind_type) {
+                            ->options(function (callable $get): array {
+                                $type = $get('cash_kind_type');
+
+                                // When editing, infer type from selected cash_kind if not set yet
+                                if (!$type) {
+                                    $selectedId = $get('cash_kind');
+                                    if ($selectedId) {
+                                        $type = CashFlowKind::whereKey($selectedId)->value('kind_type');
+                                    }
+                                }
+
+                                if (!$type) {
                                     return [];
                                 }
-                                return CashFlowKind::where('kind_type', $kind_type)
+
+                                return CashFlowKind::query()
+                                    ->where('kind_type', $type)
                                     ->when(!auth()->user()->isKantorPusatEmployee(), fn($q) => $q->where('kind_pusat_only', false))
-                                    ->pluck('kind_name', 'id');
+                                    ->pluck('kind_name', 'id')
+                                    ->all();
+                            })
+                            ->afterStateHydrated(function (callable $set, $state): void {
+                                // Ensure the dependent type is initialized on edit
+                                if ($state) {
+                                    $type = CashFlowKind::whereKey($state)->value('kind_type');
+                                    if ($type) {
+                                        $set('cash_kind_type', $type);
+                                    }
+                                }
                             })
                             ->disabled(fn(callable $get) => !$get('cash_kind_type'))
+                            ->searchable()
+                            ->preload()
                             ->columnSpanFull()
                             ->inlineLabel()
+                            ->reactive()
                             ->required(),
                         Forms\Components\DatePicker::make('cash_tanggal')
                             ->label('Tanggal')
