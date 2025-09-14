@@ -26,57 +26,61 @@ class CashFlowResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\Select::make('cash_kind_type')
-                    ->label('Tipe')
-                    ->prefixIcon('heroicon-o-arrows-right-left')
-                    ->options(function () {
-                        $opts = CashFlowKind::getPossibleEnumValues('kind_type');
-                        return array_combine($opts, $opts);
-                    })
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->dehydrated()
-                    ->reactive()
-                    ->required(),
-                Forms\Components\Select::make('cash_kind')
-                    ->label('Jenis')
-                    ->prefixIcon('heroicon-o-tag')
-                    ->options(function (callable $get) {
-                        $kind_type = $get('cash_kind_type');
-                        if (!$kind_type) {
-                            return [];
-                        }
-                        return CashFlowKind::where('kind_type', $kind_type)
-                            ->when(!auth()->user()->isKantorPusatEmployee(), fn($q) => $q->where('kind_pusat_only', false))
-                            ->pluck('kind_name', 'id');
-                    })
-                    ->disabled(fn(callable $get) => !$get('cash_kind_type'))
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->required(),
-                Forms\Components\DatePicker::make('cash_tanggal')
-                    ->label('Tanggal')
-                    ->prefixIcon('heroicon-o-calendar')
-                    ->default(now())
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->required(),
-                Forms\Components\Textarea::make('cash_keterangan')
-                    ->label('Keterangan')
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\TextInput::make('cash_jumlah')
-                    ->label('Jumlah')
-                    ->required()
-                    ->prefix('Rp ')
-                    ->debounce()
-                    ->mask(RawJs::make('$money($input)'))
-                    ->stripCharacters([',', '.'])
-                    ->numeric()
-                    ->columnSpanFull()
-                    ->inlineLabel(),
+                Forms\Components\Fieldset::make()
+                    ->columns(1)
+                    ->schema([
+                        Forms\Components\Select::make('cash_kind_type')
+                            ->label('Tipe')
+                            ->prefixIcon('heroicon-o-arrows-right-left')
+                            ->options(function () {
+                                $opts = CashFlowKind::getPossibleEnumValues('kind_type');
+                                return array_combine($opts, $opts);
+                            })
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->dehydrated()
+                            ->reactive()
+                            ->required(),
+                        Forms\Components\Select::make('cash_kind')
+                            ->label('Jenis')
+                            ->prefixIcon('heroicon-o-tag')
+                            ->options(function (callable $get) {
+                                $kind_type = $get('cash_kind_type');
+                                if (!$kind_type) {
+                                    return [];
+                                }
+                                return CashFlowKind::where('kind_type', $kind_type)
+                                    ->when(!auth()->user()->isKantorPusatEmployee(), fn($q) => $q->where('kind_pusat_only', false))
+                                    ->pluck('kind_name', 'id');
+                            })
+                            ->disabled(fn(callable $get) => !$get('cash_kind_type'))
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->required(),
+                        Forms\Components\DatePicker::make('cash_tanggal')
+                            ->label('Tanggal')
+                            ->prefixIcon('heroicon-o-calendar')
+                            ->default(now())
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->required(),
+                        Forms\Components\Textarea::make('cash_keterangan')
+                            ->label('Keterangan')
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\TextInput::make('cash_jumlah')
+                            ->label('Jumlah')
+                            ->required()
+                            ->prefix('Rp ')
+                            ->debounce()
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters([',', '.'])
+                            ->numeric()
+                            ->columnSpanFull()
+                            ->inlineLabel(),
+                    ]),
             ]);
     }
 

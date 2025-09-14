@@ -24,33 +24,37 @@ class CashFlowKindResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('kind_name')
-                    ->label('Nama')
-                    ->prefixIcon('heroicon-o-tag')
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->required()
-                    ->maxLength(255),
-                Forms\Components\Select::make('kind_type')
-                    ->label('Tipe')
-                    ->prefixIcon('heroicon-o-arrows-right-left')
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->options(function () {
-                        $opts = CashFlowKind::getPossibleEnumValues('kind_type');
-                        return array_combine($opts, $opts);
-                    })
-                    ->required(),
-                Forms\Components\Textarea::make('kind_description')
-                    ->label('Deskripsi')
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->maxLength(255),
-                Forms\Components\Toggle::make('kind_pusat_only')
-                    ->label('Hanya untuk Kantor Pusat')
-                    ->columnSpanFull()
-                    ->inlineLabel()
-                    ->required(),
+                Forms\Components\Fieldset::make()
+                    ->columns(1)
+                    ->schema([
+                        Forms\Components\TextInput::make('kind_name')
+                            ->label('Nama')
+                            ->prefixIcon('heroicon-o-tag')
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->required()
+                            ->maxLength(255),
+                        Forms\Components\Select::make('kind_type')
+                            ->label('Tipe')
+                            ->prefixIcon('heroicon-o-arrows-right-left')
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->options(function () {
+                                $opts = CashFlowKind::getPossibleEnumValues('kind_type');
+                                return array_combine($opts, $opts);
+                            })
+                            ->required(),
+                        Forms\Components\Textarea::make('kind_description')
+                            ->label('Deskripsi')
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->maxLength(255),
+                        Forms\Components\Toggle::make('kind_pusat_only')
+                            ->label('Hanya untuk Kantor Pusat')
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->required(),
+                    ]),
             ]);
     }
 
