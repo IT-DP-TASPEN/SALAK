@@ -26,6 +26,7 @@ class CashFlowKindSeeder extends Seeder
 
             ['kind_name' => 'Penarikan Tabungan', 'kind_type' => 'Cash Out', 'kind_description' => 'Penarikan tabungan oleh nasabah', 'kind_pusat_only' => false],
             ['kind_name' => 'Pencairan Deposito', 'kind_type' => 'Cash Out', 'kind_description' => 'Pencairan deposito oleh nasabah', 'kind_pusat_only' => false],
+            ['kind_name' => 'Pencairan Kredit', 'kind_type' => 'Cash Out', 'kind_description' => 'Pencairan kredit kepada nasabah', 'kind_pusat_only' => false],
             ['kind_name' => 'Pengeluaran Biaya Operasional', 'kind_type' => 'Cash Out', 'kind_description' => 'Pengeluaran biaya operasional kantor cabang', 'kind_pusat_only' => false],
             ['kind_name' => 'Pengeluaran Biaya Non-Operasional', 'kind_type' => 'Cash Out', 'kind_description' => 'Pengeluaran biaya non-operasional kantor cabang', 'kind_pusat_only' => false],
             ['kind_name' => 'Lain-lain', 'kind_type' => 'Cash Out', 'kind_description' => 'Pengeluaran lain-lain', 'kind_pusat_only' => false],
