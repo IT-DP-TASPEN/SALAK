@@ -60,7 +60,8 @@ class ProyeksiFundingResource extends Resource
                             ->dehydrated(false)
                             ->reactive()
                             ->required()
-                            ->inlineLabel(),
+                            ->inlineLabel()
+                            ->default(fn(?ProyeksiFunding $record) => $record?->produk?->produk_jenis),
                         Forms\Components\Select::make('funding_produk')
                             ->label('Produk Funding')
                             ->prefixIcon('heroicon-o-circle-stack')
@@ -68,11 +69,23 @@ class ProyeksiFundingResource extends Resource
                             ->options(
                                 function (callable $get) {
                                     $produkJenis = $get('funding_jenis');
+                                    if (empty($produkJenis)) {
+                                        return [];
+                                    }
                                     return ProdukFunding::where('produk_jenis', $produkJenis)
                                         ->pluck('produk_nama', 'id')
                                         ->toArray();
                                 }
                             )
+                            ->afterStateHydrated(function (callable $set, $state): void {
+                                // Ensure the dependent type is initialized on edit
+                                if ($state) {
+                                    $jenis = ProdukFunding::whereKey($state)->value('produk_jenis');
+                                    if ($jenis) {
+                                        $set('funding_jenis', $jenis);
+                                    }
+                                }
+                            })
                             ->required()
                             ->inlineLabel(),
                         Forms\Components\Select::make('funding_deposito_jenis')
