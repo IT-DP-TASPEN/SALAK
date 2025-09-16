@@ -66,6 +66,7 @@ class CashFlowResource extends Resource
                                 return CashFlowKind::query()
                                     ->where('kind_type', $type)
                                     ->when(!auth()->user()->isKantorPusatEmployee(), fn($q) => $q->where('kind_pusat_only', false))
+                                    ->orderBy('kind_sort_order', 'asc')
                                     ->pluck('kind_name', 'id')
                                     ->all();
                             })
@@ -124,6 +125,10 @@ class CashFlowResource extends Resource
                         'success' => 'Approved',
                         'danger' => 'Rejected',
                     ]),
+                Tables\Columns\TextColumn::make('kind.kind_type')
+                    ->label('Tipe')
+                    ->sortable()
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('kind.kind_name')
                     ->label('Jenis')
                     ->sortable()

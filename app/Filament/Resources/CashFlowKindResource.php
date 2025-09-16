@@ -49,6 +49,13 @@ class CashFlowKindResource extends Resource
                             ->columnSpanFull()
                             ->inlineLabel()
                             ->maxLength(255),
+                        Forms\Components\TextInput::make('kind_sort_order')
+                            ->label('Urutan')
+                            ->columnSpanFull()
+                            ->inlineLabel()
+                            ->required()
+                            ->default(0)
+                            ->numeric(),
                         Forms\Components\Toggle::make('kind_pusat_only')
                             ->label('Hanya untuk Kantor Pusat')
                             ->columnSpanFull()
@@ -84,7 +91,11 @@ class CashFlowKindResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                Tables\Filters\SelectFilter::make('kind_type')
+                    ->options(function () {
+                        $opts = CashFlowKind::getPossibleEnumValues('kind_type');
+                        return array_combine($opts, $opts);
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
@@ -93,7 +104,8 @@ class CashFlowKindResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->defaultSort('kind_sort_order', 'asc');
     }
 
     public static function getRelations(): array
