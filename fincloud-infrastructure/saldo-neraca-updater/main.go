@@ -19,9 +19,10 @@ import (
 )
 
 const (
-	batchSize = 200
-	baseURL   = "http://172.22.80.24/fincloud-taspen"
-	userAgent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0"
+	batchSize  = 200
+	maxRetries = 3
+	baseURL    = "http://172.22.80.24/fincloud-taspen"
+	userAgent  = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0"
 )
 
 type LoginResponse struct {
@@ -133,9 +134,21 @@ func main() {
 		wg.Go(func() {
 			saldo, err := fetchSaldoNeraca(loginResp.Data.Result.SessionID, kc, date)
 			if err != nil {
+				for attempt := 1; attempt <= maxRetries; attempt++ {
+					fmt.Printf("Retrying fetch for branch %s (attempt %d/%d)\n", kc, attempt, maxRetries)
+					saldo, err = fetchSaldoNeraca(loginResp.Data.Result.SessionID, kc, date)
+					if err == nil {
+						break
+					}
+					time.Sleep(2 * time.Second) // Backoff before retrying
+				}
+			}
+
+			if err != nil {
 				resCh <- saldoResult{branch: kc, err: err}
 				return
 			}
+
 			resCh <- saldoResult{branch: kc, saldoNeraca: saldo}
 		})
 	}
