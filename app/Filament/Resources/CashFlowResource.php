@@ -6,6 +6,7 @@ use App\Filament\Resources\CashFlowResource\Pages;
 use App\Filament\Resources\CashFlowResource\RelationManagers;
 use App\Models\CashFlow;
 use App\Models\CashFlowKind;
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Infolists\Components\Section;
@@ -90,6 +91,7 @@ class CashFlowResource extends Resource
                             ->label('Tanggal')
                             ->prefixIcon('heroicon-o-calendar')
                             ->default(now())
+                            ->minDate(now())
                             ->columnSpanFull()
                             ->inlineLabel()
                             ->required(),
