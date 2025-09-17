@@ -5,7 +5,9 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\CashRatioChart;
 use App\Filament\Widgets\LoanToDepositRatioChart;
 use App\Filament\Widgets\NonPerformingLoanChart;
+use Carbon\Carbon;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Support\Htmlable;
 
 class RekapTKSPerCabang extends Page
 {
@@ -20,5 +22,11 @@ class RekapTKSPerCabang extends Page
             LoanToDepositRatioChart::class,
             NonPerformingLoanChart::class,
         ];
+    }
+
+    public function getHeading(): string | Htmlable
+    {
+        $yesterday = Carbon::yesterday();
+        return "Rekap TKS per Cabang - {$yesterday->format('d M Y')}";
     }
 }
