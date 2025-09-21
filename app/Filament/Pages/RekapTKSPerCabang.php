@@ -11,6 +11,7 @@ use Illuminate\Contracts\Support\Htmlable;
 
 class RekapTKSPerCabang extends Page
 {
+    protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $title = 'Rekap TKS Per Cabang';
     protected static string $view = 'filament.pages.rekap-t-k-s-per-cabang';

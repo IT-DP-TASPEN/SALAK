@@ -11,11 +11,13 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class RekapCashFlow extends Page implements HasTable
 {
     use InteractsWithTable;
-
+    protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
 
     protected static string $view = 'filament.pages.rekap-cash-flow';
