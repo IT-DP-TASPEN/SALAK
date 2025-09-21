@@ -275,7 +275,6 @@ class ProyeksiLendingResource extends Resource
                             ->required()
                             ->reactive()
                             ->dehydrated()
-                            ->selectablePlaceholder(false)
                             ->visible(
                                 fn($get) => $get('lending_tanggal_lahir_debitur')
                                     && Carbon::parse($get('lending_tanggal_lahir_debitur'))->diffInYears(Carbon::now()) < 65
