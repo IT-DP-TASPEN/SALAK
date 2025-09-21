@@ -148,6 +148,11 @@ class ProyeksiLendingResource extends Resource
                             )
                             ->required()
                             ->reactive()
+                            ->afterStateUpdated(function (Forms\Set $set, $state) {
+                                if ($state !== 'BARU') {
+                                    $set('lending_tipe_pengajuan', null);
+                                }
+                            })
                             ->inlineLabel(),
                         Forms\Components\Select::make('lending_tipe_pengajuan')
                             ->label('Tipe Pengajuan')
@@ -205,6 +210,7 @@ class ProyeksiLendingResource extends Resource
                             ->maxLength(255)
                             ->inlineLabel()
                             ->required()
+                            ->reactive()
                             ->visible(function (Forms\Get $get) {
                                 $mitra = $get('lending_mitra_bayar_takeover');
                                 return \App\Models\MitraBayar::find($mitra)?->mitra_nama === 'KOPERASI';
@@ -354,7 +360,7 @@ class ProyeksiLendingResource extends Resource
                                 ->required(fn($get) => filled($get('lending_mitra_bayar_takeover')))
                                 ->inlineLabel(),
                         ])
-                            ->visible(fn($get) => filled($get('lending_mitra_bayar_takeover'))),
+                            ->visible(fn($get) => $get('lending_tipe_pengajuan') === 'Takeover'),
                         Forms\Components\DatePicker::make('lending_tanggal_rencana_bayar')
                             ->prefixIcon('heroicon-o-calendar')
                             ->label('Tanggal Rencana Bayar')
