@@ -104,7 +104,7 @@ class BranchOffice extends BaseModel
             $giroTab += $this->transaksiABA()
                 ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
                 ->whereDate('trans_reg_date', $asOf->toDateString())
-                ->selectRaw('COALESCE(SUM(trans_kredit), 0) - COALESCE(SUM(trans_debet), 0) AS saldo')
+                ->selectRaw('COALESCE(SUM(trans_kredit - trans_debet), 0) AS saldo')
                 ->value('saldo') ?? 0;
         }
 
