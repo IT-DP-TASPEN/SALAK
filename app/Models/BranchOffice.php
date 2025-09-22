@@ -376,6 +376,7 @@ class BranchOffice extends BaseModel
             ->when($branchCode, fn($q) => $q->where('neraca_kantor', $branchCode))
             ->whereIn('perk_kode', $kodePerkiraanList)
             ->where('neraca_tanggal', '<=', $asOf->toDateString())
+            ->groupBy('perk_kode')
             ->pluck('saldo', 'perk_kode');
 
         return $rows->toArray();
