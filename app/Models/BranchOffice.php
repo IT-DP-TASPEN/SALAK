@@ -174,7 +174,7 @@ class BranchOffice extends BaseModel
                 '1.210', // tabungan
                 '1.220', // deposito
             ],
-            null,
+            $this->branch_code,
             $tanggal,
         );
 
