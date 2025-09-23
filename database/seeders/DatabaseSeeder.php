@@ -24,6 +24,9 @@ class DatabaseSeeder extends Seeder
             StatusDapemSeeder::class,
             StatusKerjaSeeder::class,
             SumberPembayaranLendingSeeder::class,
+
+            AdminSeeder::class,
+            ShieldSeeder::class,
         ]);
     }
 }

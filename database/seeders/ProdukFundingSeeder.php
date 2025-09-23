@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Models\JenisFunding;
 use App\Models\ProdukFunding;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
@@ -14,8 +15,13 @@ class ProdukFundingSeeder extends Seeder
     public function run(): void
     {
         $products = [
+            'ABP' => [
+                ['produk_nama' => 'ABP'],
+            ],
             'Deposito' => [
                 ['produk_nama' => 'Deposito'],
+                ['produk_nama' => 'Deposito Berjangka Perorangan'],
+                ['produk_nama' => 'Deposito Berjangka Antar Bank'],
             ],
             'Tabungan' => [
                 ['produk_nama' => 'Bujang Umroh'],
@@ -36,15 +42,13 @@ class ProdukFundingSeeder extends Seeder
 
         foreach ($products as $type => $items) {
             foreach ($items as $item) {
+                $id = JenisFunding::firstOrCreate(
+                    ['jenis_funding_nama' => $type],
+                    ['jenis_funding_nama' => $type]
+                )->id;
                 ProdukFunding::updateOrCreate(
-                    [
-                        'produk_jenis' => $type,
-                        'produk_nama' => $item['produk_nama'],
-                    ],
-                    [
-                        'produk_jenis' => $type,
-                        'produk_nama' => $item['produk_nama'],
-                    ]
+                    ['produk_nama' => $item['produk_nama']],
+                    array_merge($item, ['produk_jenis' => $id])
                 );
             }
         }

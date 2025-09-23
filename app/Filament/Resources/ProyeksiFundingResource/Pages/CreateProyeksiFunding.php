@@ -18,6 +18,11 @@ class CreateProyeksiFunding extends CreateRecord
         $agent = Agent::findOrFail($data['funding_agent']);
         $data['funding_kantor'] = $agent->branchOffice->id;
 
+        if ($data['funding_deposito_jenis'] === 'Cair Tanam') {
+            $nett = $data['funding_nominal'] - $data['funding_nominal_bersih'];
+            $data['funding_nominal_bersih'] = $nett;
+        }
+
         return $data;
     }
 }

@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProyeksiFundingResource\Pages;
 use App\Filament\Resources\ProyeksiFundingResource\RelationManagers;
+use App\Models\JenisFunding;
 use App\Models\ProdukFunding;
 use App\Models\ProyeksiFunding;
 use Filament\Forms;
@@ -51,17 +52,11 @@ class ProyeksiFundingResource extends Resource
                         Forms\Components\Select::make('funding_jenis')
                             ->label('Jenis Funding')
                             ->prefixIcon('heroicon-o-currency-dollar')
-                            ->options(
-                                function () {
-                                    $opts = ProdukFunding::getPossibleEnumValues('produk_jenis');
-                                    return array_combine($opts, $opts);
-                                }
-                            )
+                            ->options(fn() => JenisFunding::pluck('jenis_funding_nama', 'id'))
                             ->dehydrated(false)
                             ->reactive()
                             ->required()
-                            ->inlineLabel()
-                            ->default(fn(?ProyeksiFunding $record) => $record?->produk?->produk_jenis),
+                            ->inlineLabel(),
                         Forms\Components\Select::make('funding_produk')
                             ->label('Produk Funding')
                             ->prefixIcon('heroicon-o-circle-stack')
@@ -80,7 +75,7 @@ class ProyeksiFundingResource extends Resource
                             ->afterStateHydrated(function (callable $set, $state): void {
                                 // Ensure the dependent type is initialized on edit
                                 if ($state) {
-                                    $jenis = ProdukFunding::whereKey($state)->value('produk_jenis');
+                                    $jenis = ProdukFunding::find($state)?->produk_jenis;
                                     if ($jenis) {
                                         $set('funding_jenis', $jenis);
                                     }
@@ -91,7 +86,7 @@ class ProyeksiFundingResource extends Resource
                         Forms\Components\Select::make('funding_deposito_jenis')
                             ->label('Jenis Deposito')
                             ->prefixIcon('heroicon-o-currency-dollar')
-                            ->visible(fn(callable $get) => $get('funding_jenis') === 'Deposito')
+                            ->visible(fn(callable $get) => $get('funding_jenis') == 2) // HACK: assuming '2' is the ID for 'Deposito'
                             ->options(
                                 function () {
                                     $opts = ProyeksiFunding::getPossibleEnumValues('funding_deposito_jenis');
@@ -108,7 +103,7 @@ class ProyeksiFundingResource extends Resource
                             ->maxLength(255)
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('funding_nominal')
-                            ->label('Nominal')
+                            ->label(fn(callable $get) => $get('funding_deposito_jenis') === 'Cair Tanam' ? 'Nominal Lama' : 'Nominal')
                             ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp ')
                             ->stripCharacters(',')
@@ -122,7 +117,7 @@ class ProyeksiFundingResource extends Resource
                             })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('funding_nominal_bersih')
-                            ->label('Nominal Bersih')
+                            ->label(fn(callable $get) => $get('funding_deposito_jenis') === 'Cair Tanam' ? 'Nominal Baru' : 'Nominal')
                             ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp ')
                             ->stripCharacters(',')

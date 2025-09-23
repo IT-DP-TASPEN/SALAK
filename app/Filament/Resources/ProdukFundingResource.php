@@ -26,12 +26,7 @@ class ProdukFundingResource extends Resource
             ->schema([
                 Forms\Components\Select::make('produk_jenis')
                     ->label('Jenis Produk')
-                    ->options(
-                        function () {
-                            $opts = ProdukFunding::getPossibleEnumValues('produk_jenis');
-                            return array_combine($opts, $opts);
-                        }
-                    )
+                    ->relationship('jenis', 'jenis_funding_nama')
                     ->required(),
                 Forms\Components\TextInput::make('produk_nama')
                     ->label('Nama Produk')
@@ -44,7 +39,7 @@ class ProdukFundingResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('produk_jenis')
+                Tables\Columns\TextColumn::make('jenis.jenis_funding_nama')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('produk_nama')
                     ->label('Nama Produk')
