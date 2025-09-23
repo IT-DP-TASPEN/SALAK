@@ -53,6 +53,11 @@ class User extends Authenticatable implements FilamentUser
         ];
     }
 
+    public function canImpersonate(): bool
+    {
+        return $this->hasRole('super_admin');
+    }
+
     /**
      * Determine if the user can access the Filament admin panel.
      *
