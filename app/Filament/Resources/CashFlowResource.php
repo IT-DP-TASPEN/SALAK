@@ -15,6 +15,7 @@ use Filament\Infolists\Infolist;
 use Filament\Resources\Resource;
 use Filament\Support\RawJs;
 use Filament\Tables;
+use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -167,6 +168,12 @@ class CashFlowResource extends Resource
                     ->autoApply()
                     ->withIndicator()
                     ->useRangeLabels(),
+                SelectFilter::make('cash_kantor')
+                    ->label('Kantor')
+                    ->relationship('branchOffice', 'branch_name')
+                    ->preload()
+                    ->multiple()
+                    ->searchable(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
