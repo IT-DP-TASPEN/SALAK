@@ -29,49 +29,55 @@ class ListProyeksiFundings extends ListRecords
         $tabs['needs-approval'] = Tab::make()
             ->label('Needs Approval')
             ->icon('heroicon-o-clock')
-            ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
-                'approval',
-                fn(Builder $query) =>
-                $query->where('approval_status', 'pending')
-            ))
-            ->badge(
-                fn() => $this->getModel()::whereHas(
+            ->modifyQueryUsing(fn(Builder $query) => ProyeksiFundingResource::getEloquentQuery()
+                ->whereHas(
                     'approval',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'pending')
-                )->count()
+                ))
+            ->badge(
+                fn() => ProyeksiFundingResource::getEloquentQuery()
+                    ->whereHas(
+                        'approval',
+                        fn(Builder $query) =>
+                        $query->where('approval_status', 'pending')
+                    )->count()
             );
 
         $tabs['approved'] = Tab::make()
             ->label('Approved')
             ->icon('heroicon-o-check-circle')
-            ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
-                'approval',
-                fn(Builder $query) =>
-                $query->where('approval_status', 'approved')
-            ))
-            ->badge(
-                fn() => $this->getModel()::whereHas(
+            ->modifyQueryUsing(fn(Builder $query) => ProyeksiFundingResource::getEloquentQuery()
+                ->whereHas(
                     'approval',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'approved')
-                )->count()
+                ))
+            ->badge(
+                fn() => ProyeksiFundingResource::getEloquentQuery()
+                    ->whereHas(
+                        'approval',
+                        fn(Builder $query) =>
+                        $query->where('approval_status', 'approved')
+                    )->count()
             );
 
         $tabs['rejected'] = Tab::make()
             ->label('Rejected')
             ->icon('heroicon-o-x-circle')
-            ->modifyQueryUsing(fn(Builder $query) => $query->whereHas(
-                'approval',
-                fn(Builder $query) =>
-                $query->where('approval_status', 'rejected')
-            ))
-            ->badge(
-                fn() => $this->getModel()::whereHas(
+            ->modifyQueryUsing(fn(Builder $query) => ProyeksiFundingResource::getEloquentQuery()
+                ->whereHas(
                     'approval',
                     fn(Builder $query) =>
                     $query->where('approval_status', 'rejected')
-                )->count()
+                ))
+            ->badge(
+                fn() => ProyeksiFundingResource::getEloquentQuery()
+                    ->whereHas(
+                        'approval',
+                        fn(Builder $query) =>
+                        $query->where('approval_status', 'rejected')
+                    )->count()
             );
 
         return $tabs;
