@@ -73,10 +73,16 @@ class UserResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('username')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('branchOffice.branch_name')
                     ->label('Kantor Cabang')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('roles')
+                    ->getStateUsing(fn(User $record): string => $record->roles->pluck('name')->join(', '))
+                    ->wrap()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
