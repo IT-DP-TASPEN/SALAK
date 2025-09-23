@@ -13,7 +13,8 @@
         "laravel/octane": "^2.12",
         "laravel/tinker": "^2.10.1",
         "malzariey/filament-daterangepicker-filter": "^3.4",
-        "pxlrbt/filament-excel": "^2.5"
+        "pxlrbt/filament-excel": "^2.5",
+        "stechstudio/filament-impersonate": "^3.16"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.16",
