@@ -241,6 +241,13 @@ class BranchOffice extends BaseModel
         return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
     }
 
+    public static function konsolidasiCashRatio2(?string $tanggal = null, float $totalLiquid = 0.0): float
+    {
+        $totalKewajibanLancar = static::konsolidasiKewajibanLancar($tanggal);
+
+        return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
+    }
+
     public static function konsolidasiLDR(?string $tanggal = null, bool $simulated = false): float
     {
         $totalBakiDebet = array_sum(static::saldoNeraca2(['1.130.1'], null, $tanggal));
