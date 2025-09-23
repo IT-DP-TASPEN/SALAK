@@ -204,6 +204,20 @@ class CashFlowResource extends Resource
         ];
     }
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        return $query
+            ->withoutGlobalScopes([SoftDeletingScope::class])
+            ->when(
+                $user->hasRole(['bm', 'abm']),
+                fn(Builder $query) =>
+                $query->where('cash_kantor', $user->branch_office_id)
+            );
+    }
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist

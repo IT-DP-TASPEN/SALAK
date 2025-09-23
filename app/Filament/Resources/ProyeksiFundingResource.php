@@ -234,7 +234,7 @@ class ProyeksiFundingResource extends Resource
         return $query
             ->withoutGlobalScopes([SoftDeletingScope::class])
             ->when(
-                $user->hasRole(['approver', 'maker']),
+                $user->hasRole(['bm', 'abm']),
                 fn(Builder $query) =>
                 $query->where('lending_kantor', $user->branch_office_id)
             );
