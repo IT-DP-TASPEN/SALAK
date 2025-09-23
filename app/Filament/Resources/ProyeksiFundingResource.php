@@ -236,7 +236,7 @@ class ProyeksiFundingResource extends Resource
             ->when(
                 $user->hasRole(['bm', 'abm']),
                 fn(Builder $query) =>
-                $query->where('lending_kantor', $user->branch_office_id)
+                $query->where('funding_kantor', $user->branch_office_id)
             );
     }
 
