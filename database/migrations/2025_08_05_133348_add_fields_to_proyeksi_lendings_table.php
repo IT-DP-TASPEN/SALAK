@@ -39,6 +39,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('proyeksi_lendings', function (Blueprint $table) {
+            $table->dropForeign(['lending_mitra_bayar_takeover']);
             $table->dropColumn([
                 'lending_pelunasan_bunga',
                 'lending_mitra_bayar_takeover',
@@ -48,7 +49,6 @@ return new class extends Migration
                 'lending_notas_debitur',
                 'lending_sistem_bunga',
             ]);
-            $table->dropForeign(['lending_mitra_bayar_takeover']);
         });
     }
 };
