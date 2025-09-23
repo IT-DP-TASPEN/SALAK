@@ -27,9 +27,9 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('proyeksi_fundings', function (Blueprint $table) {
-            $table->dropForeign(['lending_agent']);
+            $table->dropForeign(['funding_agent']);
 
-            $table->foreign('lending_agent')
+            $table->foreign('funding_agent')
                 ->references('id')
                 ->on('users')
                 ->onDelete('cascade');
