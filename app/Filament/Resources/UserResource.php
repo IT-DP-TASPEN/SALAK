@@ -83,8 +83,7 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('roles')
                     ->getStateUsing(fn(User $record): string => $record->roles->pluck('name')->join(', '))
-                    ->wrap()
-                    ->searchable(),
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
