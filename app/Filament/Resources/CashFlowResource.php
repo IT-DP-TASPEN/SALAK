@@ -92,7 +92,7 @@ class CashFlowResource extends Resource
                             ->label('Tanggal')
                             ->prefixIcon('heroicon-o-calendar')
                             ->default(now())
-                            ->minDate(now())
+                            ->minDate(Carbon::today())
                             ->columnSpanFull()
                             ->inlineLabel()
                             ->required(),
