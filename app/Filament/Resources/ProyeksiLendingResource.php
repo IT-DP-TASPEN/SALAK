@@ -274,17 +274,23 @@ class ProyeksiLendingResource extends Resource
                             ])
                             ->required()
                             ->reactive()
-                            ->dehydrated()
+                            ->dehydrated(false)
                             ->visible(
                                 fn($get) => $get('lending_tanggal_lahir_debitur')
                                     && Carbon::parse($get('lending_tanggal_lahir_debitur'))->diffInYears(Carbon::now()) < 65
                             )
+                            ->afterStateHydrated(function (Forms\Set $set, Forms\Get $get) {
+                                if ($get('lending_bundling_bpjs')) {
+                                    $set('lending_with_bpjs', 'YA');
+                                } else {
+                                    $set('lending_with_bpjs', 'TIDAK');
+                                }
+                            })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_bunga_percent')
                             ->label('Bunga p.a. (%)')
                             ->prefix('%')
                             ->numeric()
-                            ->stripCharacters([',', '.'])
                             ->default(0)
                             ->required()
                             ->inlineLabel(),
@@ -834,7 +840,6 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('produk.produk_nama')->label('Produk')->icon('heroicon-o-briefcase'),
                         TextEntry::make('lending_plafond')->label('Plafond')->money('IDR')->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_booking_bersih')->label('Booking Bersih')->money('IDR')->icon('heroicon-o-banknotes'),
-                        TextEntry::make('lending_tanggal_jatuh_tempo')->label('Tanggal Jatuh Tempo')->date()->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_asuransi_perusahaan')->label('Asuransi Perusahaan')->icon('heroicon-o-shield-check')->visible(fn($record) => filled($record->lending_asuransi_perusahaan)),
                         TextEntry::make('branchOffice.branch_name')->label('Kantor Cabang')->icon('heroicon-o-building-office-2'),
                         TextEntry::make('lending_bunga_percent')->label('Bunga')->suffix('%')->numeric()->icon('heroicon-o-chart-bar'),
@@ -843,6 +848,7 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('lending_pelunasan_bunga')->label('Pelunasan Bunga')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => $record->lending_jenis_pengajuan === 'TOP UP'),
                         TextEntry::make('lending_tanggal_realisasi')->label('Tanggal Realisasi')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('lending_jkw')->label('Jangka Waktu (Bulan)')->numeric()->icon('heroicon-o-clock'),
+                        TextEntry::make('lending_tanggal_jatuh_tempo')->label('Tanggal Jatuh Tempo')->date()->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_nominal_pelunasan_takeover')->label('Nominal Pelunasan Takeover')->money('IDR')->icon('heroicon-o-banknotes')->visible(fn($record) => filled($record->lending_nominal_pelunasan_takeover)),
                         TextEntry::make('lending_tanggal_rencana_takeover')->label('Tanggal Rencana Takeover')->date()->icon('heroicon-o-calendar')->visible(fn($record) => filled($record->lending_tanggal_rencana_takeover)),
                         TextEntry::make('lending_tanggal_rencana_bayar')->label('Tanggal Rencana Bayar')->date()->icon('heroicon-o-calendar'),
