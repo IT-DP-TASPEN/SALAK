@@ -49,30 +49,6 @@ class ProyeksiLendingResource extends Resource
                             ->prefixIcon('heroicon-o-user')
                             ->maxLength(255)
                             ->inlineLabel(),
-                        Forms\Components\TextInput::make('lending_notas')
-                            ->label('NOTAS')
-                            ->required()
-                            ->visible(
-                                function ($get) {
-                                    $statusKerja = StatusKerja::find($get('lending_status_kerja'));
-                                    if (!$statusKerja) {
-                                        return false;
-                                    }
-                                    return in_array(
-                                        $statusKerja->kerja_nama,
-                                        [
-                                            'PENSIUN ASN',
-                                            'PENSIUN DP TASPEN',
-                                            'PENSIUN ASABRI',
-                                            'PRA PENSIUN ASN',
-                                            'PRA PENSIUN DP TASPEN',
-                                        ]
-                                    );
-                                }
-                            )
-                            ->prefixIcon('heroicon-o-document-text')
-                            ->maxLength(255)
-                            ->inlineLabel(),
                         Forms\Components\DatePicker::make('lending_tanggal_lahir_debitur')
                             ->label('Tanggal Lahir Debitur')
                             ->required()
@@ -120,6 +96,30 @@ class ProyeksiLendingResource extends Resource
                             ->required()
                             ->reactive()
                             ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_notas')
+                            ->label('NOTAS')
+                            ->required()
+                            ->visible(
+                                function ($get) {
+                                    $statusKerja = StatusKerja::find($get('lending_status_kerja'));
+                                    if (!$statusKerja) {
+                                        return false;
+                                    }
+                                    return in_array(
+                                        $statusKerja->kerja_nama,
+                                        [
+                                            'PENSIUN ASN',
+                                            'PENSIUN DP TASPEN',
+                                            'PENSIUN ASABRI',
+                                            'PRA PENSIUN ASN',
+                                            'PRA PENSIUN DP TASPEN',
+                                        ]
+                                    );
+                                }
+                            )
+                            ->prefixIcon('heroicon-o-document-text')
+                            ->maxLength(255)
+                            ->inlineLabel(),
                     ]),
                 Forms\Components\Fieldset::make('Informasi Lending')
                     ->columns(1)
@@ -131,7 +131,10 @@ class ProyeksiLendingResource extends Resource
                                 'agent',
                                 'agent_nama',
                                 fn($query) => $query
-                                    ->where('agent_branch_office', auth()->user()->branchOffice->id)
+                                    ->where(
+                                        'agent_branch_office',
+                                        auth()->user()->branchOffice->id,
+                                    )
                             )
                             ->searchable()
                             ->preload()
