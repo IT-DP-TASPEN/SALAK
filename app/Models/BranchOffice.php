@@ -207,7 +207,7 @@ class BranchOffice extends BaseModel
     public function loanToDepositRatio(?string $tanggal = null, bool $simulated = false): float
     {
         // Single round-trip for all needed codes
-        $res = static::saldoNeraca2(['1.130.1', '1.210', '1.220'], null, $tanggal);
+        $res = static::saldoNeraca2(['1.130.1', '1.210', '1.220'], $this->branch_code, $tanggal);
 
         $bakiDebet = $res['1.130.1']; // kredit yang diberikan
         $simpanan = $res['1.210'] + $res['1.220']; // total simpanan (tabungan + deposito)
