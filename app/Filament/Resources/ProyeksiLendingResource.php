@@ -818,7 +818,7 @@ class ProyeksiLendingResource extends Resource
                             return "{$years} Tahun {$months} Bulan {$days} Hari";
                         }),
                         TextEntry::make('lending_no_hp_debitur')->label('No. HP')->icon('heroicon-o-phone'),
-                        TextEntry::make('lending_kre_rekening')->label('Rekening Kredit')->icon('heroicon-o-credit-card'),
+                        TextEntry::make('lending_kre_rekening')->label('Rekening Kredit')->icon('heroicon-o-credit-card')->visible(fn($record) => filled($record->lending_kre_rekening)),
                         TextEntry::make('sumberPembayaran.sumber_nama')->label('Sumber Pembayaran')->icon('heroicon-o-currency-dollar'),
                         TextEntry::make('statusDapem.dapem_nama')->label('Status Dapem')->icon('heroicon-o-check-badge'),
                         TextEntry::make('statusKerja.kerja_nama')->label('Status Kerja')->icon('heroicon-o-briefcase'),
