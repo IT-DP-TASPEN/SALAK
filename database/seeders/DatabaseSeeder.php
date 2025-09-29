@@ -18,6 +18,7 @@ class DatabaseSeeder extends Seeder
             CashFlowKindSeeder::class,
             JabatanSeeder::class,
             MitraBayarSeeder::class,
+            PerusahaanAsuransiSeeder::class,
             ProdukFundingSeeder::class,
             ProdukLendingSeeder::class,
             ProyeksiLendingProgressStatusSeeder::class,
