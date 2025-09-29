@@ -367,23 +367,25 @@ class BranchOffice extends BaseModel
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
         $rows = DB::connection('mso')
             ->table('kode_perkiraan')
+            ->join('kode_perksandi', 'sandip_mbs', '=', 'perk_kode')
+            ->join('kode_sandipos', 'sandi_pos', '=', 'sandip_pos')
             ->join('data_akuntansi_neraca', 'neraca_perkiraan', '=', 'perk_kode')
             ->select(
                 'perk_kode',
                 DB::raw(
                     'SUM(
-                        CASE
-                            WHEN perk_d_or_k = \'D\'
-                            THEN neraca_debet - neraca_kredit
-                            ELSE neraca_kredit - neraca_debet
-                        END
-                    ) AS saldo'
+                    CASE
+                        WHEN perk_d_or_k = \'D\'
+                        THEN neraca_debet - neraca_kredit
+                        ELSE neraca_kredit - neraca_debet
+                    END
+                ) AS saldo'
                 )
             )
             ->when($branchCode, fn($q) => $q->where('neraca_kantor', $branchCode))
             ->whereIn('perk_kode', $kodePerkiraanList)
             ->where('neraca_tanggal', '<=', $asOf->toDateString())
-            ->groupBy('perk_kode')
+            ->groupBy('sandip_pos')
             ->pluck('saldo', 'perk_kode');
 
         return $rows->toArray();
