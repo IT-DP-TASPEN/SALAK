@@ -25,8 +25,6 @@ class CreateProyeksiLending extends CreateRecord
             ->addMonths((int)$data['lending_jkw'])
             ->toDateString();
 
-        // $data['lending_angsuran_muka']
-
         $monthly_interest_percent = $data['lending_bunga_percent'] / 12 / 100;
         $angsuran_awal = 0;
         if ($data['lending_sistem_bunga'] === 'Anuitas') {
@@ -62,7 +60,7 @@ class CreateProyeksiLending extends CreateRecord
                 $totalAngsuran += floatval($angsuran['lending_nominal_angsuran'] ?? 0);
             }
         }
-        // dd($angsuran_awal, $data['lending_angsuran_fasilitas_aktif'], $totalAngsuran, $data['lending_gaji_bersih']);
+
         $gaji_bersih = floatval($data['lending_gaji_bersih'] ?? 0);
         $data['lending_dsr'] = $gaji_bersih > 0 ? ($totalAngsuran / $gaji_bersih) * 100 : 0;
         $data['lending_dsr'] = round($data['lending_dsr'], 2);
