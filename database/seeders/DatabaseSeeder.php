@@ -26,8 +26,8 @@ class DatabaseSeeder extends Seeder
             StatusKerjaSeeder::class,
             SumberPembayaranLendingSeeder::class,
 
-            AdminSeeder::class,
-            ShieldSeeder::class,
+            // AdminSeeder::class,
+            // ShieldSeeder::class,
         ]);
     }
 }
