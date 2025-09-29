@@ -54,12 +54,16 @@ class CreateProyeksiLending extends CreateRecord
             - ($data['lending_angsuran_muka'] ?? 0)
             - ($data['lending_nominal_pelunasan_takeover'] ?? 0);
 
-        $totalAngsuran = $angsuran_awal;
-        if (!empty($data['lending_angsuran_fasilitas_aktif']) && is_array($data['lending_angsuran_fasilitas_aktif'])) {
-            foreach ($data['lending_angsuran_fasilitas_aktif'] as $angsuran) {
-                $totalAngsuran += floatval($angsuran['lending_nominal_angsuran'] ?? 0);
-            }
-        }
+        $data['lending_angsuran_fasilitas_aktif'] = $data['lending_angsuran_fasilitas_aktif'] ?? [];
+        $data['lending_angsuran_fasilitas_aktif'][] = [
+            'lending_nominal_angsuran' => $angsuran_awal,
+        ];
+        $totalAngsuran = array_sum(
+            array_map(
+                fn($item) => floatval($item['lending_nominal_angsuran'] ?? 0),
+                $data['lending_angsuran_fasilitas_aktif']
+            )
+        );
 
         $gaji_bersih = floatval($data['lending_gaji_bersih'] ?? 0);
         $data['lending_dsr'] = $gaji_bersih > 0 ? ($totalAngsuran / $gaji_bersih) * 100 : 0;

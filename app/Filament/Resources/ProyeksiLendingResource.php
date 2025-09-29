@@ -925,7 +925,8 @@ class ProyeksiLendingResource extends Resource
                                 return null;
                             }
                             return array_sum(array_map(fn($item) => $item['lending_nominal_angsuran'] ?? 0, $record->lending_angsuran_fasilitas_aktif));
-                        }),
+                        })
+                            ->visible(fn($record) => count($record->lending_angsuran_fasilitas_aktif) > 1),
                     ])
                     ->visible(fn($record) => filled($record->lending_angsuran_fasilitas_aktif)),
 
