@@ -56,6 +56,18 @@ class CreateProyeksiLending extends CreateRecord
             - ($data['lending_angsuran_muka'] ?? 0)
             - ($data['lending_nominal_pelunasan_takeover'] ?? 0);
 
+        $totalAngsuran = $angsuran_awal;
+        if (!empty($data['lending_angsuran_fasilitas_aktif']) && is_array($data['lending_angsuran_fasilitas_aktif'])) {
+            foreach ($data['lending_angsuran_fasilitas_aktif'] as $angsuran) {
+                $totalAngsuran += floatval($angsuran['lending_nominal_angsuran'] ?? 0);
+            }
+        }
+        // dd($angsuran_awal, $data['lending_angsuran_fasilitas_aktif'], $totalAngsuran, $data['lending_gaji_bersih']);
+        $gaji_bersih = floatval($data['lending_gaji_bersih'] ?? 0);
+        $data['lending_dsr'] = $gaji_bersih > 0 ? ($totalAngsuran / $gaji_bersih) * 100 : 0;
+        $data['lending_dsr'] = round($data['lending_dsr'], 2);
+        dd($data['lending_dsr'], $totalAngsuran, $gaji_bersih);
+
         // remove lending_saldo_tab_mengendap_bulan and lending_angsuran_muka_bulan from data
         unset($data['lending_saldo_tab_mengendap_bulan'], $data['lending_angsuran_muka_bulan'], $data['lending_with_bpjs']);
 
