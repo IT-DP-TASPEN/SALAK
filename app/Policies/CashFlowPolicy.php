@@ -4,6 +4,7 @@ namespace App\Policies;
 
 use App\Models\User;
 use App\Models\CashFlow;
+use Carbon\Carbon;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class CashFlowPolicy
@@ -39,6 +40,12 @@ class CashFlowPolicy
      */
     public function update(User $user, CashFlow $cashFlow): bool
     {
+        if (!$user->hasRole('super_admin')) {
+            $hMinus1 = $cashFlow->cash_tanggal->subDay();
+            if (Carbon::now()->greaterThan($hMinus1)) {
+                return false;
+            }
+        }
         return $user->can('update_cash::flow');
     }
 

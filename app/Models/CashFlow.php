@@ -17,6 +17,11 @@ class CashFlow extends Model
         'cash_jumlah',
     ];
 
+    protected $casts = [
+        'cash_tanggal' => 'datetime',
+        'cash_jumlah' => 'decimal:2',
+    ];
+
     protected static function boot()
     {
         parent::boot();
