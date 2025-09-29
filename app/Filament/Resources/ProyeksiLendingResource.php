@@ -287,8 +287,12 @@ class ProyeksiLendingResource extends Resource
                                 }
                             })
                             ->inlineLabel(),
-                        Forms\Components\TextInput::make('lending_asuransi_perusahaan')
+                        Forms\Components\Select::make('lending_asuransi_perusahaan')
                             ->label('Perusahaan Asuransi')
+                            ->relationship(
+                                'perusahaanAsuransi',
+                                'asuransi_nama',
+                            )
                             ->prefixIcon('heroicon-o-building-office')
                             ->required()
                             ->inlineLabel(),
@@ -888,7 +892,10 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('produk.produk_nama')->label('Produk')->icon('heroicon-o-briefcase'),
                         TextEntry::make('lending_plafond')->label('Plafond')->money('IDR')->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_booking_bersih')->label('Booking Bersih')->money('IDR')->icon('heroicon-o-banknotes'),
-                        TextEntry::make('lending_asuransi_perusahaan')->label('Asuransi Perusahaan')->icon('heroicon-o-shield-check')->visible(fn($record) => filled($record->lending_asuransi_perusahaan)),
+                        TextEntry::make('perusahaanAsuransi.asuransi_nama')->label('Perusahaan Asuransi')->icon('heroicon-o-shield-check')->visible(fn($record) => filled($record->lending_asuransi_perusahaan)),
+                        TextEntry::make('bundling_bpjs')->label('Bundling BPJS?')->icon('heroicon-o-shield-check')->getStateUsing(function ($record) {
+                            return isset($record->lending_bundling_bpjs) ? 'YA' : 'TIDAK';
+                        }),
                         TextEntry::make('branchOffice.branch_name')->label('Kantor Cabang')->icon('heroicon-o-building-office-2'),
                         TextEntry::make('lending_bunga_percent')->label('Bunga')->suffix('%')->numeric()->icon('heroicon-o-chart-bar'),
                         TextEntry::make('lending_sistem_bunga')->label('Sistem Bunga')->icon('heroicon-o-calculator'),

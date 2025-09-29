@@ -82,4 +82,9 @@ class ProyeksiLending extends BaseModel
     {
         return $this->hasOne(ProyeksiLendingProgress::class, 'progress_lending', 'id');
     }
+
+    public function perusahaanAsuransi(): BelongsTo
+    {
+        return $this->belongsTo(PerusahaanAsuransi::class, 'lending_asuransi_perusahaan', 'id');
+    }
 }
