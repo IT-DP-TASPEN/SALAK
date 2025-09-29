@@ -66,7 +66,6 @@ class CreateProyeksiLending extends CreateRecord
         $gaji_bersih = floatval($data['lending_gaji_bersih'] ?? 0);
         $data['lending_dsr'] = $gaji_bersih > 0 ? ($totalAngsuran / $gaji_bersih) * 100 : 0;
         $data['lending_dsr'] = round($data['lending_dsr'], 2);
-        dd($data['lending_dsr'], $totalAngsuran, $gaji_bersih);
 
         // remove lending_saldo_tab_mengendap_bulan and lending_angsuran_muka_bulan from data
         unset($data['lending_saldo_tab_mengendap_bulan'], $data['lending_angsuran_muka_bulan'], $data['lending_with_bpjs']);
