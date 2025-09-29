@@ -803,8 +803,7 @@ class ProyeksiLendingResource extends Resource
             )
             ->selectCurrentPageOnly()
             ->defaultSort('created_at', 'desc')
-            ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]))
-            ->emptyStateHeading(fn(): string => 'Tidak ada data proyeksi lending yang ditemukan');
+            ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]));
     }
 
     public static function getRelations(): array
