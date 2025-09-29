@@ -19,6 +19,10 @@ class ProyeksiLending extends BaseModel
         'lending_sumber_pembayaran' => 'string',
         'lending_status_kerja' => 'string',
         'lending_produk' => 'string',
+        'lending_angsuran_fasilitas_aktif' => 'array',
+        'lending_dsr' => 'double',
+        'lending_gaji_pokok' => 'decimal:2',
+        'lending_gaji_bersih' => 'decimal:2',
     ];
 
     // booted method to set default values for certain fields

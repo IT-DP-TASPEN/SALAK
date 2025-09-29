@@ -13,6 +13,7 @@ use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Form;
+use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Resources\Resource;
@@ -53,7 +54,7 @@ class ProyeksiLendingResource extends Resource
                             ->label('Tanggal Lahir Debitur')
                             ->required()
                             ->prefixIcon('heroicon-o-cake')
-                            ->reactive()
+                            ->live()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_no_hp_debitur')
                             ->label('No. HP Debitur')
@@ -86,6 +87,24 @@ class ProyeksiLendingResource extends Resource
                             )
                             ->required()
                             ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_gaji_pokok')
+                            ->label('Gaji Pokok')
+                            ->required()
+                            ->prefix('Rp ')
+                            ->debounce()
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters([',', '.'])
+                            ->numeric()
+                            ->inlineLabel(),
+                        Forms\Components\TextInput::make('lending_gaji_bersih')
+                            ->label('Gaji Bersih')
+                            ->required()
+                            ->prefix('Rp ')
+                            ->debounce()
+                            ->mask(RawJs::make('$money($input)'))
+                            ->stripCharacters([',', '.'])
+                            ->numeric()
+                            ->inlineLabel(),
                         Forms\Components\Select::make('lending_status_kerja')
                             ->label('Status Kerja')
                             ->prefixIcon('heroicon-o-briefcase')
@@ -94,7 +113,7 @@ class ProyeksiLendingResource extends Resource
                                 'kerja_nama',
                             )
                             ->required()
-                            ->reactive()
+                            ->live()
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_notas')
                             ->label('NOTAS')
@@ -379,6 +398,26 @@ class ProyeksiLendingResource extends Resource
                             ->label('Tanggal Rencana Bayar')
                             ->required()
                             ->inlineLabel(),
+                    ]),
+                Forms\Components\Fieldset::make('Informasi Fasilitas Aktif di BPR')
+                    ->columns(1)
+                    ->schema([
+                        Forms\Components\Repeater::make('lending_angsuran_fasilitas_aktif')
+                            ->label('')
+                            ->schema([
+                                Forms\Components\TextInput::make('lending_nominal_angsuran')
+                                    ->label('Nominal Angsuran')
+                                    ->prefix('Rp ')
+                                    ->mask(RawJs::make('$money($input)'))
+                                    ->stripCharacters([',', '.'])
+                                    ->numeric()
+                                    ->required()
+                                    ->inlineLabel(),
+                            ])
+                            ->addActionLabel('Tambah angsuran fasilitas aktif')
+                            ->defaultItems(0)
+                            ->maxItems(4) // Limit to 4 active facilities, because the 5th is the new loan
+                            ->reorderable(false),
                     ]),
                 Forms\Components\Fieldset::make('Potongan dan Saldo')
                     ->columns(1)
@@ -821,7 +860,10 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('lending_kre_rekening')->label('Rekening Kredit')->icon('heroicon-o-credit-card')->visible(fn($record) => filled($record->lending_kre_rekening)),
                         TextEntry::make('sumberPembayaran.sumber_nama')->label('Sumber Pembayaran')->icon('heroicon-o-currency-dollar'),
                         TextEntry::make('statusDapem.dapem_nama')->label('Status Dapem')->icon('heroicon-o-check-badge'),
+                        TextEntry::make('lending_gaji_pokok')->label('Gaji Pokok')->money('IDR')->icon('heroicon-o-currency-dollar'),
+                        TextEntry::make('lending_gaji_bersih')->label('Gaji Bersih')->money('IDR')->icon('heroicon-o-currency-dollar'),
                         TextEntry::make('statusKerja.kerja_nama')->label('Status Kerja')->icon('heroicon-o-briefcase'),
+                        TextEntry::make('lending_dsr')->label('DSR')->suffix('%')->numeric()->icon('heroicon-o-calculator'),
                     ]),
 
                 Section::make('Informasi Lending')
@@ -839,10 +881,10 @@ class ProyeksiLendingResource extends Resource
                                 'danger' => 'Rejected',
                             ]),
                         TextEntry::make('progress.status.progress_status')->label('Progress')->icon('heroicon-o-arrow-path'),
-                        TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => $record->lending_tipe_pengajuan === 'Takeover' && filled($record->lending_mitra_bayar_takeover)),
-                        TextEntry::make('lending_nama_koperasi_takeover')->label('Nama Koperasi Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => filled($record->lending_nama_koperasi_takeover)),
                         TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
                         TextEntry::make('lending_tipe_pengajuan')->label('Tipe Pengajuan')->icon('heroicon-o-document-text'),
+                        TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => $record->lending_tipe_pengajuan === 'Takeover' && filled($record->lending_mitra_bayar_takeover)),
+                        TextEntry::make('lending_nama_koperasi_takeover')->label('Nama Koperasi Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => filled($record->lending_nama_koperasi_takeover)),
                         TextEntry::make('produk.produk_nama')->label('Produk')->icon('heroicon-o-briefcase'),
                         TextEntry::make('lending_plafond')->label('Plafond')->money('IDR')->icon('heroicon-o-banknotes'),
                         TextEntry::make('lending_booking_bersih')->label('Booking Bersih')->money('IDR')->icon('heroicon-o-banknotes'),
@@ -859,6 +901,33 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('lending_tanggal_rencana_takeover')->label('Tanggal Rencana Takeover')->date()->icon('heroicon-o-calendar')->visible(fn($record) => filled($record->lending_tanggal_rencana_takeover)),
                         TextEntry::make('lending_tanggal_rencana_bayar')->label('Tanggal Rencana Bayar')->date()->icon('heroicon-o-calendar'),
                     ]),
+
+                Section::make('Informasi Fasilitas Aktif di BPR')
+                    ->columns(2)
+                    ->collapsible()
+                    ->schema([
+                        RepeatableEntry::make('lending_angsuran_fasilitas_aktif')
+                            ->label('')
+                            ->schema([
+                                TextEntry::make('lending_nominal_angsuran')
+                                    ->label(function ($record, $state) {
+                                        static $iteration = 0;
+                                        $iteration++;
+                                        return "Nominal Angsuran #" . $iteration;
+                                    })
+                                    ->money('IDR')
+                                    ->icon('heroicon-o-banknotes'),
+                            ])
+                            ->contained(true)
+                            ->columnSpanFull(),
+                        TextEntry::make('lending_total_angsuran_fasilitas_aktif')->label('Total Angsuran Fasilitas Aktif')->money('IDR', 0, 'id_ID')->icon('heroicon-o-calculator')->getStateUsing(function ($record) {
+                            if (!$record->lending_angsuran_fasilitas_aktif) {
+                                return null;
+                            }
+                            return array_sum(array_map(fn($item) => $item['lending_nominal_angsuran'] ?? 0, $record->lending_angsuran_fasilitas_aktif));
+                        }),
+                    ])
+                    ->visible(fn($record) => filled($record->lending_angsuran_fasilitas_aktif)),
 
                 Section::make('Potongan dan Saldo')
                     ->columns(2)
