@@ -78,7 +78,7 @@ class BranchOffice extends BaseModel
                 ->value('saldo') ?? 0;
 
             if ($asOf->isToday()) {
-                $saldo += DB::connection('mso-backup')
+                $saldo += DB::connection('mso')
                     ->table('data_aba_trans')
                     ->join('data_aba_master', 'aba_kode', '=', 'trans_rekening')
                     ->when($jenis, fn($q) => $q->whereIn('aba_jenis', $jenis))
@@ -99,15 +99,6 @@ class BranchOffice extends BaseModel
     {
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
         $giroTab = static::saldoAba($asOf, $this->branch_code, [10, 20]); // giro & tabungan umum
-
-        if ($asOf->isToday()) {
-            $giroTab += $this->transaksiABA()
-                ->whereHas('abaMaster', fn($q) => $q->whereIn('aba_jenis', [10, 20]))
-                ->whereDate('trans_reg_date', $asOf->toDateString())
-                ->selectRaw('COALESCE(SUM(trans_kredit - trans_debet), 0) AS saldo')
-                ->value('saldo') ?? 0;
-        }
-
         $kas = $this->saldoKas($tanggal);
 
         $ret = $kas + $giroTab - ($efektif ? $this->branch_saldo_aba_blokir : 0.0);
