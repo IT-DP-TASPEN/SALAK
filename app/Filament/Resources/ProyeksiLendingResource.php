@@ -769,7 +769,9 @@ class ProyeksiLendingResource extends Resource
                         ->action(function ($records, $data) {
                             try {
                                 DB::transaction(function () use (&$records, $data) {
-                                    foreach ($records as $record) {
+                                    $approved = $records->filter(fn($record) => $record->approval->approval_status === 'Approved');
+
+                                    foreach ($approved as $record) {
                                         $record->progress()->updateOrCreate(
                                             [
                                                 'progress_lending' => $record->id,
@@ -780,10 +782,11 @@ class ProyeksiLendingResource extends Resource
                                         );
                                     }
 
-                                    $n = count($records);
+                                    $n = count($approved);
+                                    $skipped = count($records) - $n;
                                     Notification::make()
                                         ->title('Status Proyeksi Lending Updated')
-                                        ->body("Berhasil mengupdate {$n} data.")
+                                        ->body("Berhasil mengupdate {$n} proyeksi lending. {$skipped} proyeksi lending di-skip karena belum di-approve.")
                                         ->success()
                                         ->send();
                                 });
@@ -798,9 +801,6 @@ class ProyeksiLendingResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->checkIfRecordIsSelectableUsing(
-                fn(ProyeksiLending $record): bool => $record->approval->approval_status === 'Approved',
-            )
             ->selectCurrentPageOnly()
             ->defaultSort('created_at', 'desc')
             ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]));
