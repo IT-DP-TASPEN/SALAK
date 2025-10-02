@@ -260,6 +260,8 @@ class ProyeksiFundingResource extends Resource
                             ->date('d M Y'),
                         TextEntry::make('branchOffice.branch_name')
                             ->label('Kantor Cabang'),
+                        TextEntry::make('petugas.name')
+                            ->label('Petugas Input'),
                         TextEntry::make('agent.agent_nama')
                             ->label('Agent'),
                         TextEntry::make('produk.produk_nama')

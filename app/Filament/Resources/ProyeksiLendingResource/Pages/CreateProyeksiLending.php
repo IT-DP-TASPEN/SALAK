@@ -18,8 +18,9 @@ class CreateProyeksiLending extends CreateRecord
         $produk = ProdukLending::find($data['lending_produk'])?->produk_nama ?? '';
 
         $data['lending_tanggal'] = Carbon::today()->toDateString();
-        $agent = Agent::findOrFail($data['lending_agent']);
-        $data['lending_kantor'] = $agent->branchOffice->id;
+        $usr = auth()->user();
+        $data['lending_petugas'] = $usr->id;
+        $data['lending_kantor'] = $usr->branch_office_id;
 
         $data['lending_tanggal_jatuh_tempo'] = Carbon::parse($data['lending_tanggal_realisasi'])
             ->addMonths((int)$data['lending_jkw'])

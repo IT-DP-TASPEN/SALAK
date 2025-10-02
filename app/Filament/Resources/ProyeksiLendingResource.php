@@ -873,6 +873,7 @@ class ProyeksiLendingResource extends Resource
                     ->columns(2)
                     ->collapsible()
                     ->schema([
+                        TextEntry::make('petugas.name')->label('Petugas Input')->icon('heroicon-o-user'),
                         TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('agent.agent_nama')->label('AO/Marketing')->icon('heroicon-o-user-group'),
                         TextEntry::make('approval.approval_status')
@@ -921,7 +922,7 @@ class ProyeksiLendingResource extends Resource
                                         $iteration++;
                                         return "Nominal Angsuran #" . $iteration;
                                     })
-                                    ->money('IDR')
+                                    ->money('IDR', 0, 'id_ID')
                                     ->icon('heroicon-o-banknotes'),
                             ])
                             ->contained(true)

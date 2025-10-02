@@ -11,6 +11,7 @@ class ProyeksiFunding extends BaseModel
         'funding_tanggal',
         'funding_kantor',
         'funding_agent',
+        'funding_petugas',
         'funding_produk',
         'funding_deposito_jenis',
         'funding_nasabah_nama',
@@ -42,6 +43,11 @@ class ProyeksiFunding extends BaseModel
     public function agent(): BelongsTo
     {
         return $this->belongsTo(Agent::class, 'funding_agent', 'id');
+    }
+
+    public function petugas(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'funding_petugas', 'id');
     }
 
     public function produk(): BelongsTo

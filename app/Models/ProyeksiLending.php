@@ -73,6 +73,11 @@ class ProyeksiLending extends BaseModel
         return $this->belongsTo(Agent::class, 'lending_agent', 'id');
     }
 
+    public function petugas(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'lending_petugas', 'id');
+    }
+
     public function approval(): HasOne
     {
         return $this->hasOne(ProyeksiLendingApproval::class, 'approval_lending', 'id');

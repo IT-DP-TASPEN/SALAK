@@ -15,8 +15,9 @@ class CreateProyeksiFunding extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['funding_tanggal'] = Carbon::today()->toDateString();
-        $agent = Agent::findOrFail($data['funding_agent']);
-        $data['funding_kantor'] = $agent->branchOffice->id;
+        $usr = auth()->user();
+        $data['funding_petugas'] = $usr->id;
+        $data['funding_kantor'] = $usr->branch_office_id;
 
         if ($data['funding_deposito_jenis'] === 'Cair Tanam') {
             $nett = $data['funding_nominal'] - $data['funding_nominal_bersih'];
