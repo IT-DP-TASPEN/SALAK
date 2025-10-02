@@ -33,6 +33,14 @@ class ProyeksiFunding extends BaseModel
             $approval->approval_status = 'Pending';
             $approval->save();
         });
+
+        static::updating(function ($funding) {
+            $approval = $funding->approval;
+            if ($approval) {
+                $approval->approval_status = 'Pending';
+                $approval->save();
+            }
+        });
     }
 
     public function branchOffice(): BelongsTo

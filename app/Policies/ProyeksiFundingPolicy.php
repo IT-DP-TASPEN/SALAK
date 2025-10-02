@@ -39,6 +39,11 @@ class ProyeksiFundingPolicy
      */
     public function update(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
+        if (!$user->hasRole('super_admin')) {
+            if ($proyeksiFunding->funding_tanggal->isPast()) {
+                return false;
+            }
+        }
         return $user->can('update_proyeksi::funding');
     }
 

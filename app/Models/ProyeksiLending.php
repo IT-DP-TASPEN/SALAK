@@ -36,6 +36,14 @@ class ProyeksiLending extends BaseModel
             $approval->approval_status = 'Pending';
             $approval->save();
         });
+
+        static::updating(function ($lending) {
+            $approval = $lending->approval;
+            if ($approval) {
+                $approval->approval_status = 'Pending';
+                $approval->save();
+            }
+        });
     }
 
     public function statusDapem(): BelongsTo
