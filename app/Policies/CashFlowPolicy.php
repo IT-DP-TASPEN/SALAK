@@ -41,8 +41,8 @@ class CashFlowPolicy
     public function update(User $user, CashFlow $cashFlow): bool
     {
         if (!$user->hasRole('super_admin')) {
-            $hMinus1 = $cashFlow->cash_tanggal->subDay();
-            if (Carbon::now()->greaterThan($hMinus1)) {
+            $hMinus1 = $cashFlow->cash_tanggal->copy()->subDay();
+            if (Carbon::now()->greaterThanOrEqualTo($hMinus1)) {
                 return false;
             }
         }
