@@ -8,10 +8,10 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class ProyeksiLendingProgressStatus extends Model
 {
-    protected $fillable = ['status'];
+    protected $fillable = ['progress_status'];
 
     protected $casts = [
-        'status' => 'string',
+        'progress_status' => 'string',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
