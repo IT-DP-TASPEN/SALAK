@@ -40,7 +40,7 @@ class ProyeksiFundingPolicy
     public function update(User $user, ProyeksiFunding $proyeksiFunding): bool
     {
         if (!$user->hasRole('super_admin')) {
-            if ($proyeksiFunding->funding_tanggal->isPast()) {
+            if (!$proyeksiFunding->created_at->isToday()) {
                 return false;
             }
         }

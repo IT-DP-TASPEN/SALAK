@@ -40,7 +40,7 @@ class ProyeksiLendingPolicy
     public function update(User $user, ProyeksiLending $proyeksiLending): bool
     {
         if (!$user->hasRole('super_admin')) {
-            if ($proyeksiLending->lending_tanggal->isPast()) {
+            if (!$proyeksiLending->created_at->isToday()) {
                 return false;
             }
         }
