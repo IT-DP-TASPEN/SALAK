@@ -232,6 +232,8 @@ class CashFlowResource extends Resource
                                 'success' => 'Approved',
                                 'danger' => 'Rejected',
                             ]),
+                        TextEntry::make('kind.kind_type')
+                            ->label('Tipe'),
                         TextEntry::make('kind.kind_name')
                             ->label('Jenis'),
                         TextEntry::make('branchOffice.branch_name')
