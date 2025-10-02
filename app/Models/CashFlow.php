@@ -32,6 +32,14 @@ class CashFlow extends Model
             $approval->approval_status = 'Pending';
             $approval->save();
         });
+
+        static::updating(function ($cashflow) {
+            $approval = $cashflow->approval;
+            if ($approval) {
+                $approval->approval_status = 'Pending';
+                $approval->save();
+            }
+        });
     }
 
     public function approval(): HasOne
