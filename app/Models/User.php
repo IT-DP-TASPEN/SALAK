@@ -70,7 +70,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function isKantorPusatEmployee(): bool
     {
-        return $this->branchOffice->id === '00';
+        return $this->branch_office_id === 1; // KPM
     }
 
     public function cashFlows(): HasMany
