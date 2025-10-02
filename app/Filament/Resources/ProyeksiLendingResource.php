@@ -886,7 +886,7 @@ class ProyeksiLendingResource extends Resource
                             ]),
                         TextEntry::make('progress.status.progress_status')->label('Progress')->icon('heroicon-o-arrow-path'),
                         TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
-                        TextEntry::make('lending_tipe_pengajuan')->label('Tipe Pengajuan')->icon('heroicon-o-document-text'),
+                        TextEntry::make('lending_tipe_pengajuan')->label('Tipe Pengajuan')->icon('heroicon-o-document-text')->visible(fn($record) => $record->lending_jenis_pengajuan === 'BARU'),
                         TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => $record->lending_tipe_pengajuan === 'Takeover' && filled($record->lending_mitra_bayar_takeover)),
                         TextEntry::make('lending_nama_koperasi_takeover')->label('Nama Koperasi Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => filled($record->lending_nama_koperasi_takeover)),
                         TextEntry::make('produk.produk_nama')->label('Produk')->icon('heroicon-o-briefcase'),
