@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Agent extends Model
 {
     protected $fillable = [
-        'agent_name',
+        'agent_nama',
         'agent_mso_code',
         'agent_jabatan',
         'agent_branch_office',
