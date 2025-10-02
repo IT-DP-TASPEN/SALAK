@@ -53,7 +53,9 @@ class CreateProyeksiLending extends CreateRecord
             - ($data['lending_bunga_muka'] ?? 0)
             - ($data['lending_saldo_tab_mengendap'] ?? 0)
             - ($data['lending_angsuran_muka'] ?? 0)
-            - ($data['lending_nominal_pelunasan_takeover'] ?? 0);
+            - ($data['lending_nominal_pelunasan_takeover'] ?? 0)
+            - ($data['lending_pelunasan_pokok'] ?? 0)
+            - ($data['lending_pelunasan_bunga'] ?? 0);
 
         $data['lending_angsuran_fasilitas_aktif'] = $data['lending_angsuran_fasilitas_aktif'] ?? [];
         $data['lending_angsuran_fasilitas_aktif'][] = [
