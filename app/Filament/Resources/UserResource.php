@@ -44,15 +44,17 @@ class UserResource extends Resource
                     ->password()
                     ->required(fn(string $context): bool => $context === 'create')
                     ->prefixIcon('heroicon-o-lock-closed')
-                    ->dehydrateStateUsing(fn(string $state): ?string => bcrypt($state))
+                    ->dehydrated(fn($state) => filled($state))
+                    ->dehydrateStateUsing(fn(?string $state): ?string => $state ? bcrypt($state) : null)
                     ->maxLength(255)
-                    ->visibleOn('create'),
+                    ->visibleOn(['create', 'edit']),
                 Forms\Components\TextInput::make('password_confirmation')
                     ->password()
                     ->required(fn(string $context): bool => $context === 'create')
                     ->prefixIcon('heroicon-o-lock-closed')
                     ->maxLength(255)
-                    ->visibleOn('create')
+                    ->visibleOn(['create', 'edit'])
+                    ->dehydrated(false)
                     ->same('password')
                     ->label('Confirm Password'),
                 Forms\Components\Select::make('branch_office_id')
