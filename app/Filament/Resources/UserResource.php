@@ -56,6 +56,7 @@ class UserResource extends Resource
                     ->same('password')
                     ->label('Confirm Password'),
                 Forms\Components\Select::make('branch_office_id')
+                    ->label('Kantor Cabang')
                     ->relationship('branchOffice', 'branch_name')
                     ->prefixIcon('heroicon-o-building-office-2')
                     ->required(),
