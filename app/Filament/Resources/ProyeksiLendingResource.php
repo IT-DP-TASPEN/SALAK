@@ -841,6 +841,22 @@ class ProyeksiLendingResource extends Resource
     {
         return $infolist
             ->schema([
+                Section::make('Informasi Approval')
+                    ->columns(2)
+                    ->collapsible()
+                    ->schema([
+                        TextEntry::make('approval.approval_status')
+                            ->label('Status')
+                            ->badge()
+                            ->colors([
+                                'primary' => 'Pending',
+                                'success' => 'Approved',
+                                'danger' => 'Rejected',
+                            ]),
+                        TextEntry::make('approval.approver.name')->label('Diperiksa Oleh')->icon('heroicon-o-user')->visible(fn($record) => filled($record->approval->approver)),
+                        TextEntry::make('approval.approval_comment')->label('Catatan Approval')->icon('heroicon-o-chat-bubble-left-right')->visible(fn($record) => filled($record->approval->approval_comment)),
+                    ]),
+
                 Section::make('Informasi Debitur')
                     ->columns(2)
                     ->collapsible()
@@ -876,14 +892,6 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('petugas.name')->label('Petugas Input')->icon('heroicon-o-user'),
                         TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('agent.agent_nama')->label('AO/Marketing')->icon('heroicon-o-user-group'),
-                        TextEntry::make('approval.approval_status')
-                            ->label('Status Approval')
-                            ->badge()
-                            ->colors([
-                                'primary' => 'Pending',
-                                'success' => 'Approved',
-                                'danger' => 'Rejected',
-                            ]),
                         TextEntry::make('progress.status.progress_status')->label('Progress')->icon('heroicon-o-arrow-path'),
                         TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
                         TextEntry::make('lending_tipe_pengajuan')->label('Tipe Pengajuan')->icon('heroicon-o-document-text')->visible(fn($record) => $record->lending_jenis_pengajuan === 'BARU'),

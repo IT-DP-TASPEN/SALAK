@@ -244,8 +244,9 @@ class ProyeksiFundingResource extends Resource
     {
         return $infolist
             ->schema([
-                Section::make('Informasi Funding')
+                Section::make('Informasi Approval')
                     ->columns(2)
+                    ->collapsible()
                     ->schema([
                         TextEntry::make('approval.approval_status')
                             ->label('Status Approval')
@@ -255,6 +256,13 @@ class ProyeksiFundingResource extends Resource
                                 'success' => 'Approved',
                                 'danger' => 'Rejected',
                             ]),
+                        TextEntry::make('approval.approver.name')->label('Diperiksa Oleh')->icon('heroicon-o-user')->visible(fn($record) => filled($record->approval->approver)),
+                        TextEntry::make('approval.approval_comment')->label('Catatan Approval')->icon('heroicon-o-chat-bubble-left-right')->visible(fn($record) => filled($record->approval->approval_comment)),
+                    ]),
+
+                Section::make('Informasi Funding')
+                    ->columns(2)
+                    ->schema([
                         TextEntry::make('funding_tanggal')
                             ->label('Tanggal')
                             ->date('d M Y'),
