@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ProyeksiLendingResource\Pages;
 use App\Filament\Resources\ProyeksiLendingResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
+use App\Support\ProyeksiLendingFormData;
 
 class EditProyeksiLending extends EditRecord
 {
@@ -17,8 +18,9 @@ class EditProyeksiLending extends EditRecord
         ];
     }
 
-    protected function mutateFormDataBeforeFill(array $data): array
+    protected function mutateFormDataBeforeSave(array $data): array
     {
-        return $data;
+        return ProyeksiLendingFormData::calculate($data);
     }
 }
+
