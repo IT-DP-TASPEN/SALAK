@@ -151,10 +151,7 @@ class ProyeksiLendingResource extends Resource
                                 'agent',
                                 'agent_nama',
                                 fn($query) => $query
-                                    ->where(
-                                        'agent_branch_office',
-                                        auth()->user()->branchOffice->id,
-                                    )
+                                    ->whereIn('agent_branch_office', [auth()->user()->branchOffice->id, 1])
                             )
                             ->searchable()
                             ->preload()
