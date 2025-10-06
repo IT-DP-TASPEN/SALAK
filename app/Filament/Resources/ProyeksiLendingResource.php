@@ -921,7 +921,7 @@ class ProyeksiLendingResource extends Resource
                             return isset($record->lending_bundling_bpjs) ? 'YA' : 'TIDAK';
                         }),
                         TextEntry::make('branchOffice.branch_name')->label('Kantor Cabang')->icon('heroicon-o-building-office-2'),
-                        TextEntry::make('lending_bunga_percent')->label('Bunga')->suffix('%')->numeric()->icon('heroicon-o-chart-bar'),
+                        TextEntry::make('lending_bunga_percent')->label('Bunga p.a.')->suffix('%')->numeric()->icon('heroicon-o-chart-bar'),
                         TextEntry::make('lending_sistem_bunga')->label('Sistem Bunga')->icon('heroicon-o-calculator'),
                         TextEntry::make('lending_pelunasan_pokok')->label('Pelunasan Pokok')->money('IDR', 0, 'id_ID')->icon('heroicon-o-banknotes')->visible(fn($record) => $record->lending_jenis_pengajuan === 'TOP UP'),
                         TextEntry::make('lending_pelunasan_bunga')->label('Pelunasan Bunga')->money('IDR', 0, 'id_ID')->icon('heroicon-o-banknotes')->visible(fn($record) => $record->lending_jenis_pengajuan === 'TOP UP'),
