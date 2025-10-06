@@ -53,8 +53,8 @@ class ProyeksiLendingFormData
             - floatval($data['lending_pelunasan_pokok'] ?? 0)
             - floatval($data['lending_pelunasan_bunga'] ?? 0);
 
-        $existingInstallments = $data['lending_angsuran_fasilitas_aktif'] ?? [];
-        $existingInstallments[] = [
+        $data['lending_angsuran_fasilitas_aktif'] ??= [];
+        $data['lending_angsuran_fasilitas_aktif'][] = [
             'lending_nominal_angsuran' => $angsuranAwal,
         ];
         // $data['lending_angsuran_fasilitas_aktif'] = $existingInstallments;
@@ -62,7 +62,7 @@ class ProyeksiLendingFormData
         $totalInstallment = array_sum(
             array_map(
                 static fn($item) => floatval($item['lending_nominal_angsuran'] ?? 0),
-                $existingInstallments
+                $data['lending_angsuran_fasilitas_aktif']
             )
         );
 
