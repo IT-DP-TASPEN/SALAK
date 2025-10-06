@@ -24,6 +24,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
+use Filament\Tables\Columns\Summarizers\Sum;
 use Filament\Tables\Enums\ActionsPosition;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Support\Facades\DB;
@@ -679,21 +680,20 @@ class ProyeksiLendingResource extends Resource
                 Tables\Columns\TextColumn::make('lending_plafond')
                     ->label('Plafond')
                     ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_pelunasan_pokok')
-                    ->label('Pelunasan Pokok')
-                    ->money('IDR', 0, 'id_ID')
+                    ->summarize(
+                        Sum::make()
+                            ->money('IDR', 0, 'id_ID')
+                            ->label('Total'),
+                    )
                     ->sortable(),
                 Tables\Columns\TextColumn::make('lending_booking_bersih')
                     ->label('Booking Bersih')
                     ->money('IDR', 0, 'id_ID')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_tanggal_realisasi')
-                    ->label('Tanggal Realisasi')
-                    ->date('d M Y')
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('lending_jkw')
-                    ->label('Jangka Waktu (Bulan)')
+                    ->summarize(
+                        Sum::make()
+                            ->money('IDR', 0, 'id_ID')
+                            ->label('Total'),
+                    )
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
