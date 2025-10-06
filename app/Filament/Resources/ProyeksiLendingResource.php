@@ -460,10 +460,7 @@ class ProyeksiLendingResource extends Resource
                                 $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
                                 $state = floatval(str_replace(',', '', $state));
                                 $calculated = $plafond ? ($state / $plafond) * 100 : 0;
-                                $provisiPercent = floatval($get('lending_pot_provisi_percent'));
-                                if (abs($calculated - $provisiPercent) <= PHP_FLOAT_EPSILON) {
-                                    $set('lending_pot_provisi_percent', $calculated);
-                                }
+                                $set('lending_pot_provisi_percent', $calculated);
                             })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_admin_percent')
@@ -496,10 +493,7 @@ class ProyeksiLendingResource extends Resource
                                 $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
                                 $state = floatval(str_replace(',', '', $state));
                                 $calculated = $plafond ? ($state / $plafond) * 100 : 0;
-                                $adminPercent = floatval($get('lending_pot_admin_percent'));
-                                if (abs($calculated - $adminPercent) <= PHP_FLOAT_EPSILON) {
-                                    $set('lending_pot_admin_percent', $calculated);
-                                }
+                                $set('lending_pot_admin_percent', $calculated);
                             })
                             ->numeric()
                             ->required()
@@ -518,10 +512,7 @@ class ProyeksiLendingResource extends Resource
                                 $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
                                 $state = floatval(str_replace(',', '', $state));
                                 $calculated = $plafond ? ($state / $plafond) * 100 : 0;
-                                $premiPercent = floatval($get('lending_pot_premi_percent'));
-                                if (abs($calculated - $premiPercent) <= PHP_FLOAT_EPSILON) {
-                                    $set('lending_pot_premi_percent', $calculated);
-                                }
+                                $set('lending_pot_premi_percent', $calculated);
                             })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_premi_percent')
@@ -556,10 +547,7 @@ class ProyeksiLendingResource extends Resource
                                 $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
                                 $state = floatval(str_replace(',', '', $state));
                                 $calculated = $plafond ? ($state / $plafond) * 100 : 0;
-                                $premiExtraPercent = floatval($get('lending_pot_premi_extra_percent'));
-                                if (abs($calculated - $premiExtraPercent) <= PHP_FLOAT_EPSILON) {
-                                    $set('lending_pot_premi_extra_percent', $calculated);
-                                }
+                                $set('lending_pot_premi_extra_percent', $calculated);
                             })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('lending_pot_premi_extra_percent')
