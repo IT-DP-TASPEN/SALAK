@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\BranchOffice;
 use App\Models\ProyeksiLending;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\Summarizers\Sum;
@@ -19,8 +20,10 @@ use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 class RekapBooking extends Page implements HasTable
 {
     use InteractsWithTable;
+    use HasPageShield;
 
-    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+    protected static ?string $navigationGroup = 'Laporan';
+    protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
 
     protected static string $view = 'filament.pages.rekap-booking';
 
