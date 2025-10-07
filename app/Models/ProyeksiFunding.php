@@ -38,6 +38,7 @@ class ProyeksiFunding extends BaseModel
             $approval = $funding->approval;
             if ($approval) {
                 $approval->approval_status = 'Pending';
+                $approval->approval_comment = null;
                 $approval->save();
             }
         });

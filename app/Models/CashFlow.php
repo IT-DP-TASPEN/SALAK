@@ -37,6 +37,7 @@ class CashFlow extends Model
             $approval = $cashflow->approval;
             if ($approval) {
                 $approval->approval_status = 'Pending';
+                $approval->approval_comment = null;
                 $approval->save();
             }
         });
