@@ -19,6 +19,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Filament\Infolists\Infolist;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Tables\Filters\SelectFilter;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
 
@@ -195,6 +196,17 @@ class ProyeksiFundingResource extends Resource
                     ->autoApply()
                     ->withIndicator()
                     ->useRangeLabels(),
+                SelectFilter::make('funding_kantor')
+                    ->label('Kantor Cabang')
+                    ->relationship(
+                        'branchOffice',
+                        'branch_name',
+                        fn($query) => $query->orderBy('branch_code', 'asc')
+                    )
+                    ->multiple()
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn() => !auth()->user()->hasRole(['bm', 'abm'])),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

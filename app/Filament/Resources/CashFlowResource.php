@@ -170,11 +170,16 @@ class CashFlowResource extends Resource
                     ->withIndicator()
                     ->useRangeLabels(),
                 SelectFilter::make('cash_kantor')
-                    ->label('Kantor')
-                    ->relationship('branchOffice', 'branch_name')
-                    ->preload()
+                    ->label('Kantor Cabang')
+                    ->relationship(
+                        'branchOffice',
+                        'branch_name',
+                        fn($query) => $query->orderBy('branch_code', 'asc')
+                    )
                     ->multiple()
-                    ->searchable(),
+                    ->searchable()
+                    ->preload()
+                    ->visible(fn() => !auth()->user()->hasRole(['bm', 'abm'])),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
