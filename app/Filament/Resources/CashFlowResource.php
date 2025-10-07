@@ -137,7 +137,7 @@ class CashFlowResource extends Resource
                     ->sortable()
                     ->searchable(),
                 Tables\Columns\TextColumn::make('branchOffice.branch_name')
-                    ->label('Kantor')
+                    ->label('Kantor Cabang')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
                     ->label('Petugas Input')
