@@ -5,12 +5,15 @@ namespace App\Filament\Pages;
 use App\Filament\Widgets\CashRatioChart;
 use App\Filament\Widgets\LoanToDepositRatioChart;
 use App\Filament\Widgets\NonPerformingLoanChart;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Illuminate\Contracts\Support\Htmlable;
 
 class RekapTKSPerCabang extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
     protected static ?string $title = 'Rekap TKS Per Cabang';

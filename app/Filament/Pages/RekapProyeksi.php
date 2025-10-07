@@ -5,9 +5,12 @@ namespace App\Filament\Pages;
 use Filament\Pages\Page;
 use App\Filament\Widgets\ProyeksiFundingStatsOverview;
 use App\Filament\Widgets\ProyeksiLendingStatsOverview;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class RekapProyeksi extends Page
 {
+    use HasPageShield;
+
     protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
 

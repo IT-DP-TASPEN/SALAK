@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\BranchOffice;
 use App\Models\CashFlow;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Pages\Page;
 use Filament\Tables\Columns\Summarizers\Summarizer;
@@ -15,6 +16,7 @@ use Filament\Tables\Table;
 class RekapCashFlow extends Page implements HasTable
 {
     use InteractsWithTable;
+    use HasPageShield;
 
     protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
@@ -106,6 +108,7 @@ class RekapCashFlow extends Page implements HasTable
 
         return $table
             ->query(BranchOffice::query())
+            ->paginated(false)
             ->columns([
                 TextColumn::make('branch_name')->label(''),
                 ...$columns,
