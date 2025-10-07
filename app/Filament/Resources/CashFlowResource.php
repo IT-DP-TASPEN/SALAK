@@ -140,6 +140,7 @@ class CashFlowResource extends Resource
                     ->label('Kantor')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('user.name')
+                    ->label('Petugas Input')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('cash_tanggal')
                     ->label('Tanggal')
@@ -249,7 +250,7 @@ class CashFlowResource extends Resource
                         TextEntry::make('branchOffice.branch_name')
                             ->label('Kantor'),
                         TextEntry::make('user.name')
-                            ->label('User'),
+                            ->label('Petugas Input'),
                         TextEntry::make('cash_tanggal')
                             ->label('Tanggal')
                             ->date('d M Y'),
@@ -258,12 +259,6 @@ class CashFlowResource extends Resource
                         TextEntry::make('cash_jumlah')
                             ->label('Jumlah')
                             ->money('IDR', 0, 'id_ID'),
-                        TextEntry::make('created_at')
-                            ->label('Dibuat pada')
-                            ->dateTime(),
-                        TextEntry::make('updated_at')
-                            ->label('Terakhir diperbarui')
-                            ->dateTime(),
                     ])
                     ->columns(2),
             ]);
