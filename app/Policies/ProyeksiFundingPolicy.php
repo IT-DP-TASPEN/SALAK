@@ -43,6 +43,9 @@ class ProyeksiFundingPolicy
             if (!$proyeksiFunding->created_at->isToday()) {
                 return false;
             }
+            if ($proyeksiFunding->approval->approval_status !== 'Rejected') {
+                return false;
+            }
         }
         return $user->can('update_proyeksi::funding');
     }

@@ -43,6 +43,9 @@ class ProyeksiLendingPolicy
             if (!$proyeksiLending->created_at->isToday()) {
                 return false;
             }
+            if ($proyeksiLending->approval->approval_status !== 'Rejected') {
+                return false;
+            }
         }
         return $user->can('update_proyeksi::lending');
     }
