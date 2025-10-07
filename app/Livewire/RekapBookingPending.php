@@ -2,6 +2,7 @@
 
 namespace App\Livewire;
 
+use App\Filament\Resources\ProyeksiLendingResource;
 use App\Models\BranchOffice;
 use App\Models\ProyeksiLending;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -46,7 +47,8 @@ class RekapBookingPending extends Component implements HasForms, HasTable
                 Tables\Actions\BulkActionGroup::make([
                     //
                 ]),
-            ]);
+            ])
+            ->recordUrl(fn(ProyeksiLending $record): string => ProyeksiLendingResource::getUrl('view', ['record' => $record]));
     }
 
     public function render(): View
