@@ -23,4 +23,3 @@ class EditProyeksiLending extends EditRecord
         return ProyeksiLendingFormData::calculate($data);
     }
 }
-
