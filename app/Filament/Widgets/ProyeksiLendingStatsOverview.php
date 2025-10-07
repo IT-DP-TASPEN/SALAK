@@ -18,7 +18,11 @@ class ProyeksiLendingStatsOverview extends BaseWidget
     protected function getStats(): array
     {
         $today = Carbon::today();
-        $branches = BranchOffice::orderBy('branch_code')->get();
+        $branches = BranchOffice::orderBy('branch_code')
+            ->when(auth()->user()->hasRole(['bm', 'abm']), function ($query) {
+                $query->where('id', auth()->user()->branch_office_id);
+            })
+            ->get();
         $lendingsToday = ProyeksiLending::whereDate('lending_tanggal', $today)
             ->whereHas('approval', function ($query) {
                 $query->where('approval_status', 'Approved');

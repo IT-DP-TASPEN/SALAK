@@ -33,6 +33,9 @@ class RekapCashFlow extends Page implements HasTable
 
         // Ambil cashflow ter-approve
         $cashflows = CashFlow::query()
+            ->when(auth()->user()->hasRole(['bm', 'abm']), function ($query) {
+                $query->where('cash_kantor', auth()->user()->branch_office_id);
+            })
             ->whereBetween('cash_tanggal', [$dates[0], end($dates)])
             ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
             ->get()
@@ -67,6 +70,7 @@ class RekapCashFlow extends Page implements HasTable
 
         // Buat kolom per tanggal
         $columns = [];
+        $isBmOrAbm = auth()->user()->hasRole(['bm', 'abm']);
         foreach ($dates as $date) {
             $columns[] = TextColumn::make($date)
                 ->label(date('d M', strtotime($date)))
@@ -90,6 +94,7 @@ class RekapCashFlow extends Page implements HasTable
                     Summarizer::make()
                         ->label('Saldo Awal')
                         ->using(fn() => $this->formatMoney($balances[$date]['awal']))
+                        ->visible(!$isBmOrAbm)
                         ->html(),
                     Summarizer::make()
                         ->label('Nett')
@@ -98,16 +103,24 @@ class RekapCashFlow extends Page implements HasTable
                     Summarizer::make()
                         ->label('Saldo Akhir')
                         ->using(fn() => $this->formatMoney($balances[$date]['akhir']))
+                        ->visible(!$isBmOrAbm)
                         ->html(),
                     Summarizer::make()
                         ->label('Cash Ratio')
                         ->using(fn() => number_format(BranchOffice::konsolidasiCashRatio2($date, $balances[$date]['akhir']), 2, ',', '.') . '%')
+                        ->visible(!$isBmOrAbm)
                         ->html(),
                 ]);
         }
 
         return $table
-            ->query(BranchOffice::query())
+            ->query(
+                BranchOffice::query()
+                    ->when(auth()->user()->hasRole(['bm', 'abm']), function ($query) {
+                        $query->where('id', auth()->user()->branch_office_id);
+                    })
+                    ->orderBy('branch_code')
+            )
             ->paginated(false)
             ->columns([
                 TextColumn::make('branch_name')->label(''),
