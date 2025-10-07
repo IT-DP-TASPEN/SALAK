@@ -722,6 +722,15 @@ class ProyeksiLendingResource extends Resource
                     ->searchable()
                     ->preload()
                     ->visible(fn() => !auth()->user()->hasRole(['bm', 'abm'])),
+                SelectFilter::make('progress_lending')
+                    ->label('Status Progress')
+                    ->relationship(
+                        'progress.status',
+                        'progress_status',
+                    )
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
