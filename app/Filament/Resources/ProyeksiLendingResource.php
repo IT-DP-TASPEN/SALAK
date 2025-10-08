@@ -538,13 +538,13 @@ class ProyeksiLendingResource extends Resource
                             ->mask(RawJs::make('$money($input)'))
                             ->stripCharacters([',', '.'])
                             ->numeric()
-                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->disabled(fn($get) => blank($get('lending_pot_premi')))
                             ->required()
                             ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
-                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $premi = floatval(str_replace(',', '', $get('lending_pot_premi')));
                                 $state = floatval(str_replace(',', '', $state));
-                                $calculated = $plafond ? ($state / $plafond) * 100 : 0;
+                                $calculated = $premi ? ($state / $premi) * 100 : 0;
                                 $set('lending_pot_premi_extra_percent', $calculated);
                             })
                             ->inlineLabel(),
@@ -554,14 +554,14 @@ class ProyeksiLendingResource extends Resource
                             ->prefix('%')
                             ->mask(RawJs::make('$money($input)'))
                             ->debounce()
-                            ->disabled(fn($get) => blank($get('lending_plafond')))
+                            ->disabled(fn($get) => blank($get('lending_pot_premi')))
                             ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
-                                $plafond = floatval(str_replace(',', '', $get('lending_plafond')));
+                                $premi = floatval(str_replace(',', '', $get('lending_pot_premi')));
                                 $state = floatval(str_replace(',', '', $state));
                                 $set(
                                     'lending_pot_premi_extra',
-                                    number_format(($plafond * $state) / 100, 0, ',', '.')
+                                    number_format(($premi * $state) / 100, 0, ',', '.')
                                 );
                             })
                             ->numeric()
