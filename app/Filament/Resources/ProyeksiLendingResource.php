@@ -542,8 +542,8 @@ class ProyeksiLendingResource extends Resource
                             ->required()
                             ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
-                                $premi = floatval(str_replace(',', '', $get('lending_pot_premi')));
-                                $state = floatval(str_replace(',', '', $state));
+                                $premi = floatval(str_replace([',', '.'], '', $get('lending_pot_premi')));
+                                $state = floatval(str_replace([',', '.'], '', $state));
                                 $calculated = $premi ? ($state / $premi) * 100 : 0;
                                 $set('lending_pot_premi_extra_percent', $calculated);
                             })
@@ -557,8 +557,8 @@ class ProyeksiLendingResource extends Resource
                             ->disabled(fn($get) => blank($get('lending_pot_premi')))
                             ->live()
                             ->afterStateUpdated(function (Forms\Set $set, $state, Forms\Get $get) {
-                                $premi = floatval(str_replace(',', '', $get('lending_pot_premi')));
-                                $state = floatval(str_replace(',', '', $state));
+                                $premi = floatval(str_replace([',', '.'], '', $get('lending_pot_premi')));
+                                $state = floatval(str_replace([',', '.'], '', $state));
                                 $set(
                                     'lending_pot_premi_extra',
                                     number_format(($premi * $state) / 100, 0, ',', '.')
