@@ -48,57 +48,67 @@ class BranchOffice extends BaseModel
 
     public function saldoAbpTabungan(?string $tanggal = null): float
     {
-        return static::saldoNeraca2(['1.240.10'], $this->branch_code, $tanggal)['1.240.10'];
+        // return static::saldoNeraca2(['1.240.10'], $this->branch_code, $tanggal)['1.240.10'];
+        return $this->fincloudAbpTabungan($tanggal);
     }
 
     public function saldoKas(?string $tanggal = null): float
     {
-        return static::saldoNeraca2(['1.100'], $this->branch_code, $tanggal)['1.100'];
+        // return static::saldoNeraca2(['1.100'], $this->branch_code, $tanggal)['1.100'];
+        return $this->fincloudSaldoKas($tanggal);
     }
 
     public static function saldoAba(?string $tanggal = null, ?string $branch = null, array $jenis = []): float
     {
-        static $saldoCache = [];
+        // static $saldoCache = [];
 
-        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
-        $dateForCalc = $asOf->gte(Carbon::today()) ?
-            Carbon::yesterday()->toDateString() :
-            $asOf->toDateString();
+        // $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        // $dateForCalc = $asOf->gte(Carbon::today()) ?
+        //     Carbon::yesterday()->toDateString() :
+        //     $asOf->toDateString();
 
-        $cacheKey = md5($branch . '|' . $dateForCalc . '|' . implode(',', $jenis));
-        if (!isset($saldoCache[$cacheKey])) {
-            $saldo = DB::connection('mso-backup')
-                ->table('data_aba_master')
-                ->when($jenis, fn($q) => $q->whereIn('aba_jenis', $jenis))
-                ->when($branch, fn($q) => $q->where('aba_kantor', $branch))
-                ->selectRaw(
-                    'SUM(HitungAbaSaldoEfektif(aba_kode, ?)) AS saldo',
-                    [$dateForCalc]
-                )
-                ->value('saldo') ?? 0;
+        // $cacheKey = md5($branch . '|' . $dateForCalc . '|' . implode(',', $jenis));
+        // if (!isset($saldoCache[$cacheKey])) {
+        //     $saldo = DB::connection('mso-backup')
+        //         ->table('data_aba_master')
+        //         ->when($jenis, fn($q) => $q->whereIn('aba_jenis', $jenis))
+        //         ->when($branch, fn($q) => $q->where('aba_kantor', $branch))
+        //         ->selectRaw(
+        //             'SUM(HitungAbaSaldoEfektif(aba_kode, ?)) AS saldo',
+        //             [$dateForCalc]
+        //         )
+        //         ->value('saldo') ?? 0;
 
-            if ($asOf->isToday()) {
-                $saldo += DB::connection('mso')
-                    ->table('data_aba_trans')
-                    ->join('data_aba_master', 'aba_kode', '=', 'trans_rekening')
-                    ->when($jenis, fn($q) => $q->whereIn('aba_jenis', $jenis))
-                    ->when($branch, fn($q) => $q->where('aba_kantor', $branch))
-                    ->where('trans_status', 1) // VALIDASI
-                    ->whereDate('trans_reg_date', $asOf->toDateString())
-                    ->selectRaw('COALESCE(SUM(trans_kredit - trans_debet), 0) AS saldo')
-                    ->value('saldo') ?? 0;
-            }
+        //     if ($asOf->isToday()) {
+        //         $saldo += DB::connection('mso')
+        //             ->table('data_aba_trans')
+        //             ->join('data_aba_master', 'aba_kode', '=', 'trans_rekening')
+        //             ->when($jenis, fn($q) => $q->whereIn('aba_jenis', $jenis))
+        //             ->when($branch, fn($q) => $q->where('aba_kantor', $branch))
+        //             ->where('trans_status', 1) // VALIDASI
+        //             ->whereDate('trans_reg_date', $asOf->toDateString())
+        //             ->selectRaw('COALESCE(SUM(trans_kredit - trans_debet), 0) AS saldo')
+        //             ->value('saldo') ?? 0;
+        //     }
 
-            $saldoCache[$cacheKey] = $saldo;
+        //     $saldoCache[$cacheKey] = $saldo;
+        // }
+
+        // return $saldoCache[$cacheKey];
+        $branch = static::where('branch_code', $branch)
+            ->orWhere('branch_code_fincloud', $branch)
+            ->first();
+        if (!$branch) {
+            return 0.0;
         }
-
-        return $saldoCache[$cacheKey];
+        return 0.0;
     }
 
     public function assetLiquid(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
-        $giroTab = static::saldoAba($asOf, $this->branch_code, [10, 20]); // giro & tabungan umum
+        // $giroTab = static::saldoAba($asOf, $this->branch_code, [10, 20]); // giro & tabungan umum
+        $giroTab = $this->fincloudAbaGiro($asOf->toDateString()) + $this->fincloudAbaTabungan($asOf->toDateString());
         $kas = $this->saldoKas($tanggal);
 
         $ret = $kas + $giroTab - ($efektif ? $this->branch_saldo_aba_blokir : 0.0);
@@ -159,35 +169,42 @@ class BranchOffice extends BaseModel
 
     public function kewajibanLancar(?string $tanggal = null): float
     {
-        $res = static::saldoNeraca2(
-            [
-                '1.200', // liabilitas segera
-                '1.210', // tabungan
-                '1.220', // deposito
-            ],
-            $this->branch_code,
-            $tanggal,
-        );
+        // $res = static::saldoNeraca2(
+        //     [
+        //         '1.200', // liabilitas segera
+        //         '1.210', // tabungan
+        //         '1.220', // deposito
+        //     ],
+        //     $this->branch_code,
+        //     $tanggal,
+        // );
 
-        return $res['1.200'] + $res['1.210'] + $res['1.220'];
+        // return $res['1.200'] + $res['1.210'] + $res['1.220'];
+        return $this->fincloudKewajibanLancar($tanggal);
     }
 
     public static function konsolidasiKewajibanLancar(?string $tanggal = null): float
     {
         $total = 0.0;
 
-        collect(static::saldoNeraca2(['1.200', '1.210', '1.220'], null, $tanggal))
-            ->each(function ($saldo) use (&$total) {
-                $total += $saldo;
-            });
+        // collect(static::saldoNeraca2(['1.200', '1.210', '1.220'], null, $tanggal))
+        //     ->each(function ($saldo) use (&$total) {
+        //         $total += $saldo;
+        //     });
+
+        static::query()->chunkById(200, function ($branches) use ($tanggal, &$total) {
+            foreach ($branches as $branch) {
+                $total += $branch->kewajibanLancar($tanggal);
+            }
+        });
 
         return $total;
     }
 
     public function cashRatio(?string $tanggal = null, bool $simulated = false): float
     {
-        $assetLiquid = $this->assetLiquid($tanggal, $simulated);
-        $kewajibanLancar = $this->kewajibanLancar($tanggal);
+        $assetLiquid = $this->fincloudAssetLiquid($tanggal, $simulated);
+        $kewajibanLancar = $this->fincloudKewajibanLancar($tanggal);
         if ($kewajibanLancar === 0.0) {
             return 0.0;
         }
@@ -197,6 +214,8 @@ class BranchOffice extends BaseModel
 
     public function loanToDepositRatio(?string $tanggal = null, bool $simulated = false): float
     {
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        $tanggal = $asOf->toDateString();
         // Single round-trip for all needed codes
         $res = static::saldoNeraca2(['1.130.1', '1.210', '1.220'], $this->branch_code, $tanggal);
 
@@ -206,13 +225,13 @@ class BranchOffice extends BaseModel
         if ($simulated) {
             $proyeksiLendings = $this->proyeksiLendings()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereRaw('lending_tanggal = CURDATE()')
+                ->whereDate('lending_tanggal', $tanggal)
                 ->sum('lending_booking_bersih');
             $bakiDebet += $proyeksiLendings;
 
             $proyeksiFundings = $this->proyeksiFundings()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereRaw('funding_tanggal = CURDATE()')
+                ->whereDate('funding_tanggal', $tanggal)
                 ->sum('funding_nominal_bersih');
             $simpanan += $proyeksiFundings;
         }
@@ -226,10 +245,11 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiCashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
-        $totalLiquid = static::konsolidasiAssetLiquid($tanggal, $simulated, $efektif);
-        $totalKewajibanLancar = static::konsolidasiKewajibanLancar($tanggal);
+        // $totalLiquid = static::konsolidasiAssetLiquid($tanggal, $simulated, $efektif);
+        // $totalKewajibanLancar = static::konsolidasiKewajibanLancar($tanggal);
 
-        return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
+        // return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
+        return static::fincloudKonsolidasiCashRatio($tanggal, $simulated, $efektif);
     }
 
     public static function konsolidasiCashRatio2(?string $tanggal = null, float $totalLiquid = 0.0): float
@@ -241,11 +261,13 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiLDR(?string $tanggal = null, bool $simulated = false): float
     {
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        $tanggal = $asOf->toDateString();
         $totalBakiDebet = array_sum(static::saldoNeraca2(['1.130.1'], null, $tanggal));
         if ($simulated) {
             $proyeksiLendings = ProyeksiLending::query()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereRaw('lending_tanggal = CURDATE()')
+                ->whereDate('lending_tanggal', $tanggal)
                 ->sum('lending_booking_bersih');
             $totalBakiDebet += $proyeksiLendings;
         }
@@ -266,13 +288,28 @@ class BranchOffice extends BaseModel
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
         $asOf = $asOf->toDateString();
 
-        $giroTab = static::saldoAba($asOf, null, [10, 20]); // giro & tabungan umum
-        $kas = self::konsolidasiSaldoKas($tanggal);
+        $giroTab = 0.0;
+        $kas = 0.0;
+
+        static::chunkById(200, function ($branches) use (&$giroTab, &$kas, $asOf, $efektif) {
+            foreach ($branches as $branch) {
+                $giroTab += $branch->fincloudAbaGiro($asOf) + $branch->fincloudAbaTabungan($asOf);
+                $kas += $branch->fincloudSaldoKas($asOf);
+                if ($efektif) {
+                    $giroTab -= $branch->branch_saldo_aba_blokir;
+                }
+            }
+        });
 
         $ret = $kas + $giroTab;
-        if ($efektif) {
-            $ret -= BranchOffice::sum('branch_saldo_aba_blokir');
-        }
+
+        // $giroTab = static::saldoAba($asOf, null, [10, 20]); // giro & tabungan umum
+        // $kas = self::konsolidasiSaldoKas($tanggal);
+
+        // $ret = $kas + $giroTab;
+        // if ($efektif) {
+        //     $ret -= BranchOffice::sum('branch_saldo_aba_blokir');
+        // }
 
         if ($simulated) {
             $proyeksiCashIns = CashFlow::query()
@@ -519,24 +556,40 @@ class BranchOffice extends BaseModel
         return $neraca->sum('saldoakhir');
     }
 
-    public function fincloudAssetLiquid(?string $tanggal = null, bool $simulated = false): float
+    public function fincloudAbpTabungan(?string $tanggal = null): float
     {
+        $neraca = $this
+            ->fincloudSaldoNeraca()
+            ->where('noakun', '2212111') // ABP Tabungan
+            ->where('tanggal', $tanggal ?? Carbon::today()->toDateString())
+            ->first();
+
+        return $neraca->saldoakhir ?? 0.0;
+    }
+
+    public function fincloudAssetLiquid(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
+    {
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        $tanggal = $asOf->toDateString();
         $kas = $this->fincloudSaldoKas($tanggal);
         $abaGiro = $this->fincloudAbaGiro($tanggal);
         $abaTabungan = $this->fincloudAbaTabungan($tanggal);
 
-        $ret = $kas + $abaGiro + $abaTabungan - $this->branch_saldo_aba_blokir;
+        $ret = $kas + $abaGiro + $abaTabungan;
+        if ($efektif) {
+            $ret -= $this->branch_saldo_aba_blokir;
+        }
 
         if ($simulated) {
             $proyeksiLendings = $this->proyeksiLendings()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereRaw('lending_tanggal = CURDATE()')
+                ->whereDate('lending_tanggal', $tanggal)
                 ->sum('lending_booking_bersih');
             $ret -= $proyeksiLendings;
 
             $proyeksiFunding = $this->proyeksiFundings()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereRaw('funding_tanggal = CURDATE()')
+                ->whereDate('funding_tanggal', $tanggal)
                 ->sum('funding_nominal_bersih');
             $ret += $proyeksiFunding;
         }
@@ -569,4 +622,6 @@ class BranchOffice extends BaseModel
 
         return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
     }
+
+    // public static function fincloudBak
 }
