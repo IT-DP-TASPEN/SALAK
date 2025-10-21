@@ -43,30 +43,7 @@ class BranchOffice extends BaseModel
 
     public function assetLiquid(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
-        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
-        $giroTab = $this->fincloudAbaGiro($asOf->toDateString()) + $this->fincloudAbaTabungan($asOf->toDateString());
-        $kas = $this->saldoKas($tanggal);
-
-        $ret = $kas + $giroTab - ($efektif ? $this->branch_saldo_aba_blokir : 0.0);
-
-        if ($simulated) {
-            $tomorrow = $asOf->copy()->addDay();
-            $proyeksiCashIns = $this->cashFlows()
-                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereHas('kind', fn($q) => $q->where('kind_type', 'Cash In'))
-                ->whereDate('cash_tanggal', $tomorrow)
-                ->sum('cash_jumlah');
-            $ret += $proyeksiCashIns;
-
-            $proyeksiCashOuts = $this->cashFlows()
-                ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereHas('kind', fn($q) => $q->where('kind_type', 'Cash Out'))
-                ->whereDate('cash_tanggal', $tomorrow)
-                ->sum('cash_jumlah');
-            $ret -= $proyeksiCashOuts;
-        }
-
-        return $ret;
+        return $this->fincloudAssetLiquid($tanggal, $simulated, $efektif);
     }
 
     // TODO: integrate with fincloud
@@ -112,26 +89,35 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiKewajibanLancar(?string $tanggal = null): float
     {
-        $total = 0.0;
-
-        static::query()->chunkById(200, function ($branches) use ($tanggal, &$total) {
-            foreach ($branches as $branch) {
-                $total += $branch->kewajibanLancar($tanggal);
-            }
-        });
+        $total = array_sum(
+            static::saldoNeraca2(
+                [
+                    '211',
+                    '212',
+                    '213',
+                    '219',
+                    '2011008',
+                    '2011001',
+                    '2011004',
+                    '2011005',
+                    '2011006',
+                    '2011007',
+                    '208',
+                    '221',
+                    '2312200',
+                    '2312201',
+                ],
+                null,
+                $tanggal
+            )
+        );
 
         return $total;
     }
 
-    public function cashRatio(?string $tanggal = null, bool $simulated = false): float
+    public function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
-        $assetLiquid = $this->fincloudAssetLiquid($tanggal, $simulated);
-        $kewajibanLancar = $this->fincloudKewajibanLancar($tanggal);
-        if ($kewajibanLancar === 0.0) {
-            return 0.0;
-        }
-
-        return $assetLiquid / $kewajibanLancar * 100;
+        return $this->fincloudCashRatio($tanggal, $simulated, $efektif);
     }
 
     public function loanToDepositRatio(?string $tanggal = null, bool $simulated = false): float
@@ -171,7 +157,6 @@ class BranchOffice extends BaseModel
     public static function konsolidasiCashRatio2(?string $tanggal = null, float $totalLiquid = 0.0): float
     {
         $totalKewajibanLancar = static::konsolidasiKewajibanLancar($tanggal);
-
         return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
     }
 
@@ -345,34 +330,35 @@ class BranchOffice extends BaseModel
         $tanggal = $asOf->toDateString();
 
         $kas = $this->fincloudSaldoKas($tanggal);
-        $abaGiro = $this->fincloudAbaGiro($tanggal);
-        $abaTabungan = $this->fincloudAbaTabungan($tanggal);
+        $giroTab = array_sum(static::saldoNeraca2(['111', '112'], $this->branch_code_fincloud, $tanggal));
 
-        $ret = $kas + $abaGiro + $abaTabungan;
+        $ret = $kas + $giroTab;
         if ($efektif) {
             $ret -= $this->branch_saldo_aba_blokir;
         }
 
         if ($simulated) {
-            $proyeksiLendings = $this->proyeksiLendings()
+            $proyeksiCashIns = $this->cashFlows()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereDate('lending_tanggal', $tanggal)
-                ->sum('lending_booking_bersih');
-            $ret -= $proyeksiLendings;
+                ->whereHas('kind', fn($q) => $q->where('kind_type', 'Cash In'))
+                ->whereDate('cash_tanggal', $asOf)
+                ->sum('cash_jumlah');
+            $ret += $proyeksiCashIns;
 
-            $proyeksiFunding = $this->proyeksiFundings()
+            $proyeksiCashOuts = $this->cashFlows()
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereDate('funding_tanggal', $tanggal)
-                ->sum('funding_nominal_bersih');
-            $ret += $proyeksiFunding;
+                ->whereHas('kind', fn($q) => $q->where('kind_type', 'Cash Out'))
+                ->whereDate('cash_tanggal', $asOf)
+                ->sum('cash_jumlah');
+            $ret -= $proyeksiCashOuts;
         }
 
         return $ret;
     }
 
-    public function fincloudCashRatio(?string $tanggal = null, bool $simulated = false): float
+    public function fincloudCashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
-        $assetLiquid = $this->fincloudAssetLiquid($tanggal, $simulated);
+        $assetLiquid = $this->fincloudAssetLiquid($tanggal, $simulated, $efektif);
         $kewajibanLancar = $this->fincloudKewajibanLancar($tanggal);
         if ($kewajibanLancar === 0.0) {
             return 0.0;
