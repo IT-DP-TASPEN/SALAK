@@ -2,6 +2,7 @@ package main
 
 import (
 	"bufio"
+	"crypto/tls"
 	"database/sql"
 	"encoding/json"
 	"flag"
@@ -21,7 +22,7 @@ import (
 const (
 	batchSize  = 200
 	maxRetries = 3
-	baseURL    = "http://172.22.80.24/fincloud-taspen"
+	baseURL    = "https://172.20.57.7/fincloud-taspen-web"
 	userAgent  = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:142.0) Gecko/20100101 Firefox/142.0"
 )
 
@@ -330,8 +331,8 @@ func askInput(prompt string) (string, error) {
 
 func login(username, password string) (LoginResponse, error) {
 	form := url.Values{}
-	form.Add("locationid", "001") // Kantor Pusat Operasional
-	form.Add("roleid", "R-0004")  // Back Office
+	form.Add("locationid", "000") // Headquarter
+	form.Add("roleid", "R-0041")  // Reporting
 	form.Add("username", username)
 	form.Add("pwd", password)
 
@@ -339,10 +340,13 @@ func login(username, password string) (LoginResponse, error) {
 	if err != nil {
 		return LoginResponse{}, err
 	}
-	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded;charset=utf-8")
 	req.Header.Set("User-Agent", userAgent)
 
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Disable certificate validation
+	}
+	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
 		return LoginResponse{}, err
@@ -391,7 +395,10 @@ func fetchSaldoNeraca(sessionId, branchOffice string, date time.Time) (SaldoNera
 	req.Header.Set("User-Agent", userAgent)
 	req.Header.Set("sessionid", sessionId)
 
-	client := &http.Client{}
+	tr := &http.Transport{
+		TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // Disable certificate validation
+	}
+	client := &http.Client{Transport: tr}
 	resp, err := client.Do(req)
 	if err != nil {
 		return SaldoNeraca{}, err
