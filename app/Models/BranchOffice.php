@@ -177,9 +177,12 @@ class BranchOffice extends BaseModel
         return $totalSimpanan === 0.0 ? 0.0 : ($totalBakiDebet / $totalSimpanan * 100);
     }
 
-    public static function konsolidasiSaldoKas(?string $tanggal)
+    public static function konsolidasiSaldoKas(?string $tanggal): float
     {
-        $neraca = static::saldoNeraca2(['1011000'], null, $tanggal);
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        $asOf = $asOf->toDateString();
+
+        $neraca = static::saldoNeraca2(['1011000'], null, $asOf);
         return array_sum($neraca);
     }
 
