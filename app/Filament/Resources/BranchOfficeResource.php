@@ -140,7 +140,7 @@ class BranchOfficeResource extends Resource
     public static function getRelations(): array
     {
         return [
-            DataAbaMasterRelationManager::class,
+            //
         ];
     }
 
