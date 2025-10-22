@@ -249,7 +249,7 @@ func insertOrUpdateSaldo(db *sql.DB, date, branch string, saldo SaldoNeraca) err
 
 		var sb strings.Builder
 		sb.WriteString(`INSERT INTO `)
-		sb.WriteString(os.Getenv("TABLE_SOURCE"))
+		sb.WriteString(os.Getenv("SNU_TABLE_SOURCE"))
 		sb.WriteString(`
 			(cabang, tanggal, noakun, namaakun, saldoawal, mutasidebit, mutasikredit, saldoakhir, created_at, updated_at)
 			VALUES `,

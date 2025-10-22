@@ -147,7 +147,7 @@ func main() {
 	fmt.Printf("Fetched %d loan outstandings for %s\n", len(loanOutstandings.Data.Result), *dateStr)
 
 	// truncate existing data
-	_, err = db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", os.Getenv("TABLE_SOURCE")))
+	_, err = db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", os.Getenv("LOU_TABLE_SOURCE")))
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Error truncating table: %v\n", err)
 		os.Exit(1)
@@ -197,7 +197,7 @@ func main() {
 				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()
 			)
 			`,
-			os.Getenv("TABLE_SOURCE"),
+			os.Getenv("LOU_TABLE_SOURCE"),
 		))
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Error preparing statement: %v\n", err)
