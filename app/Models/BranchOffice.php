@@ -46,6 +46,11 @@ class BranchOffice extends BaseModel
         return $this->fincloudAssetLiquid($tanggal, $simulated, $efektif);
     }
 
+    public function loanOutstandings(): HasMany
+    {
+        return $this->hasMany(LoanOutstanding::class, 'loan_branch_office', 'branch_code_fincloud');
+    }
+
     // TODO: integrate with fincloud
     public function npl(): float
     {
