@@ -16,6 +16,13 @@ Schedule::exec(base_path() . '/saldo-neraca-updater', ['-date=' . now()->format(
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/schedule.log'));
 
+Schedule::exec(base_path() . '/loan-outstanding-updater', ['-date=' . now()->format('Y-m-d')])
+    ->everyThreeHours()
+    ->onOneServer()
+    ->runInBackground()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/schedule.log'));
+
 Schedule::command('cache:refresh-kredit-kolek')
     ->dailyAt('05:00')
     ->onOneServer()
