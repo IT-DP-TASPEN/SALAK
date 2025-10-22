@@ -146,14 +146,6 @@ func main() {
 
 	fmt.Printf("Fetched %d loan outstandings for %s\n", len(loanOutstandings.Data.Result), *dateStr)
 
-	// truncate existing data
-	_, err = db.Exec(fmt.Sprintf("TRUNCATE TABLE %s", os.Getenv("LOU_TABLE_SOURCE")))
-	if err != nil {
-		fmt.Fprintf(os.Stderr, "Error truncating table: %v\n", err)
-		os.Exit(1)
-	}
-	fmt.Println("Truncated existing loan outstandings data")
-
 	// chunk insert to avoid too large query
 	size := len(loanOutstandings.Data.Result)
 	for i := 0; i < size; i += batchSize {
@@ -197,6 +189,29 @@ func main() {
 			) VALUES (
 				?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW()
 			)
+			ON DUPLICATE KEY UPDATE
+				loan_branch_office     = VALUES(loan_branch_office),
+				loan_product           = VALUES(loan_product),
+				loan_customer          = VALUES(loan_customer),
+				loan_cif               = VALUES(loan_cif),
+				loan_alt_account       = VALUES(loan_alt_account),
+				loan_agreement_no      = VALUES(loan_agreement_no),
+				loan_start_date        = VALUES(loan_start_date),
+				loan_end_date          = VALUES(loan_end_date),
+				loan_interest_rate     = VALUES(loan_interest_rate),
+				loan_installment_loans = VALUES(loan_installment_loans),
+				loan_bi_collectability = VALUES(loan_bi_collectability),
+				loan_days_past_due     = VALUES(loan_days_past_due),
+				loan_currency          = VALUES(loan_currency),
+				loan_principal         = VALUES(loan_principal),
+				loan_outstanding       = VALUES(loan_outstanding),
+				loan_principal_arrears = VALUES(loan_principal_arrears),
+				loan_interest_arrears  = VALUES(loan_interest_arrears),
+				loan_penalty_arrears   = VALUES(loan_penalty_arrears),
+				loan_accrue_interest   = VALUES(loan_accrue_interest),
+				loan_marketing_code    = VALUES(loan_marketing_code),
+				loan_over_repayment    = VALUES(loan_over_repayment),
+				updated_at             = NOW()
 			`,
 			os.Getenv("LOU_TABLE_SOURCE"),
 		))
