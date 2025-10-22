@@ -6,7 +6,6 @@ use App\Models\BranchOffice;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use Illuminate\Support\Facades\Cache;
 use Livewire\Attributes\On;
 
 class LiquidityStatsOverview extends BaseWidget
@@ -23,14 +22,7 @@ class LiquidityStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        $kolek = Cache::get('dashboard:kolek', []);
-        $npl = array_filter($kolek, fn($item) => !in_array($item->kolek, ['L', 'DP']));
-        // Calculate NPL percentage based on kre_baki_debet
-        $totalBakiDebet = array_sum(array_column($kolek, 'baki_debet'));
-        $totalNplBakiDebet = array_sum(array_column($npl, 'baki_debet'));
-        $nplPercentage = $totalBakiDebet > 0
-            ? ($totalNplBakiDebet / $totalBakiDebet) * 100
-            : 0;
+        $nplPercentage = BranchOffice::konsolidasiNPL();
         $cashRatio = BranchOffice::konsolidasiCashRatio($this->tanggal, $this->simulated, $this->efektif);
         $ldr = BranchOffice::konsolidasiLDR($this->tanggal, $this->simulated);
 

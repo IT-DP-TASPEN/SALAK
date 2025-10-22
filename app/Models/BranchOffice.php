@@ -51,40 +51,32 @@ class BranchOffice extends BaseModel
         return $this->hasMany(LoanOutstanding::class, 'loan_branch_office', 'branch_code_fincloud');
     }
 
-    // TODO: integrate with fincloud
     public function npl(): float
     {
-        $kolek = Cache::get('dashboard:kolek', []);
-        $totalBakiDebet = array_sum(array_column($kolek, 'baki_debet'));
-        $npl = array_filter(
-            $kolek,
-            fn($item) =>
-            !in_array($item->kolek, ['L', 'DP']) && $item->kantor === $this->branch_code
-        );
-        $totalNPL = array_sum(array_column($npl, 'baki_debet'));
+        $loans = $this->loanOutstandings()->get();
+        $totalBakiDebet = $loans->sum('loan_outstanding');
         if ($totalBakiDebet == 0.0) {
             return 0.0;
         }
 
-        return $totalNPL / $totalBakiDebet * 100;
+        $nplLoans = $loans->filter(fn($loan) => !in_array($loan->loan_bi_collectability, [1, 2]));
+        $totalNpl = $nplLoans->sum('loan_outstanding');
+
+        return $totalNpl / $totalBakiDebet * 100;
     }
 
-    // TODO: integrate with fincloud
     public static function konsolidasiNPL(): float
     {
-        $kolek = Cache::get('dashboard:kolek', []);
-        $totalBakiDebet = array_sum(array_column($kolek, 'baki_debet'));
-        $npl = array_filter(
-            $kolek,
-            fn($item) =>
-            !in_array($item->kolek, ['L', 'DP'])
-        );
-        $totalNPL = array_sum(array_column($npl, 'baki_debet'));
+        $loans = LoanOutstanding::query()->get();
+        $totalBakiDebet = $loans->sum('loan_outstanding');
         if ($totalBakiDebet == 0.0) {
             return 0.0;
         }
 
-        return $totalNPL / $totalBakiDebet * 100;
+        $nplLoans = $loans->filter(fn($loan) => !in_array($loan->loan_bi_collectability, [1, 2]));
+        $totalNpl = $nplLoans->sum('loan_outstanding');
+
+        return $totalNpl / $totalBakiDebet * 100;
     }
 
     public function kewajibanLancar(?string $tanggal = null): float
