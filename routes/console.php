@@ -23,13 +23,6 @@ Schedule::exec(base_path() . '/loan-outstanding-updater', ['-date=' . now()->for
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/schedule.log'));
 
-Schedule::command('cache:refresh-kredit-kolek')
-    ->dailyAt('05:00')
-    ->onOneServer()
-    ->runInBackground()
-    ->withoutOverlapping()
-    ->appendOutputTo(storage_path('logs/schedule.log'));
-
 Schedule::command('cache:refresh-cash-ratio-history')
     ->dailyAt('05:00')
     ->onOneServer()
