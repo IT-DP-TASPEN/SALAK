@@ -155,8 +155,9 @@ func main() {
 	fmt.Println("Truncated existing loan outstandings data")
 
 	// chunk insert to avoid too large query
-	for i := 0; i < len(loanOutstandings.Data.Result); i += batchSize {
-		end := min(i+batchSize, len(loanOutstandings.Data.Result))
+	size := len(loanOutstandings.Data.Result)
+	for i := 0; i < size; i += batchSize {
+		end := min(i+batchSize, size)
 		batch := loanOutstandings.Data.Result[i:end]
 
 		tx, err := db.Begin()
