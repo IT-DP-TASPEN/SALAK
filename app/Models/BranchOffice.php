@@ -57,7 +57,7 @@ class BranchOffice extends BaseModel
             !in_array($item->kolek, ['L', 'DP']) && $item->kantor === $this->branch_code
         );
         $totalNPL = array_sum(array_column($npl, 'baki_debet'));
-        if ($totalBakiDebet === 0) {
+        if ($totalBakiDebet == 0.0) {
             return 0.0;
         }
 
@@ -75,7 +75,7 @@ class BranchOffice extends BaseModel
             !in_array($item->kolek, ['L', 'DP'])
         );
         $totalNPL = array_sum(array_column($npl, 'baki_debet'));
-        if ($totalBakiDebet === 0) {
+        if ($totalBakiDebet == 0.0) {
             return 0.0;
         }
 
@@ -142,7 +142,7 @@ class BranchOffice extends BaseModel
             $simpanan += $proyeksiFundings;
         }
 
-        if ($simpanan === 0.0) {
+        if ($simpanan == 0.0) {
             return 0.0;
         }
 
@@ -157,7 +157,7 @@ class BranchOffice extends BaseModel
     public static function konsolidasiCashRatio2(?string $tanggal = null, float $totalLiquid = 0.0): float
     {
         $totalKewajibanLancar = static::konsolidasiKewajibanLancar($tanggal);
-        return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
+        return $totalKewajibanLancar == 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
     }
 
     public static function konsolidasiLDR(?string $tanggal = null, bool $simulated = false): float
@@ -174,7 +174,7 @@ class BranchOffice extends BaseModel
         }
         $totalSimpanan = array_sum(static::saldoNeraca2(['221', '2312200', '2312201'], null, $tanggal));
 
-        return $totalSimpanan === 0.0 ? 0.0 : ($totalBakiDebet / $totalSimpanan * 100);
+        return $totalSimpanan == 0.0 ? 0.0 : ($totalBakiDebet / $totalSimpanan * 100);
     }
 
     public static function konsolidasiSaldoKas(?string $tanggal): float
@@ -363,7 +363,7 @@ class BranchOffice extends BaseModel
     {
         $assetLiquid = $this->fincloudAssetLiquid($tanggal, $simulated, $efektif);
         $kewajibanLancar = $this->fincloudKewajibanLancar($tanggal);
-        if ($kewajibanLancar === 0.0) {
+        if ($kewajibanLancar == 0.0) {
             return 0.0;
         }
         return $assetLiquid / $kewajibanLancar * 100;
@@ -374,6 +374,6 @@ class BranchOffice extends BaseModel
         $totalLiquid = static::konsolidasiAssetLiquid($tanggal, $simulated, $efektif);
         $totalKewajibanLancar = static::konsolidasiKewajibanLancar($tanggal);
 
-        return $totalKewajibanLancar === 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
+        return $totalKewajibanLancar == 0.0 ? 0.0 : ($totalLiquid / $totalKewajibanLancar * 100);
     }
 }
