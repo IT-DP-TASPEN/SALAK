@@ -53,35 +53,28 @@ class BranchOffice extends BaseModel
 
     public function npl(?string $tanggal = null): float
     {
-        $loans = $this
+        $npl = $this
             ->loanOutstandings()
+            ->selectRaw(
+                'SUM(CASE WHEN loan_bi_collectability IN (3, 4, 5) THEN loan_outstanding END) * 1.0
+                / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as npl_percentage'
+            )
             ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
-            ->get();
-        $totalBakiDebet = $loans->sum('loan_outstanding');
-        if ($totalBakiDebet == 0.0) {
-            return 0.0;
-        }
+            ->value('npl_percentage');
 
-        $nplLoans = $loans->filter(fn($loan) => !in_array($loan->loan_bi_collectability, [1, 2]));
-        $totalNpl = $nplLoans->sum('loan_outstanding');
-
-        return $totalNpl / $totalBakiDebet * 100;
+        return $npl ?? 0.0;
     }
 
     public static function konsolidasiNPL(?string $tanggal = null): float
     {
-        $loans = LoanOutstanding::query()
+        $npl = LoanOutstanding::query()
+            ->selectRaw(
+                'SUM(CASE WHEN loan_bi_collectability IN (3, 4, 5) THEN loan_outstanding END) * 1.0
+                / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as npl_percentage'
+            )
             ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
-            ->get();
-        $totalBakiDebet = $loans->sum('loan_outstanding');
-        if ($totalBakiDebet == 0.0) {
-            return 0.0;
-        }
-
-        $nplLoans = $loans->filter(fn($loan) => !in_array($loan->loan_bi_collectability, [1, 2]));
-        $totalNpl = $nplLoans->sum('loan_outstanding');
-
-        return $totalNpl / $totalBakiDebet * 100;
+            ->value('npl_percentage');
+        return $npl ?? 0.0;
     }
 
     public function ppka(?string $tanggal = null): float
