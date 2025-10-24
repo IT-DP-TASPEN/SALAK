@@ -53,12 +53,17 @@ class BranchOffice extends BaseModel
 
     public function npl(?string $tanggal = null): float
     {
-        $npl = $this
-            ->loanOutstandings()
+        return static::konsolidasiNPL($tanggal, $this->branch_code_fincloud);
+    }
+
+    public static function konsolidasiNPL(?string $tanggal = null, ?string $branch = null): float
+    {
+        $npl = LoanOutstanding::query()
             ->selectRaw(
                 'SUM(CASE WHEN loan_bi_collectability IN (3, 4, 5) THEN loan_outstanding END) * 1.0
                 / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as npl_percentage'
             )
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
             ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
             ->value('npl_percentage');
 
@@ -79,31 +84,10 @@ class BranchOffice extends BaseModel
 
     public function ppka(?string $tanggal = null): float
     {
-        $weights = [
-            1 => 0.005, // 0.5%
-            2 => 0.03,  // 3%
-            3 => 0.10,  // 10%
-            4 => 0.50,  // 50%
-            5 => 1.00,  // 100%
-        ];
-
-        $totals = $this
-            ->loanOutstandings()
-            ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
-            ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
-            ->whereIn('loan_bi_collectability', array_keys($weights))
-            ->groupBy('loan_bi_collectability')
-            ->pluck('total_outstanding', 'loan_bi_collectability');
-
-        $ppka = 0.0;
-        foreach ($totals as $collectability => $totalOutstanding) {
-            $ppka += (float) $totalOutstanding * $weights[$collectability];
-        }
-
-        return $ppka;
+        return static::konsolidasiPPKA($tanggal, $this->branch_code_fincloud);
     }
 
-    public static function konsolidasiPPKA(?string $tanggal = null): float
+    public static function konsolidasiPPKA(?string $tanggal = null, ?string $branch = null): float
     {
         $weights = [
             1 => 0.005, // 0.5%
@@ -115,6 +99,7 @@ class BranchOffice extends BaseModel
 
         $totals = LoanOutstanding::query()
             ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
             ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
             ->whereIn('loan_bi_collectability', array_keys($weights))
             ->groupBy('loan_bi_collectability')
@@ -130,11 +115,34 @@ class BranchOffice extends BaseModel
 
     public function kewajibanLancar(?string $tanggal = null): float
     {
-        return $this->fincloudKewajibanLancar($tanggal);
+        return static::konsolidasiKewajibanLancar($tanggal, $this->branch_code_fincloud);
     }
 
-    public static function konsolidasiKewajibanLancar(?string $tanggal = null): float
+    public static function konsolidasiKewajibanLancar(?string $tanggal = null, ?string $branch = null): float
     {
+        /**
+         * 1.200 : Kewajiban yang Segera Dapat Dibayar
+         *   - 1.200.10 : Kewajiban kepada Pemerintah yang harus dibayar 
+         *     - 211 : Tax Payable - Saving Account Interest
+         *     - 212 : Tax Payable - Interest Time Deposit Account
+         *     - 213 : Tax Payable - Employees
+         *     - 219 : Tax Payable - Honorary
+         *   - 1.200.20 : Kewajiban yang telah JT
+         *     - 2011008 : Deposit - Interest Due
+         *   - 1.200.30 : Titipan Nasabah
+         *     - 2011001 : Deposit - Third Parties
+         *     - 2011004 : Debtor Customer Deposit / Temporary
+         *     - 2011005 : Taspen Pension Customer Deposits
+         *     - 2011006 : Deposits for Retired Civil Servants
+         *     - 2011007 : DP Taspen Pension Deposit
+         *     - 208 : Insurance
+         * 1.210 : Tabungan
+         *   - 221 : Savings
+         * 1.220 : Deposito Berjangka
+         *   - 2312200 : Time Deposit
+         *   - 2312201 : Time Deposit Compound
+         */
+
         $total = array_sum(
             static::saldoNeraca2(
                 [
@@ -153,7 +161,7 @@ class BranchOffice extends BaseModel
                     '2312200',
                     '2312201',
                 ],
-                null,
+                $branch,
                 $tanggal
             )
         );
