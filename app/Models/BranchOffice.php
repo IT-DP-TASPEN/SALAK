@@ -70,16 +70,60 @@ class BranchOffice extends BaseModel
         return $npl ?? 0.0;
     }
 
-    public static function konsolidasiNPL(?string $tanggal = null): float
+    public static function konsolidasiNPLNett(?string $tanggal = null, ?string $branch = null): float
     {
+        $ckpn = array_sum(BranchOffice::saldoNeraca2(['1272005'], $branch, $tanggal));
+
         $npl = LoanOutstanding::query()
             ->selectRaw(
-                'SUM(CASE WHEN loan_bi_collectability IN (3, 4, 5) THEN loan_outstanding END) * 1.0
-                / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as npl_percentage'
+                '(SUM(CASE WHEN loan_bi_collectability IN (3, 4, 5) THEN loan_outstanding END) - ?) * 1.0
+                / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as npl_percentage',
+                [$ckpn]
             )
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
             ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
             ->value('npl_percentage');
+
         return $npl ?? 0.0;
+    }
+
+    public function modalInti(?string $tanggal = null): float
+    {
+        return static::konsolidasiModalInti($tanggal, $this->branch_code_fincloud);
+    }
+
+    public static function konsolidasiModalInti(?string $tanggal = null, ?string $branch = null): float
+    {
+        $total = array_sum(
+            static::saldoNeraca2(
+                [
+                    '300', // Authorized Capital
+                    '3111000', // General Reserve
+                    '3111001', // Goal Reserve
+                    '322', // Last Year Retained Earning
+                    '323', // This Year Retained Earning
+                ],
+                $branch,
+                $tanggal
+            )
+        );
+
+        $ckpn = array_sum(
+            static::saldoNeraca2(
+                [
+                    '1272005', // Provisioning - CKPN
+                ],
+                $branch,
+                $tanggal
+            )
+        );
+        $ppka = static::konsolidasiPPKA($tanggal, $branch);
+
+        if ($ckpn < $ppka) {
+            $total -= $ppka - $ckpn;
+        }
+
+        return $total;
     }
 
     public function ppka(?string $tanggal = null): float
@@ -111,6 +155,63 @@ class BranchOffice extends BaseModel
         }
 
         return $ppka;
+    }
+
+    public function pendapatanOperasional(?string $tanggal = null): float
+    {
+        return static::konsolidasiPendapatanOperasional($tanggal, $this->branch_code_fincloud);
+    }
+
+    public static function konsolidasiPendapatanOperasional(?string $tanggal = null, ?string $branch = null): float
+    {
+        $pendapatan = array_sum(
+            static::saldoNeraca2(
+                [
+                    '4', // Income
+                ],
+                $branch,
+                $tanggal
+            )
+        );
+
+        return $pendapatan;
+    }
+
+    public function bebanOperasional(?string $tanggal = null): float
+    {
+        return static::konsolidasiBebanOperasional($tanggal, $this->branch_code_fincloud);
+    }
+
+    public static function konsolidasiBebanOperasional(?string $tanggal = null, ?string $branch = null): float
+    {
+        $beban = array_sum(
+            static::saldoNeraca2(
+                [
+                    '5', // Expenses
+                ],
+                $branch,
+                $tanggal
+            )
+        );
+
+        return $beban;
+    }
+
+    public function bopo(?string $tanggal = null): float
+    {
+        return static::konsolidasiBopo($tanggal, $this->branch_code_fincloud);
+    }
+
+    public static function konsolidasiBopo(?string $tanggal = null, ?string $branch = null): float
+    {
+        $bebanOperasional = static::konsolidasiBebanOperasional($tanggal, $branch);
+        $pendapatanOperasional = static::konsolidasiPendapatanOperasional($tanggal, $branch);
+
+        if ($pendapatanOperasional == 0.0) {
+            return 0.0;
+        }
+
+        return $bebanOperasional / $pendapatanOperasional * 100;
     }
 
     public function kewajibanLancar(?string $tanggal = null): float
