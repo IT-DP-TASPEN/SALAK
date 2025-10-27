@@ -731,6 +731,24 @@ class ProyeksiLendingResource extends Resource
                     ->multiple()
                     ->searchable()
                     ->preload(),
+                SelectFilter::make('lending_jenis_pengajuan')
+                    ->label('Jenis Pengajuan')
+                    ->options(
+                        function () {
+                            $opts = ProyeksiLending::getPossibleEnumValues('lending_jenis_pengajuan');
+                            return array_combine($opts, $opts);
+                        }
+                    )
+                    ->searchable(),
+                SelectFilter::make('lending_mitra_bayar_takeover')
+                    ->label('Bank Takeover')
+                    ->relationship(
+                        'mitraBayarTakeover',
+                        'mitra_nama',
+                    )
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
