@@ -665,6 +665,9 @@ class ProyeksiLendingResource extends Resource
                 Tables\Columns\TextColumn::make('lending_jenis_pengajuan')
                     ->label('Jenis Pengajuan')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('mitraBayarTakeover.mitra_nama')
+                    ->label('Bank Takeover')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('produk.produk_nama')
                     ->label('Produk')
                     ->searchable(),
