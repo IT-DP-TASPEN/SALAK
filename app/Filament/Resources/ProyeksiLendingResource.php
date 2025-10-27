@@ -639,6 +639,8 @@ class ProyeksiLendingResource extends Resource
                     ->badge(),
                 Tables\Columns\TextColumn::make('lending_boss_application_number')
                     ->copyable()
+                    ->copyMessage('No. Aplikasi BOSS copied to clipboard!')
+                    ->copyMessageDuration(1500)
                     ->label('No. Aplikasi BOSS')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('lending_tanggal')
