@@ -847,7 +847,6 @@ class ProyeksiLendingResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->selectCurrentPageOnly()
             ->defaultSort('created_at', 'desc')
             ->recordUrl(fn(ProyeksiLending $record): ?string => static::getUrl('view', ['record' => $record]));
     }
