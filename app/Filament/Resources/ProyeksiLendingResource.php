@@ -935,6 +935,7 @@ class ProyeksiLendingResource extends Resource
                     ->collapsible()
                     ->schema([
                         TextEntry::make('petugas.name')->label('Petugas Input')->icon('heroicon-o-user'),
+                        TextEntry::make('lending_boss_application_number')->label('No. Aplikasi BOSS')->icon('heroicon-o-document-text')->visible(fn($record) => filled($record->lending_boss_application_number)),
                         TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('agent.agent_nama')->label('AO/Marketing')->icon('heroicon-o-user-group'),
                         TextEntry::make('progress.status.progress_status')->label('Progress')->icon('heroicon-o-arrow-path'),

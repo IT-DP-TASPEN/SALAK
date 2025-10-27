@@ -8,6 +8,7 @@ use App\Models\ProyeksiLendingProgressStatus;
 use Filament\Actions;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\HtmlString;
@@ -77,6 +78,8 @@ class ViewProyeksiLending extends ViewRecord
                             'approval_comment' => $data['approval_comment'] ?? null,
                         ]
                     );
+                    $record->lending_boss_application_number = $data['lending_boss_application_number'];
+                    $record->save();
                     Notification::make()
                         ->title('Lending approved successfully.')
                         ->success()
@@ -88,6 +91,10 @@ class ViewProyeksiLending extends ViewRecord
                 ->modalDescription(new HtmlString('Are you sure you want to approve this lending?<br/>This action cannot be undone.'))
                 ->modalSubmitActionLabel('Approve Lending')
                 ->form([
+                    TextInput::make('lending_boss_application_number')
+                        ->label('BOSS Application Number')
+                        ->placeholder('Enter BOSS Application Number')
+                        ->required(),
                     Textarea::make('approval_comment')
                         ->label('Remarks')
                         ->placeholder('Optional remarks for approval')
