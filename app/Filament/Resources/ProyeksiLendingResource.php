@@ -637,6 +637,9 @@ class ProyeksiLendingResource extends Resource
                 Tables\Columns\TextColumn::make('progress.status.progress_status')
                     ->label('Status')
                     ->badge(),
+                Tables\Columns\TextColumn::make('lending_boss_application_number')
+                    ->label('No. Aplikasi BOSS')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('lending_tanggal')
                     ->label('Tanggal')
                     ->date('d M Y')
