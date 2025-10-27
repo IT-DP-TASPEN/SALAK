@@ -79,11 +79,11 @@ class RekapBooking extends Page implements HasTable
         $today = Carbon::today();
 
         $bookingScope = fn($q) => $q
-            ->whereDate('lending_tanggal', $today)
+            ->whereRelation('progress.updated_at', fn($query) => $query->whereDate('updated_at', $today))
             ->whereRelation('progress.status', 'progress_status', 'BOOKING');
 
         $pendingScope = fn($q) => $q
-            ->whereDate('lending_tanggal', $today)
+            ->whereRelation('progress.updated_at', fn($query) => $query->whereDate('updated_at', $today))
             ->whereRelation('progress.status', 'progress_status', 'PENDING');
 
         return BranchOffice::query()
