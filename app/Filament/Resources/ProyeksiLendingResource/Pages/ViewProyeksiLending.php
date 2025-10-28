@@ -78,7 +78,7 @@ class ViewProyeksiLending extends ViewRecord
                             'approval_comment' => $data['approval_comment'] ?? null,
                         ]
                     );
-                    $record->lending_boss_application_number = $data['lending_boss_application_number'];
+                    $record->lending_boss_application_number = trim($data['lending_boss_application_number']);
                     $record->save();
                     Notification::make()
                         ->title('Lending approved successfully.')
