@@ -732,15 +732,16 @@ class ProyeksiLendingResource extends Resource
                     ->searchable()
                     ->preload()
                     ->visible(fn() => !auth()->user()->hasRole(['bm', 'abm'])),
-                SelectFilter::make('progress_lending')
-                    ->label('Status Progress')
-                    ->relationship(
-                        'progress.status',
-                        'progress_status',
-                    )
-                    ->multiple()
-                    ->searchable()
-                    ->preload(),
+                // TODO: Enable progress status filter based on BOSS track code
+                // SelectFilter::make('progress_lending')
+                //     ->label('Status Progress')
+                //     ->relationship(
+                //         'progress.status',
+                //         'progress_status',
+                //     )
+                //     ->multiple()
+                //     ->searchable()
+                //     ->preload(),
                 SelectFilter::make('lending_jenis_pengajuan')
                     ->label('Jenis Pengajuan')
                     ->options(
