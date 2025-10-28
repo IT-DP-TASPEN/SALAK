@@ -90,6 +90,18 @@ return [
             'engine' => null,
         ],
 
+        'boss' => [
+            'driver' => env('BOSS_DB_CONNECTION'),
+            'host' => env('BOSS_DB_HOST'),
+            'port' => env('BOSS_DB_PORT'),
+            'database' => env('BOSS_DB_DATABASE'),
+            'username' => env('BOSS_DB_USERNAME'),
+            'password' => env('BOSS_DB_PASSWORD'),
+            'charset' => 'utf8',
+            'prefix' => '',
+            'prefix_indexes' => true,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

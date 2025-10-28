@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\BOSSAPPFLAG;
 use App\Models\BranchOffice;
 use App\Models\ProyeksiLending;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
@@ -78,17 +79,22 @@ class RekapBooking extends Page implements HasTable
     {
         $today = Carbon::today();
 
-        $bookingScope = fn($q) => $q
-            ->whereHas('progress', function ($query) use ($today) {
-                $query->whereDate('updated_at', $today);
-            })
-            ->whereRelation('progress.status', 'progress_status', 'BOOKING');
+        $bookedRegNos = BOSSAPPFLAG::on('boss')
+            ->where('AP_CURRTRCODE', '9.0')
+            ->whereDate('AP_LASTTRDATE', $today)
+            ->pluck('AP_REGNO')
+            ->toArray();
 
-        $pendingScope = fn($q) => $q
-            ->whereHas('progress', function ($query) use ($today) {
-                $query->whereDate('updated_at', $today);
-            })
-            ->whereRelation('progress.status', 'progress_status', 'PENDING');
+        $pendingRegNos = BOSSAPPFLAG::on('boss')
+            ->where('AP_CURRTRCODE', '!=', '9.0')
+            ->whereDate('AP_LASTTRDATE', '<=', $today)
+            ->pluck('AP_REGNO')
+            ->toArray();
+        // dd($pendingRegNos);
+
+        $bookingScope = fn($q) => $q->whereIn('lending_boss_application_number', $bookedRegNos);
+        //A2025101600300000001
+        $pendingScope = fn($q) => $q->whereIn('lending_boss_application_number', $pendingRegNos);
 
         return BranchOffice::query()
             ->select('branch_offices.branch_name')

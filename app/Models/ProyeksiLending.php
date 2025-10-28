@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class ProyeksiLending extends BaseModel
 {
+    protected $connection = 'mysql';
+
     protected $guarded = [];
 
     protected $casts = [
@@ -45,6 +47,16 @@ class ProyeksiLending extends BaseModel
                 $approval->save();
             }
         });
+    }
+
+    public function bossApp(): BelongsTo
+    {
+        return $this->belongsTo(BOSSAPP::class, 'lending_boss_application_number', 'AP_REGNO');
+    }
+
+    public function bossAppFlag(): BelongsTo
+    {
+        return $this->belongsTo(BOSSAPPFLAG::class, 'lending_boss_application_number', 'AP_REGNO');
     }
 
     public function statusDapem(): BelongsTo
@@ -100,5 +112,32 @@ class ProyeksiLending extends BaseModel
     public function perusahaanAsuransi(): BelongsTo
     {
         return $this->belongsTo(PerusahaanAsuransi::class, 'lending_asuransi_perusahaan', 'id');
+    }
+
+    public function getProgressStatusAttribute()
+    {
+        $ret = $this->progress?->status?->progress_status ?? null;
+        if ($ret) {
+            return $ret;
+        }
+
+        $curTrack = $this->bossAppFlag()->first()?->AP_CURRTRCODE ?? null;
+        if ($curTrack === '9.0') {
+            return 'BOOKING';
+        }
+
+        return 'PROSES BOSS';
+    }
+
+    public static function bossTrackCodeToString(string $trackCode): ?string
+    {
+        return match ($trackCode) {
+            '9.0' => 'BOOKING',
+            '8.1.2' | '8.1.2.1' => 'PROSES BOSS',
+            '8.1.2.3' | '8.1.5.3' | '9.2.1' | '9.2.2' | '9.2.4' | '9.2.5' | '9.2.9' => 'REJECTED',
+            '3.3' | '7.2' => 'PENDING',
+            '1.0' | '9.1.1' | '9.1.2' => 'CANCELLED',
+            default => null,
+        };
     }
 }

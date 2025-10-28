@@ -94,7 +94,9 @@ class ViewProyeksiLending extends ViewRecord
                     TextInput::make('lending_boss_application_number')
                         ->label('BOSS Application Number')
                         ->placeholder('Enter BOSS Application Number')
-                        ->required(),
+                        ->required()
+                        ->rule('exists:boss.dbo.APP,AP_REGNO')
+                        ->validationAttribute('BOSS application number'),
                     Textarea::make('approval_comment')
                         ->label('Remarks')
                         ->placeholder('Optional remarks for approval')
