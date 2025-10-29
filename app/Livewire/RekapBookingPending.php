@@ -3,8 +3,10 @@
 namespace App\Livewire;
 
 use App\Filament\Resources\ProyeksiLendingResource;
+use App\Models\BOSSAPPFLAG;
 use App\Models\BranchOffice;
 use App\Models\ProyeksiLending;
+use Carbon\Carbon;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Tables;
@@ -28,7 +30,12 @@ class RekapBookingPending extends Component implements HasForms, HasTable
             ->paginated(false)
             ->query(
                 ProyeksiLending::query()
-                    ->whereRelation('progress.status', 'progress_status', '=', 'PENDING')
+                    ->whereHas('bossAppFlag', function (Builder $query) {
+                        $today = Carbon::today();
+                        $query
+                            ->whereIn('AP_CURRTRCODE', ['3.3', '7.2'])
+                            ->whereDate('AP_LASTTRDATE', '<=', $today);
+                    })
                     ->orderBy('lending_tanggal', 'asc')
             )
             ->columns([
