@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\BranchOffice;
+use Carbon\Carbon;
 
 class TKSRatioStatsOverview extends BaseWidget
 {
@@ -15,16 +16,18 @@ class TKSRatioStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
+        $today = Carbon::today()->toDateString();
+
         return [
-            // static::kpmm(),
-            // static::ckpnPerPPKA(),
-            static::nplNett(),
-            static::npl(),
-            // static::roa(),
-            static::bopo(),
-            // static::nim(),
-            static::ldr(),
-            static::cashRatio(),
+            // static::kpmm($today),
+            // static::ckpnPerPPKA($today),
+            static::nplNett($today),
+            static::npl($today),
+            // static::roa($today),
+            static::bopo($today),
+            // static::nim($today),
+            static::ldr($today),
+            static::cashRatio($today),
         ];
     }
 
