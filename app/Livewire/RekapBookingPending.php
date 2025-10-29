@@ -25,22 +25,12 @@ class RekapBookingPending extends Component implements HasForms, HasTable
 
     public function table(Table $table): Table
     {
-        $pendingRegNos = BOSSAPPFLAG::query()
-            ->whereIn('AP_CURRTRCODE', ['3.3', '7.2'])
-            ->whereDate('AP_LASTTRDATE', '<=', Carbon::today())
-            ->pluck('AP_REGNO')
-            ->toArray();
-
         return $table
             ->heading('Rekap Booking Pending')
             ->paginated(false)
-            ->query(
-                ProyeksiLending::query()
-                    ->whereIn('lending_boss_application_number', $pendingRegNos)
-                    ->orderBy('lending_tanggal', 'asc')
-            )
+            ->query($this->rekapPendingQuery())
             ->columns([
-                TextColumn::make('branchOffice.branch_name')->label('Kantor Cabang'),
+                TextColumn::make('branch_name')->label('Kantor Cabang'),
                 TextColumn::make('lending_nama_debitur')->label('Nama Debitur'),
                 TextColumn::make('lending_plafond')->label('Plafond')->money('IDR', 0, 'id_ID'),
                 TextColumn::make('lending_tanggal')->label('Tanggal Input')->date('d M Y'),
@@ -62,5 +52,27 @@ class RekapBookingPending extends Component implements HasForms, HasTable
     public function render(): View
     {
         return view('livewire.rekap-booking-pending');
+    }
+
+    public function rekapPendingQuery(): Builder
+    {
+        $today = Carbon::today();
+
+        $pendingRegNos = BOSSAPPFLAG::on('boss')
+            ->whereIn('AP_CURRTRCODE', ['3.3', '7.2'])
+            ->whereDate('AP_LASTTRDATE', '<=', $today)
+            ->pluck('AP_REGNO')
+            ->toArray();
+
+        return BranchOffice::query()
+            ->leftJoin('proyeksi_lendings', 'branch_offices.branch_code', '=', 'proyeksi_lendings.lending_kantor')
+            ->whereIn('proyeksi_lendings.lending_boss_application_number', $pendingRegNos)
+            ->selectRaw('
+                branch_name,
+                lending_nama_debitur,
+                lending_plafond,
+                lending_tanggal
+            ')
+            ->orderBy('branch_offices.branch_code_fincloud', 'asc');
     }
 }
