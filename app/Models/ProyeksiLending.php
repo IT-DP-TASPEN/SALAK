@@ -140,4 +140,24 @@ class ProyeksiLending extends BaseModel
             default => null,
         };
     }
+
+    public static function progressStatusToBossTrackCodes(string $status): array
+    {
+        return match ($status) {
+            'BOOKING' => ['9.0'],
+            'PROSES BOSS' => ['8.1.2', '8.1.2.1'],
+            'REJECTED' => [
+                '8.1.2.3',
+                '8.1.5.3',
+                '9.2.1',
+                '9.2.2',
+                '9.2.4',
+                '9.2.5',
+                '9.2.9'
+            ],
+            'PENDING' => ['3.3', '7.2'],
+            'CANCELLED' => ['1.0', '9.1.1', '9.1.2'],
+            default => [],
+        };
+    }
 }

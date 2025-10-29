@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProyeksiLendingResource\Pages;
 use App\Filament\Resources\ProyeksiLendingResource\RelationManagers;
+use App\Models\BOSSAPPFLAG;
 use App\Models\MitraBayar;
 use App\Models\ProdukLending;
 use App\Models\ProyeksiLending;
@@ -732,16 +733,28 @@ class ProyeksiLendingResource extends Resource
                     ->searchable()
                     ->preload()
                     ->visible(fn() => !auth()->user()->hasRole(['bm', 'abm'])),
-                // TODO: Enable progress status filter based on BOSS track code
-                // SelectFilter::make('progress_lending')
-                //     ->label('Status Progress')
-                //     ->relationship(
-                //         'progress.status',
-                //         'progress_status',
-                //     )
-                //     ->multiple()
-                //     ->searchable()
-                //     ->preload(),
+                SelectFilter::make('progress_lending')
+                    ->label('Status Progress')
+                    ->options(ProyeksiLendingProgressStatus::pluck('progress_status', 'progress_status'))
+                    ->modifyQueryUsing(function (Builder $query, array $data) {
+                        $value = $data['value'] ?? null;
+                        if (is_null($value)) {
+                            return $query;
+                        }
+
+                        $statuses = ProyeksiLending::progressStatusToBossTrackCodes($value);
+                        if (empty($statuses)) {
+                            return $query;
+                        }
+
+                        $bossApplications = BOSSAPPFLAG::whereIn('AP_CURRTRCODE', $statuses)
+                            ->pluck('AP_REGNO')
+                            ->toArray();
+
+                        return $query->whereIn('lending_boss_application_number', $bossApplications);
+                    })
+                    ->searchable()
+                    ->preload(),
                 SelectFilter::make('lending_jenis_pengajuan')
                     ->label('Jenis Pengajuan')
                     ->options(
