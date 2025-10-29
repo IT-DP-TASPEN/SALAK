@@ -946,7 +946,7 @@ class ProyeksiLendingResource extends Resource
                         TextEntry::make('lending_boss_application_number')->label('No. Aplikasi BOSS')->icon('heroicon-o-document-text')->visible(fn($record) => filled($record->lending_boss_application_number)),
                         TextEntry::make('lending_tanggal')->label('Tanggal Pengajuan')->date()->icon('heroicon-o-calendar'),
                         TextEntry::make('agent.agent_nama')->label('AO/Marketing')->icon('heroicon-o-user-group'),
-                        TextEntry::make('bossAppFlag.AP_CURRTRCODE')->label('Progress')->formatStateUsing(fn($state) => ProyeksiLending::bossTrackCodeToString($state))->icon('heroicon-o-arrow-path'),
+                        TextEntry::make('bossAppFlag.AP_CURRTRCODE')->label('Progress')->formatStateUsing(fn($state) => ProyeksiLending::bossTrackCodeToString($state) ?? $state)->icon('heroicon-o-arrow-path'),
                         TextEntry::make('lending_jenis_pengajuan')->label('Jenis Pengajuan')->icon('heroicon-o-document-text'),
                         TextEntry::make('lending_tipe_pengajuan')->label('Tipe Pengajuan')->icon('heroicon-o-document-text')->visible(fn($record) => $record->lending_jenis_pengajuan === 'BARU'),
                         TextEntry::make('mitraBayarTakeover.mitra_nama')->label('Mitra Bayar Takeover')->icon('heroicon-o-building-office-2')->visible(fn($record) => $record->lending_tipe_pengajuan === 'Takeover' && filled($record->lending_mitra_bayar_takeover)),
