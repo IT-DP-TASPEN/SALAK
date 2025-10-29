@@ -31,7 +31,7 @@ class TKSRatioStatsOverview extends BaseWidget
         ];
     }
 
-    private static function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = false): Stat
+    private static function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): Stat
     {
         $cashRatio = BranchOffice::konsolidasiCashRatio($tanggal, $simulated, $efektif);
 
