@@ -25,17 +25,18 @@ class RekapBookingPending extends Component implements HasForms, HasTable
 
     public function table(Table $table): Table
     {
+        $pendingRegNos = BOSSAPPFLAG::query()
+            ->whereIn('AP_CURRTRCODE', ['3.3', '7.2'])
+            ->whereDate('AP_LASTTRDATE', '<=', Carbon::today())
+            ->pluck('AP_REGNO')
+            ->toArray();
+
         return $table
             ->heading('Rekap Booking Pending')
             ->paginated(false)
             ->query(
                 ProyeksiLending::query()
-                    ->whereHas('bossAppFlag', function (Builder $query) {
-                        $today = Carbon::today();
-                        $query
-                            ->whereIn('AP_CURRTRCODE', ['3.3', '7.2'])
-                            ->whereDate('AP_LASTTRDATE', '<=', $today);
-                    })
+                    ->whereIn('lending_boss_application_number', $pendingRegNos)
                     ->orderBy('lending_tanggal', 'asc')
             )
             ->columns([
