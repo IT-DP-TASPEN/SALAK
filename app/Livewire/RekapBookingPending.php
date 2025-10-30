@@ -65,7 +65,7 @@ class RekapBookingPending extends Component implements HasForms, HasTable
             ->toArray();
 
         return BranchOffice::query()
-            ->leftJoin('proyeksi_lendings', 'branch_offices.branch_code', '=', 'proyeksi_lendings.lending_kantor')
+            ->leftJoin('proyeksi_lendings', 'branch_offices.id', '=', 'proyeksi_lendings.lending_kantor')
             ->whereIn('proyeksi_lendings.lending_boss_application_number', $pendingRegNos)
             ->selectRaw('
                 proyeksi_lendings.id AS proyeksi_lending_id,
