@@ -133,7 +133,7 @@ class ProyeksiLending extends BaseModel
     {
         return match ($trackCode) {
             '9.0' => 'BOOKING',
-            '8.1.2', '8.1.2.1' => 'PROSES BOSS',
+            '8.1.2', '8.1.2.1', '5.2', '5.3', '8.1.4' => 'PROSES BOSS',
             '8.1.2.3', '8.1.5.3', '9.2.1', '9.2.2', '9.2.4', '9.2.5', '9.2.9' => 'REJECTED',
             '3.3', '7.2' => 'PENDING',
             '1.0', '9.1.1', '9.1.2' => 'CANCELLED',
@@ -145,7 +145,7 @@ class ProyeksiLending extends BaseModel
     {
         return match ($status) {
             'BOOKING' => ['9.0'],
-            'PROSES BOSS' => ['8.1.2', '8.1.2.1'],
+            'PROSES BOSS' => ['8.1.2', '8.1.2.1', '5.2', '5.3', '8.1.4'],
             'REJECTED' => [
                 '8.1.2.3',
                 '8.1.5.3',
