@@ -376,6 +376,10 @@ class BranchOffice extends BaseModel
     public static function saldoNeraca2(array $kodePerkiraanList, ?string $branchCode = null, ?string $tanggal = null): array
     {
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        if ($asOf->isFuture()) {
+            $asOf = Carbon::today();
+        }
+
         $rows = SaldoNeraca::query()
             ->select(
                 'noakun as perk_kode',
