@@ -12,7 +12,7 @@ class RekapTKS extends Page
 
     protected static ?string $navigationGroup = 'Laporan';
     protected static ?string $navigationIcon = 'heroicon-o-presentation-chart-line';
-
+    protected static ?string $title = 'Rekap TKS';
     protected static string $view = 'filament.pages.rekap-t-k-s';
 
     protected function getHeaderWidgets(): array
