@@ -31,6 +31,7 @@ class RekapBookingPending extends Component implements HasForms, HasTable
             ->query($this->rekapPendingQuery())
             ->columns([
                 TextColumn::make('branch_name')->label('Kantor Cabang'),
+                TextColumn::make('lending_boss_application_number')->label('No. Aplikasi BOSS'),
                 TextColumn::make('lending_nama_debitur')->label('Nama Debitur'),
                 TextColumn::make('lending_plafond')->label('Plafond')->money('IDR', 0, 'id_ID'),
                 TextColumn::make('lending_tanggal')->label('Tanggal Input')->date('d M Y'),
@@ -69,6 +70,7 @@ class RekapBookingPending extends Component implements HasForms, HasTable
             ->whereIn('proyeksi_lendings.lending_boss_application_number', $pendingRegNos)
             ->selectRaw('
                 proyeksi_lendings.id AS proyeksi_lending_id,
+                lending_boss_application_number,
                 branch_name,
                 lending_nama_debitur,
                 lending_plafond,
