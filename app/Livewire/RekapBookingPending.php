@@ -46,7 +46,7 @@ class RekapBookingPending extends Component implements HasForms, HasTable
                     //
                 ]),
             ])
-            ->recordUrl(fn(ProyeksiLending $record): string => ProyeksiLendingResource::getUrl('view', ['record' => $record]));
+            ->recordUrl(fn($record): string => ProyeksiLendingResource::getUrl('view', ['record' => $record->proyeksi_lending_id]));
     }
 
     public function render(): View
@@ -68,6 +68,7 @@ class RekapBookingPending extends Component implements HasForms, HasTable
             ->leftJoin('proyeksi_lendings', 'branch_offices.branch_code', '=', 'proyeksi_lendings.lending_kantor')
             ->whereIn('proyeksi_lendings.lending_boss_application_number', $pendingRegNos)
             ->selectRaw('
+                proyeksi_lendings.id AS proyeksi_lending_id,
                 branch_name,
                 lending_nama_debitur,
                 lending_plafond,
