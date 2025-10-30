@@ -75,4 +75,10 @@ class RekapBookingPending extends Component implements HasForms, HasTable
             ')
             ->orderBy('branch_offices.branch_code_fincloud', 'asc');
     }
+
+    // getTableRecordKey
+    public function getTableRecordKey($record): string
+    {
+        return $record->branch_name . $record->lending_nama_debitur . $record->lending_plafond . $record->lending_tanggal;
+    }
 }
