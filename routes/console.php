@@ -8,14 +8,15 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::exec(base_path() . '/saldo-neraca-updater', ['-date=' . now()->format('Y-m-d')])
-    ->everyThreeHours()
-    ->onOneServer()
-    ->runInBackground()
-    ->withoutOverlapping()
-    ->appendOutputTo(storage_path('logs/schedule.log'));
-
-Schedule::exec(base_path() . '/loan-outstanding-updater', ['-date=' . now()->format('Y-m-d')])
+Schedule::exec('/bin/bash', [
+    '-lc',
+    sprintf(
+        '%1$s -date=%3$s; %2$s -date=%3$s',
+        base_path('saldo-neraca-updater'),
+        base_path('loan-outstanding-updater'),
+        now()->format('Y-m-d')
+    ),
+])
     ->everyThreeHours()
     ->onOneServer()
     ->runInBackground()
