@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Filament\Widgets\TKSRatioStatsOverview;
+use App\Filament\Widgets\TKSDateFilter;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Filament\Pages\Page;
 
@@ -18,6 +19,7 @@ class RekapTKS extends Page
     protected function getHeaderWidgets(): array
     {
         return [
+            TKSDateFilter::class,
             TKSRatioStatsOverview::class,
         ];
     }

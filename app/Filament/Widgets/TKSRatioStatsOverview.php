@@ -2,13 +2,18 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\StatsOverviewWidget as BaseWidget;
-use Filament\Widgets\StatsOverviewWidget\Stat;
 use App\Models\BranchOffice;
 use Carbon\Carbon;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
+use Livewire\Attributes\On;
 
 class TKSRatioStatsOverview extends BaseWidget
 {
+    public ?string $selectedDate = null;
+
+    protected static bool $isLazy = false;
+
     protected function getColumns(): int
     {
         return 3;
@@ -16,18 +21,18 @@ class TKSRatioStatsOverview extends BaseWidget
 
     protected function getStats(): array
     {
-        $today = Carbon::today()->toDateString();
+        $targetDate = $this->selectedDate ?? Carbon::today()->toDateString();
 
         return [
             // static::kpmm($today),
             // static::ckpnPerPPKA($today),
-            static::nplNett($today),
-            static::npl($today),
+            static::nplNett($targetDate),
+            static::npl($targetDate),
             // static::roa($today),
-            static::bopo($today),
+            static::bopo($targetDate),
             // static::nim($today),
-            static::ldr($today),
-            static::cashRatio($today),
+            static::ldr($targetDate),
+            static::cashRatio($targetDate),
         ];
     }
 
@@ -157,7 +162,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function ldr(?string $tanggal = null, bool $simulated = false): Stat
     {
-        $nplPercentage = BranchOffice::konsolidasiNPL();
+        $nplPercentage = BranchOffice::konsolidasiNPL($tanggal);
         $ldr = BranchOffice::konsolidasiLDR($tanggal, $simulated);
 
         $kshtLdr = match (true) {
@@ -187,5 +192,12 @@ class TKSRatioStatsOverview extends BaseWidget
             ->color($kshtLdr['color'])
             ->description($kshtLdr['description'])
             ->icon('heroicon-o-chart-bar');
+    }
+
+    #[On('rekapTksDateChanged')]
+    public function updateSelectedDate(?string $date): void
+    {
+        $this->selectedDate = blank($date) ? null : Carbon::parse($date)->toDateString();
+        $this->cachedStats = null;
     }
 }
