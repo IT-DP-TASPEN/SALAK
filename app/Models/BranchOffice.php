@@ -135,8 +135,10 @@ class BranchOffice extends BaseModel
     public static function konsolidasiPPKA(?string $tanggal = null, ?string $branch = null): float
     {
         $weights = [
+            // PPKA Umum
             1 => 0.005, // 0.5%
             2 => 0.03,  // 3%
+            // PPKA Khusus
             3 => 0.10,  // 10%
             4 => 0.50,  // 50%
             5 => 1.00,  // 100%
@@ -196,6 +198,27 @@ class BranchOffice extends BaseModel
         );
 
         return $beban;
+    }
+
+    public static function konsolidasiCKPNPerPPKA(?string $tanggal = null, ?string $branch = null): float
+    {
+        $ckpn = array_sum(
+            static::saldoNeraca2(
+                [
+                    '1272005', // Provisioning - CKPN
+                ],
+                $branch,
+                $tanggal
+            )
+        );
+
+        $ppka = static::konsolidasiPPKA($tanggal, $branch);
+
+        if ($ppka == 0.0) {
+            return 0.0;
+        }
+
+        return $ckpn / $ppka * 100;
     }
 
     public function bopo(?string $tanggal = null): float

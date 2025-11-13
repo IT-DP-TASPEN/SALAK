@@ -25,7 +25,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return [
             // static::kpmm($targetDate),
-            // static::ckpnPerPPKA($targetDate),
+            static::ckpnPerPPKA($targetDate),
             static::nplNett($targetDate),
             static::npl($targetDate),
             static::roa($targetDate),
@@ -34,6 +34,39 @@ class TKSRatioStatsOverview extends BaseWidget
             static::ldr($targetDate),
             static::cashRatio($targetDate),
         ];
+    }
+
+    private static function ckpnPerPPKA(?string $tanggal = null): Stat
+    {
+        $ckpnPerPPKA = BranchOffice::konsolidasiCkpnPerPPKA($tanggal);
+
+        $kshtCkpnPerPPKA = match (true) {
+            $ckpnPerPPKA >= 100 => [
+                'color' => 'success',
+                'description' => 'Sangat sehat',
+            ],
+            $ckpnPerPPKA >= 80 && $ckpnPerPPKA < 100 => [
+                'color' => 'success',
+                'description' => 'Sehat',
+            ],
+            $ckpnPerPPKA >= 60 && $ckpnPerPPKA < 80 => [
+                'color' => 'warning',
+                'description' => 'Cukup sehat',
+            ],
+            $ckpnPerPPKA >= 40 && $ckpnPerPPKA < 60 => [
+                'color' => 'danger',
+                'description' => 'Tidak sehat',
+            ],
+            default => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+        };
+
+        return Stat::make('CKPN per PPKA', number_format($ckpnPerPPKA, 2, ',', '.') . '%')
+            ->color($kshtCkpnPerPPKA['color'])
+            ->description($kshtCkpnPerPPKA['description'])
+            ->icon('heroicon-o-shield-exclamation');
     }
 
     private static function roa(?string $tanggal = null): Stat
