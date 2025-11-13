@@ -66,7 +66,7 @@ class TKSRatioStatsOverview extends BaseWidget
         return Stat::make('NIM', number_format($nim, 2, ',', '.') . '%')
             ->color($kshtNim['color'])
             ->description($kshtNim['description'])
-            ->icon('heroicon-o-trending-up');
+            ->icon('heroicon-o-percent-badge');
     }
 
     private static function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): Stat
