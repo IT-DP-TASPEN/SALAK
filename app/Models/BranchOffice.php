@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 
@@ -211,7 +212,117 @@ class BranchOffice extends BaseModel
             return 0.0;
         }
 
+        $month = $tanggal ? Carbon::parse($tanggal)->month : Carbon::today()->month;
+        $monthsInYear = 12;
+        $bebanOperasional = $bebanOperasional / $month * $monthsInYear;
+        $pendapatanOperasional = $pendapatanOperasional / $month * $monthsInYear;
+
         return $bebanOperasional / $pendapatanOperasional * 100;
+    }
+
+    public static function konsolidasiNim(?string $tanggal = null, ?string $branch = null): float
+    {
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        $month = $asOf->month;
+
+        $pendapatanBunga = 0.0;
+        $bebanBunga = 0.0;
+        $asetProduktif = 0.0;
+
+        if ($asOf->isBefore('2025-10-12')) {
+            $pendapatanBunga = array_sum(
+                static::saldoNeracaMso(
+                    [
+                        '2.112',   // Pend. ABA Giro
+                        '2.113',   // Pend. ABA Tabungan
+                        '2.115',   // Pend. ABA Deposito
+                        '2.120.1', // Pend. Bg Kredit : Baki Debet
+                    ],
+                    $branch,
+                    $asOf->toDateString(),
+                )
+            );
+
+            $bebanBunga = array_sum(
+                static::saldoNeracaMso(
+                    [
+                        '2.171', // DPK Non Bank Tabungan
+                        '2.172', // DPK Non Bank Deposito Berjangka
+                        '2.166', // ABA Tabungan
+                        '2.167', // ABA Deposito
+                        '2.168', // ABA Pinjaman yang Diterima
+                    ],
+                    $branch,
+                    $asOf->toDateString()
+                )
+            );
+        } else {
+            $pendapatanBunga = array_sum(
+                static::saldoNeraca2(
+                    [
+                        '401', // Current Account Interest Income
+                        '402', // Savings Account Interest Income
+                        '403', // Time Deposit Interest Income
+                        '410', // Loan Interest Income
+                    ],
+                    $branch,
+                    $asOf->toDateString()
+                )
+            );
+
+            $bebanBunga = array_sum(
+                static::saldoNeraca2(
+                    [
+                        '501', // Savings Interest Expenses
+                        '502', // Time Deposits Interest Expenses
+                        '511', // Expenses - Loan Interest Fees
+                    ],
+                    $branch,
+                    $asOf->toDateString()
+                )
+            );
+        }
+
+
+        for ($m = 1; $m <= $month; $m++) {
+            $tanggal = $asOf->copy()->setMonth($m);
+
+            if ($tanggal->isBefore('2025-10-12')) {
+                $asetProduktif += array_sum(
+                    static::saldoNeracaMso(
+                        [
+                            '1.120', // Antar Bank Aktiva
+                            '1.130.1', // Kredit Yang Diberikan
+                        ],
+                        $branch,
+                        $tanggal->toDateString()
+                    )
+                );
+            } else {
+                $asetProduktif += array_sum(
+                    static::saldoNeraca2(
+                        [
+                            '110', // Placement In Other Banks
+                            '121', // Loans
+                        ],
+                        $branch,
+                        $tanggal->toDateString()
+                    )
+                );
+            }
+        }
+
+        $monthsInYear = 12;
+        $pendapatanBunga = $pendapatanBunga / $month * $monthsInYear;
+        $bebanBunga = $bebanBunga / $month * $monthsInYear;
+        $pendapatanBunga -= $bebanBunga;
+        $asetProduktif = $asetProduktif / $month;
+
+        if ($asetProduktif == 0.0) {
+            return 0.0;
+        }
+
+        return $pendapatanBunga / $asetProduktif * 100;
     }
 
     public function kewajibanLancar(?string $tanggal = null): float
@@ -390,6 +501,32 @@ class BranchOffice extends BaseModel
             ->whereDate('tanggal', $asOf->toDateString())
             ->groupBy('perk_kode')
             ->pluck('saldo', 'perk_kode');
+
+        return $rows->toArray();
+    }
+
+    public static function saldoNeracaMso(array $kodePerkiraanList, ?string $branchCode = null, ?string $tanggal = null): array
+    {
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        if ($asOf->isFuture()) {
+            $asOf = Carbon::today();
+        }
+
+        $rows = Collection::make();
+        foreach ($kodePerkiraanList as $perk) {
+            $row = DB::connection('mso-backup')
+                ->query()
+                ->selectRaw(
+                    'GetPerkSaldo(?, ?, ?) as saldo',
+                    [
+                        $perk,
+                        $branchCode,
+                        $asOf->toDateString(),
+                    ]
+                )
+                ->first();
+            $rows->put($perk, $row->saldo ?? 0.0);
+        }
 
         return $rows->toArray();
     }
