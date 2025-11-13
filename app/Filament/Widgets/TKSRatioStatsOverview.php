@@ -24,16 +24,49 @@ class TKSRatioStatsOverview extends BaseWidget
         $targetDate = $this->selectedDate ?? Carbon::today()->toDateString();
 
         return [
-            // static::kpmm($today),
-            // static::ckpnPerPPKA($today),
+            // static::kpmm($targetDate),
+            // static::ckpnPerPPKA($targetDate),
             static::nplNett($targetDate),
             static::npl($targetDate),
-            // static::roa($today),
+            // static::roa($targetDate),
             static::bopo($targetDate),
-            // static::nim($today),
+            static::nim($targetDate),
             static::ldr($targetDate),
             static::cashRatio($targetDate),
         ];
+    }
+
+    private static function nim(?string $tanggal = null): Stat
+    {
+        $nim = BranchOffice::konsolidasiNim($tanggal);
+
+        $kshtNim = match (true) {
+            $nim >= 10 => [
+                'color' => 'success',
+                'description' => 'Sangat sehat',
+            ],
+            $nim >= 8.0 && $nim < 10.0 => [
+                'color' => 'success',
+                'description' => 'Sehat',
+            ],
+            $nim >= 6.0 && $nim < 8.0 => [
+                'color' => 'warning',
+                'description' => 'Cukup sehat',
+            ],
+            $nim >= 4.0 && $nim < 6.0 => [
+                'color' => 'danger',
+                'description' => 'Tidak sehat',
+            ],
+            default => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+        };
+
+        return Stat::make('NIM', number_format($nim, 2, ',', '.') . '%')
+            ->color($kshtNim['color'])
+            ->description($kshtNim['description'])
+            ->icon('heroicon-o-trending-up');
     }
 
     private static function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): Stat
