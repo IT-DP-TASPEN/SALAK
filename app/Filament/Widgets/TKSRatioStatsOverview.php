@@ -28,12 +28,45 @@ class TKSRatioStatsOverview extends BaseWidget
             // static::ckpnPerPPKA($targetDate),
             static::nplNett($targetDate),
             static::npl($targetDate),
-            // static::roa($targetDate),
+            static::roa($targetDate),
             static::bopo($targetDate),
             static::nim($targetDate),
             static::ldr($targetDate),
             static::cashRatio($targetDate),
         ];
+    }
+
+    private static function roa(?string $tanggal = null): Stat
+    {
+        $roa = BranchOffice::konsolidasiROA($tanggal);
+
+        $kshtRoa = match (true) {
+            $roa >= 2.0 => [
+                'color' => 'success',
+                'description' => 'Sangat sehat',
+            ],
+            $roa >= 1.5 && $roa < 2 => [
+                'color' => 'success',
+                'description' => 'Sehat',
+            ],
+            $roa >= 1.0 && $roa < 1.5 => [
+                'color' => 'warning',
+                'description' => 'Cukup sehat',
+            ],
+            $roa >= 0.5 && $roa < 1 => [
+                'color' => 'danger',
+                'description' => 'Tidak sehat',
+            ],
+            default => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+        };
+
+        return Stat::make('ROA', number_format($roa, 2, ',', '.') . '%')
+            ->color($kshtRoa['color'])
+            ->description($kshtRoa['description'])
+            ->icon('heroicon-o-building-library');
     }
 
     private static function nim(?string $tanggal = null): Stat

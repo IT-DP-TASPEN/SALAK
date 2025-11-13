@@ -381,6 +381,83 @@ class BranchOffice extends BaseModel
         return $total;
     }
 
+    public static function konsolidasiROA(?string $tanggal = null, ?string $branch = null): float
+    {
+        $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
+        $month = $asOf->month;
+
+        $labaBeforeTax = 0.0;
+        if ($asOf->isBefore('2025-10-12')) {
+            $labaBeforeTax = array_sum(
+                static::saldoNeracaMso(
+                    [
+                        '2.330', // Laba / Rugi Tahun Berjalan (Sebelum Pajak)
+                    ],
+                    $branch,
+                    $asOf->toDateString()
+                )
+            );
+        } else {
+            $labaBeforeTax = array_sum(
+                static::saldoNeraca2(
+                    [
+                        '323', // Current Year Retained Earning
+                        '312', // Estimated Income Tax
+                    ],
+                    $branch,
+                    $asOf->toDateString()
+                )
+            );
+        }
+
+        $totalAsset = 0.0;
+
+        for ($m = 1; $m <= $month; $m++) {
+            $tgl = $asOf->copy()->setMonth($m);
+            if ($tgl->isBefore('2025-10-12')) {
+                $aktiva = array_sum(
+                    static::saldoNeracaMso(
+                        [
+                            '1.190', // Jumlah Aktiva
+                        ],
+                        $branch,
+                        $tgl->toDateString()
+                    )
+                );
+                $aka = array_sum(
+                    static::saldoNeracaMso(
+                        [
+                            '1.170', // Antar Kantor Aktiva
+                        ],
+                        $branch,
+                        $tgl->toDateString()
+                    )
+                );
+                $totalAsset += $aktiva - $aka;
+            } else {
+                $totalAsset += array_sum(
+                    static::saldoNeraca2(
+                        [
+                            '1', // Assets
+                        ],
+                        $branch,
+                        $tgl->toDateString()
+                    )
+                );
+            }
+        }
+
+        $monthsInYear = 12;
+        $pendapatanBersih = $labaBeforeTax / $month * $monthsInYear;
+        $rataRataTotalAset = $totalAsset / $month;
+
+        if ($rataRataTotalAset == 0.0) {
+            return 0.0;
+        }
+
+        return $pendapatanBersih / $rataRataTotalAset * 100;
+    }
+
     public function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): float
     {
         return $this->fincloudCashRatio($tanggal, $simulated, $efektif);
