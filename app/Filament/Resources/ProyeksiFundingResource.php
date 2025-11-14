@@ -118,7 +118,8 @@ class ProyeksiFundingResource extends Resource
                             })
                             ->inlineLabel(),
                         Forms\Components\TextInput::make('funding_nominal_bersih')
-                            ->label(fn(callable $get) => $get('funding_deposito_jenis') === 'Cair Tanam' ? 'Nominal Baru' : 'Nominal')
+                            ->label(fn(callable $get) => $get('funding_deposito_jenis') === 'Cair Tanam' ? 'Nominal Penambahan (+) / Pengurangan (-)' : 'Nominal')
+                            ->hint(fn(callable $get) => $get('funding_deposito_jenis') === 'Cair Tanam' ? 'Tambahkan mines (-) di depan jika ada pengurangan' : '')
                             ->mask(RawJs::make('$money($input)'))
                             ->prefix('Rp ')
                             ->stripCharacters(',')

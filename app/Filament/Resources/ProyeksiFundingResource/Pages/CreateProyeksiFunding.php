@@ -20,7 +20,7 @@ class CreateProyeksiFunding extends CreateRecord
         $data['funding_kantor'] = $usr->branch_office_id;
 
         if (isset($data['funding_deposito_jenis']) && $data['funding_deposito_jenis'] === 'Cair Tanam') {
-            $nett = $data['funding_nominal'] - $data['funding_nominal_bersih'];
+            $nett = $data['funding_nominal'] + $data['funding_nominal_bersih'];
             $data['funding_nominal_bersih'] = $nett;
         }
 
