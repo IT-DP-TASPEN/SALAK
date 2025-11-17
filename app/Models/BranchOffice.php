@@ -109,6 +109,16 @@ class BranchOffice extends BaseModel
             )
         );
 
+        $total -= array_sum(
+            static::saldoNeraca2(
+                [
+                    '302', // Unpaid Capital
+                ],
+                $branch,
+                $tanggal
+            )
+        );
+
         $ckpn = array_sum(
             static::saldoNeraca2(
                 [
@@ -125,6 +135,43 @@ class BranchOffice extends BaseModel
         }
 
         return $total;
+    }
+
+    public static function konsolidasiModalPelengkap(?string $tanggal = null, ?string $branch = null): float
+    {
+        $weights = [
+            // PPKA Umum
+            1 => 0.005, // 0.5%
+            2 => 0.03,  // 3%
+        ];
+
+        $totals = LoanOutstanding::query()
+            ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->whereIn('loan_bi_collectability', array_keys($weights))
+            ->groupBy('loan_bi_collectability')
+            ->pluck('total_outstanding', 'loan_bi_collectability');
+
+        $ppkaUmum = 0.0;
+        foreach ($totals as $collectability => $totalOutstanding) {
+            $ppkaUmum += (float) $totalOutstanding * $weights[$collectability];
+        }
+
+        $abaTotal = array_sum(
+            static::saldoNeraca2(
+                [
+                    '110', // Placement In Other Banks
+                ],
+                $branch,
+                $tanggal
+            )
+        );
+
+        // TODO: data ini nanti harus diambil dari db
+        $abaTotal -= 2_000_000_000; // dikurangi 2 miliar
+
+        return $ppkaUmum + max(0.0, $abaTotal);
     }
 
     public function ppka(?string $tanggal = null): float
