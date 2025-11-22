@@ -62,10 +62,11 @@ class TKSRatioStatsOverview extends BaseWidget
                 'description' => 'Sangat tidak sehat',
             ],
         };
+        (array)$kshtCkpnPerPPKA;
 
         return Stat::make('CKPN per PPKA', number_format($ckpnPerPPKA, 2, ',', '.') . '%')
-            ->color($kshtCkpnPerPPKA['color'])
-            ->description($kshtCkpnPerPPKA['description'])
+            // ->color($kshtCkpnPerPPKA['color'])
+            // ->description($kshtCkpnPerPPKA['description'])
             ->icon('heroicon-o-shield-exclamation');
     }
 
