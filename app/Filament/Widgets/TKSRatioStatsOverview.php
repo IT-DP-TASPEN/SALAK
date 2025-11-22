@@ -14,6 +14,8 @@ class TKSRatioStatsOverview extends BaseWidget
 
     protected static bool $isLazy = false;
 
+    private static ?string $branchCode = null;
+
     protected function getColumns(): int
     {
         return 3;
@@ -22,6 +24,12 @@ class TKSRatioStatsOverview extends BaseWidget
     protected function getStats(): array
     {
         $targetDate = $this->selectedDate ?? Carbon::today()->toDateString();
+        $user = auth()->user();
+        if ($user->isKantorPusatEmployee()) {
+            static::$branchCode = null;
+        } else {
+            static::$branchCode = $user->branchOffice->branch_code_fincloud;
+        }
 
         return [
             // static::kpmm($targetDate),
@@ -38,7 +46,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function ckpnPerPPKA(?string $tanggal = null): Stat
     {
-        $ckpnPerPPKA = BranchOffice::konsolidasiCkpnPerPPKA($tanggal);
+        $ckpnPerPPKA = BranchOffice::konsolidasiCkpnPerPPKA($tanggal, static::$branchCode);
 
         $kshtCkpnPerPPKA = match (true) {
             $ckpnPerPPKA >= 100 => [
@@ -72,7 +80,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function roa(?string $tanggal = null): Stat
     {
-        $roa = BranchOffice::konsolidasiROA($tanggal);
+        $roa = BranchOffice::konsolidasiROA($tanggal, static::$branchCode);
 
         $kshtRoa = match (true) {
             $roa >= 2.0 => [
@@ -105,7 +113,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function nim(?string $tanggal = null): Stat
     {
-        $nim = BranchOffice::konsolidasiNim($tanggal);
+        $nim = BranchOffice::konsolidasiNim($tanggal, static::$branchCode);
 
         $kshtNim = match (true) {
             $nim >= 10 => [
@@ -138,7 +146,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true): Stat
     {
-        $cashRatio = BranchOffice::konsolidasiCashRatio($tanggal, $simulated, $efektif);
+        $cashRatio = BranchOffice::konsolidasiCashRatio($tanggal, $simulated, $efektif, static::$branchCode);
 
         $kshtCashRatio = match (true) {
             $cashRatio >= 4.05 => [
@@ -171,7 +179,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function npl(?string $tanggal = null): Stat
     {
-        $nplPercentage = BranchOffice::konsolidasiNPL($tanggal);
+        $nplPercentage = BranchOffice::konsolidasiNPL($tanggal, static::$branchCode);
 
         $kshtNpl = match (true) {
             $nplPercentage <= 5 => [
@@ -200,7 +208,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function nplNett(?string $tanggal = null): Stat
     {
-        $nplNettPercentage = BranchOffice::konsolidasiNPLNett($tanggal);
+        $nplNettPercentage = BranchOffice::konsolidasiNPLNett($tanggal, static::$branchCode);
 
         $kshtNplNett = match (true) {
             $nplNettPercentage <= 2 => [
@@ -229,7 +237,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function bopo(?string $tanggal = null): Stat
     {
-        $bopo = BranchOffice::konsolidasiBOPO($tanggal);
+        $bopo = BranchOffice::konsolidasiBOPO($tanggal, static::$branchCode);
 
         $kshtBopo = match (true) {
             $bopo <= 85 => [
@@ -262,8 +270,8 @@ class TKSRatioStatsOverview extends BaseWidget
 
     private static function ldr(?string $tanggal = null, bool $simulated = false): Stat
     {
-        $nplPercentage = BranchOffice::konsolidasiNPL($tanggal);
-        $ldr = BranchOffice::konsolidasiLDR($tanggal, $simulated);
+        $nplPercentage = BranchOffice::konsolidasiNPL($tanggal, static::$branchCode);
+        $ldr = BranchOffice::konsolidasiLDR($tanggal, $simulated, static::$branchCode);
 
         $kshtLdr = match (true) {
             $ldr <= 90 => [
