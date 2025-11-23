@@ -55,7 +55,7 @@ class BranchOffice extends BaseModel
                 / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as npl_percentage'
             )
             ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
             ->value('npl_percentage');
 
         return $npl ?? 0.0;
@@ -77,7 +77,7 @@ class BranchOffice extends BaseModel
                 [$ckpn]
             )
             ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
             ->value('npl_percentage');
 
         return $npl ?? 0.0;
@@ -641,7 +641,7 @@ class BranchOffice extends BaseModel
             )
             ->when($branchCode, fn($q) => $q->where('cabang', $branchCode))
             ->whereIn('noakun', $kodePerkiraanList)
-            ->whereDate('tanggal', $asOf->toDateString())
+            ->where('tanggal', $asOf->toDateString())
             ->groupBy('perk_kode')
             ->pluck('saldo', 'perk_kode');
 
