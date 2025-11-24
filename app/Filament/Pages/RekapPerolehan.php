@@ -12,6 +12,8 @@ use Filament\Tables\Table;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Filters\Filter;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class RekapPerolehan extends Page implements HasTable
 {
@@ -129,6 +131,15 @@ class RekapPerolehan extends Page implements HasTable
                         return $query;
                     })
                     ->label('Per Tanggal'),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->exports([
+                        ExcelExport::make('rekap')
+                            ->fromTable()
+                            ->ignoreFormatting()
+                            ->withFilename(fn() => 'Rekap Perolehan ' . ($this->getAsOfDate() ?? now()->toDateString())),
+                    ]),
             ])
             ->actions([
                 //
