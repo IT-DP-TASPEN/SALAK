@@ -6,6 +6,8 @@ use App\Models\BranchOffice;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
+use Illuminate\Contracts\Support\Htmlable;
+use Illuminate\Support\HtmlString;
 use Livewire\Attributes\On;
 
 class TKSRatioStatsOverview extends BaseWidget
@@ -46,6 +48,15 @@ class TKSRatioStatsOverview extends BaseWidget
         ];
     }
 
+    private function descriptionWithOjk(?string $status, string $ojkRequirement): Htmlable
+    {
+        $statusLine = $status ? '<div>' . e($status) . '</div>' : '';
+
+        return new HtmlString(
+            $statusLine . '<div class="text-sm text-gray-500">Ketentuan OJK: ' . e($ojkRequirement) . '</div>',
+        );
+    }
+
     private function ckpnPerPPKA(?string $tanggal = null, ?string $branch = null): Stat
     {
         $ckpnPerPPKA = BranchOffice::konsolidasiCkpnPerPPKA($tanggal, $branch);
@@ -76,7 +87,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('CKPN per PPKA', number_format($ckpnPerPPKA, 2, ',', '.') . '%')
             // ->color($kshtCkpnPerPPKA['color'])
-            // ->description($kshtCkpnPerPPKA['description'])
+            ->description($this->descriptionWithOjk(null, '100%'))
             ->icon('heroicon-o-shield-exclamation');
     }
 
@@ -109,7 +120,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('ROA', number_format($roa, 2, ',', '.') . '%')
             ->color($kshtRoa['color'])
-            ->description($kshtRoa['description'])
+            ->description($this->descriptionWithOjk($kshtRoa['description'], '>= 2%'))
             ->icon('heroicon-o-building-library');
     }
 
@@ -142,7 +153,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('NIM', number_format($nim, 2, ',', '.') . '%')
             ->color($kshtNim['color'])
-            ->description($kshtNim['description'])
+            ->description($this->descriptionWithOjk($kshtNim['description'], '>= 10%'))
             ->icon('heroicon-o-percent-badge');
     }
 
@@ -175,7 +186,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('Cash Ratio', number_format($cashRatio, 2, ',', '.') . '%')
             ->color($kshtCashRatio['color'])
-            ->description($kshtCashRatio['description'])
+            ->description($this->descriptionWithOjk($kshtCashRatio['description'], '>= 4.05%'))
             ->icon('heroicon-o-currency-dollar');
     }
 
@@ -204,7 +215,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('NPL', number_format($nplPercentage, 2, ',', '.') . '%')
             ->color($kshtNpl['color'])
-            ->description('NPL ' . $kshtNpl['level'])
+            ->description($this->descriptionWithOjk('NPL ' . $kshtNpl['level'], '<= 5%'))
             ->icon('heroicon-o-exclamation-triangle');
     }
 
@@ -233,7 +244,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('NPL Nett', number_format($nplNettPercentage, 2, ',', '.') . '%')
             ->color($kshtNplNett['color'])
-            ->description('NPL Nett ' . $kshtNplNett['level'])
+            ->description($this->descriptionWithOjk('NPL Nett ' . $kshtNplNett['level'], '<= 5%'))
             ->icon('heroicon-o-shield-check');
     }
 
@@ -266,7 +277,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('BOPO', number_format($bopo, 2, ',', '.') . '%')
             ->color($kshtBopo['color'])
-            ->description($kshtBopo['description'])
+            ->description($this->descriptionWithOjk($kshtBopo['description'], '<= 85%'))
             ->icon('heroicon-o-calculator');
     }
 
@@ -300,7 +311,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('LDR', number_format($ldr, 2, ',', '.') . '%')
             ->color($kshtLdr['color'])
-            ->description($kshtLdr['description'])
+            ->description($this->descriptionWithOjk($kshtLdr['description'], '<= 90%'))
             ->icon('heroicon-o-chart-bar');
     }
 
