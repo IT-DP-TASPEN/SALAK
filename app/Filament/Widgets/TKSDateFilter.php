@@ -2,7 +2,9 @@
 
 namespace App\Filament\Widgets;
 
+use App\Models\BranchOffice;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
@@ -27,8 +29,8 @@ class TKSDateFilter extends Widget implements HasForms
             ->statePath('data')
             ->schema([
                 DatePicker::make('filter_date')
-                    ->label('')
-                    ->default(fn() => now()->toDateString())
+                    ->label('Tanggal')
+                    ->default(fn() => now())
                     ->maxDate(today())
                     ->reactive()
                     ->closeOnDateSelection()
@@ -37,6 +39,23 @@ class TKSDateFilter extends Widget implements HasForms
                         $this->dispatch(
                             'rekapTksDateChanged',
                             blank($state) ? null : Carbon::parse($state)->toDateString(),
+                        );
+                    }),
+                Select::make('branch_office')
+                    ->label('Kantor Cabang')
+                    ->visible(fn() => auth()->user()->isKantorPusatEmployee())
+                    ->options(
+                        fn() => BranchOffice::orderBy('branch_code_fincloud')
+                            ->pluck('branch_name', 'branch_code_fincloud')
+                            ->toArray()
+                    )
+                    ->reactive()
+                    ->placeholder('Semua Cabang')
+                    ->columnSpanFull()
+                    ->afterStateUpdated(function (?string $state): void {
+                        $this->dispatch(
+                            'rekapTksBranchOfficeChanged',
+                            $state,
                         );
                     }),
             ]);
