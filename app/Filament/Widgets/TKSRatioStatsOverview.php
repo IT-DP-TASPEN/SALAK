@@ -62,32 +62,24 @@ class TKSRatioStatsOverview extends BaseWidget
         $ckpnPerPPKA = BranchOffice::konsolidasiCkpnPerPPKA($tanggal, $branch);
 
         $kshtCkpnPerPPKA = match (true) {
-            $ckpnPerPPKA >= 100 => [
-                'color' => 'success',
-                'description' => 'Sangat sehat',
-            ],
-            $ckpnPerPPKA >= 80 && $ckpnPerPPKA < 100 => [
+            $ckpnPerPPKA < 50 => [
                 'color' => 'success',
                 'description' => 'Sehat',
             ],
-            $ckpnPerPPKA >= 60 && $ckpnPerPPKA < 80 => [
+            $ckpnPerPPKA >= 50 && $ckpnPerPPKA < 100 => [
                 'color' => 'warning',
                 'description' => 'Cukup sehat',
             ],
-            $ckpnPerPPKA >= 40 && $ckpnPerPPKA < 60 => [
+            default => [ // $ckpnPerPPKA >= 100
                 'color' => 'danger',
                 'description' => 'Tidak sehat',
-            ],
-            default => [
-                'color' => 'danger',
-                'description' => 'Sangat tidak sehat',
             ],
         };
         (array)$kshtCkpnPerPPKA;
 
         return Stat::make('CKPN per PPKA', number_format($ckpnPerPPKA, 2, ',', '.') . '%')
-            // ->color($kshtCkpnPerPPKA['color'])
-            ->description($this->descriptionWithOjk(null, '100%'))
+            ->color($kshtCkpnPerPPKA['color'])
+            ->description($this->descriptionWithOjk($kshtCkpnPerPPKA['description'], '100%'))
             ->icon('heroicon-o-shield-exclamation');
     }
 
