@@ -79,7 +79,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('CKPN per PPKA', number_format($ckpnPerPPKA, 2, ',', '.') . '%')
             ->color($kshtCkpnPerPPKA['color'])
-            ->description($this->descriptionWithOjk($kshtCkpnPerPPKA['description'], '100%'))
+            ->description($this->descriptionWithOjk($kshtCkpnPerPPKA['description'], '< 50%'))
             ->icon('heroicon-o-shield-exclamation');
     }
 
