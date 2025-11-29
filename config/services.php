@@ -35,4 +35,10 @@ return [
         ],
     ],
 
+    'fincloud' => [
+        'username' => env('FINCLOUD_USERNAME'),
+        'password' => env('FINCLOUD_PASSWORD'),
+        'role' => env('FINCLOUD_ROLE'),
+        'location' =>  env('FINCLOUD_LOCATION'),
+    ],
 ];
