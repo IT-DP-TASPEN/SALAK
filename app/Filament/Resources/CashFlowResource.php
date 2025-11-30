@@ -224,6 +224,22 @@ class CashFlowResource extends Resource
             );
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        $count = static::getEloquentQuery()
+            ->whereHas('approval', function (Builder $query) {
+                $query->where('approval_status', 'Pending');
+            })
+            ->count();
+
+        return $count > 0 ? (string)$count : null;
+    }
+
+    public static function getNavigationBadgeTooltip(): ?string
+    {
+        return 'Pending Proyeksi Cash Flow';
+    }
+
     public static function infolist(Infolist $infolist): Infolist
     {
         return $infolist
