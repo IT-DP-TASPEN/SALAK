@@ -148,7 +148,7 @@ class BranchOffice extends BaseModel
         $totals = LoanOutstanding::query()
             ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
             ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
             ->whereIn('loan_bi_collectability', array_keys($weights))
             ->groupBy('loan_bi_collectability')
             ->pluck('total_outstanding', 'loan_bi_collectability');
@@ -194,7 +194,7 @@ class BranchOffice extends BaseModel
         $totals = LoanOutstanding::query()
             ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
             ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->whereDate('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
             ->whereIn('loan_bi_collectability', array_keys($weights))
             ->groupBy('loan_bi_collectability')
             ->pluck('total_outstanding', 'loan_bi_collectability');
@@ -569,7 +569,7 @@ class BranchOffice extends BaseModel
             $proyeksiLendings = ProyeksiLending::query()
                 ->when($branch, fn($q) => $q->whereHas('branchOffice', fn($q2) => $q2->where('branch_code_fincloud', $branch)))
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
-                ->whereDate('lending_tanggal', $tanggal)
+                ->where('lending_tanggal', $tanggal)
                 ->sum('lending_booking_bersih');
             $totalBakiDebet += $proyeksiLendings;
         }
@@ -611,7 +611,7 @@ class BranchOffice extends BaseModel
                 ->when($branch, fn($q) => $q->whereHas('branchOffice', fn($q2) => $q2->where('branch_code_fincloud', $branch)))
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                 ->whereHas('kind', fn($q) => $q->where('kind_type', 'Cash In'))
-                ->whereDate('cash_tanggal', $asOf)
+                ->where('cash_tanggal', $asOf)
                 ->sum('cash_jumlah');
             $ret += $proyeksiCashIns;
 
@@ -619,7 +619,7 @@ class BranchOffice extends BaseModel
                 ->when($branch, fn($q) => $q->whereHas('branchOffice', fn($q2) => $q2->where('branch_code_fincloud', $branch)))
                 ->whereHas('approval', fn($q) => $q->where('approval_status', 'Approved'))
                 ->whereHas('kind', fn($q) => $q->where('kind_type', 'Cash Out'))
-                ->whereDate('cash_tanggal', $asOf)
+                ->where('cash_tanggal', $asOf)
                 ->sum('cash_jumlah');
             $ret -= $proyeksiCashOuts;
         }
