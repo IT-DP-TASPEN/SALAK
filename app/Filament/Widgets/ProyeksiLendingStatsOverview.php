@@ -23,7 +23,7 @@ class ProyeksiLendingStatsOverview extends BaseWidget
                 $query->where('id', auth()->user()->branch_office_id);
             })
             ->get();
-        $lendingsToday = ProyeksiLending::whereDate('lending_tanggal', $today)
+        $lendingsToday = ProyeksiLending::where('lending_tanggal', $today->format('Y-m-d'))
             ->whereHas('approval', function ($query) {
                 $query->where('approval_status', 'Approved');
             })

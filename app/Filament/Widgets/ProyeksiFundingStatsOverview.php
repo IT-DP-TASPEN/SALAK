@@ -23,7 +23,7 @@ class ProyeksiFundingStatsOverview extends BaseWidget
                 $query->where('id', auth()->user()->branch_office_id);
             })
             ->get();
-        $fundingsToday = ProyeksiFunding::whereDate('funding_tanggal', $today)
+        $fundingsToday = ProyeksiFunding::where('funding_tanggal', $today->format('Y-m-d'))
             ->whereHas('approval', function ($query) {
                 $query->where('approval_status', 'Approved');
             })
