@@ -171,7 +171,191 @@ class BranchOffice extends BaseModel
         // TODO: data ini nanti harus diambil dari db
         $abaTotal -= 2_000_000_000; // dikurangi 2 miliar
 
-        return $ppkaUmum + max(0.0, $abaTotal);
+        return $ppkaUmum + max(0.0, $abaTotal * 0.05);
+    }
+
+    public static function konsolidasiATMR(?string $tanggal = null, ?string $branch = null): float
+    {
+        $GLWeights = [
+            '100' => 0.0,    // Cash (0%)
+            '110' => 0.2,    // Placement In Other Banks (20%)
+            '150' => 1.0,
+            '197' => 1.0,
+            '196' => 1.0,
+            '195' => 1.0,
+            '194' => 1.0,
+            '193' => 1.0,
+            '192' => 1.0,
+            '191' => 1.0,
+            '184' => 1.0,
+            '183' => 1.0,
+            '182' => 1.0,
+            '181' => 1.0,
+            '171' => 1.0,
+            '163' => 1.0,
+            '164' => 1.0,
+            '162' => 1.0,
+            '161' => 1.0,
+            '132' => 1.0,
+            '131' => 1.0,
+            '129' => 1.0,
+        ];
+        $totalATMR = 0.0;
+
+        $tanggal ??= Carbon::today()->toDateString();
+
+        $keys = array_keys($GLWeights);
+        $neraca = static::saldoNeraca2($keys, $branch, $tanggal);
+
+        foreach ($neraca as $perkKode => $saldo) {
+            $totalATMR += $saldo * $GLWeights[$perkKode];
+        }
+
+        $badLoans = LoanOutstanding::query()
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->where('loan_date_params', $tanggal)
+            ->where(function ($q) use ($tanggal) {
+                $q
+                    ->where('loan_end_date', '<', $tanggal)
+                    ->orWhereIn('loan_bi_collectability', [5]);
+            })
+            ->selectRaw('loan_account, loan_bi_collectability, loan_outstanding')
+            ->get();
+
+        $totalATMR += $badLoans->sum('loan_outstanding') * 1.0; // 100%
+        $excludedAccounts = $badLoans->pluck('loan_account')->toArray();
+
+        $landCollaterals = LoanCollateralList::query()
+            ->whereNotIn('loan_acc_no', $excludedAccounts)
+            ->where(function ($q) {
+                $q
+                    ->where('collateral_type', 'like', '%land%')
+                    ->orWhere('collateral_type', 'like', '%building%');
+            })
+            ->selectRaw('loan_acc_no, outstanding')
+            ->get();
+
+        $totalATMR += $landCollaterals->sum('outstanding')  * 0.3; // 30%
+        $excludedAccounts = array_merge($excludedAccounts, $landCollaterals->pluck('loan_acc_no')->toArray());
+
+        $total874 = LoanOutstanding::query()
+            ->whereNotIn('loan_account', $excludedAccounts)
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->where('loan_date_params', $tanggal)
+            ->where(function ($q) {
+                $q->whereHas('msoLoanAtmr', function ($q) {
+                    $q
+                        ->where('loan_golongan_debitur', '874')
+                        ->whereNotIn('loan_jenis_usaha', ['1', '2']); // bukan UMK
+                })->orWhere(function ($q) {
+                    $q
+                        ->doesntHave('msoLoanAtmr')
+                        ->whereHas('cbrCustomer', function ($q) {
+                            $q
+                                ->where('owner_group', '874')
+                                ->whereNotIn('debtor_group', ['UK', 'UM']); // bukan UMK
+                        });
+                });
+            })
+            ->select('loan_account', 'loan_outstanding')
+            ->get();
+
+        $totalATMR += $total874->sum('loan_outstanding') * 0.5; // 50%
+        $excludedAccounts = array_merge($excludedAccounts, $total874->pluck('loan_account')->toArray());
+
+        $total875 = LoanOutstanding::whereNotIn('loan_account', $excludedAccounts)
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->where('loan_date_params', $tanggal)
+            ->whereHas('msoLoanAtmr', function ($q) {
+                $q
+                    ->where('loan_golongan_debitur', '875') // Lainnya
+                    ->whereNotIn('loan_jenis_usaha', ['1', '2']); // Bukan UMK
+            })
+            ->orWhere(function ($q) {
+                $q
+                    ->doesntHave('msoLoanAtmr')
+                    ->whereHas('cbrCustomer', function ($q) {
+                        $q
+                            ->where('owner_group', '875') // Lainnya
+                            ->whereNotIn('debtor_group', ['UK', 'UM']); // Bukan UMK
+                    });
+            })
+            ->selectRaw('loan_account, loan_outstanding')
+            ->get();
+
+        $totalATMR += $total875->sum('loan_outstanding') * 1.0; // 100%
+        $excludedAccounts = array_merge($excludedAccounts, $total875->pluck('loan_account')->toArray());
+
+        $totalUMK = LoanOutstanding::whereNotIn('loan_account', $excludedAccounts)
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->where('loan_date_params', $tanggal)
+            ->whereHas('msoLoanAtmr', function ($q) {
+                $q
+                    ->whereIn('loan_jenis_usaha', ['1', '2']) // Mikro & Kecil
+                    ->whereNotIn('loan_golongan_debitur', ['874', '875']); // Bukan Pensiunan / Pegawai & Lainnya
+            })
+            ->orWhere(function ($q) {
+                $q
+                    ->doesntHave('msoLoanAtmr')
+                    ->whereHas('cbrCustomer', function ($q) {
+                        $q
+                            ->whereIn('debtor_group', ['UK', 'UM']) // Mikro & Kecil
+                            ->whereNotIn('owner_group', ['874', '875']); // Bukan Pensiunan / Pegawai & Lainnya
+                    });
+            })
+            ->selectRaw('loan_account, loan_outstanding')
+            ->get();
+        $totalATMR += $totalUMK->sum('loan_outstanding') * 0.70; // 70%
+
+        // aktiva tetap & inventaris : 150
+        // 197
+        // 196
+        // 195
+        // 194
+        // 193
+        // 192
+        // 191
+        // 184
+        // 183
+        // 182
+        // 181
+        // 171
+        // 163
+        // 164
+        // 162
+        // 161
+        // 132
+        // 131
+        // 129
+
+        return $totalATMR;
+    }
+
+    public static function konsolidasiKPMM(?string $tanggal = null, ?string $branch = null): float
+    {
+        $modalInti = static::konsolidasiModalInti($tanggal, $branch);
+        $modalPelengkap = static::konsolidasiModalPelengkap($tanggal, $branch);
+
+        $modal = $modalInti + $modalPelengkap;
+        if ($modal == 0.0) {
+            return 0.0;
+        }
+
+        $atmr = static::konsolidasiATMR($tanggal, $branch);
+        if ($atmr == 0.0) {
+            return 0.0;
+        }
+
+        $kpmm = $modal / $atmr * 100;
+
+        print_r([
+            'modal_inti' => number_format($modalInti, 2, ',', '.'),
+            'modal_pelengkap' => number_format($modalPelengkap, 2, ',', '.'),
+            'atmr' => number_format($atmr, 2, ',', '.'),
+            'kpmm' => number_format($kpmm, 2, ',', '.') . '%',
+        ]);
+
+        return $kpmm;
     }
 
     public function ppka(?string $tanggal = null): float

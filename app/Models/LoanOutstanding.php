@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class LoanOutstanding extends Model
 {
+    protected $connection = 'mysql';
+
     protected $fillable = [
         'loan_date_params',
         'loan_branch_office',
@@ -36,5 +38,15 @@ class LoanOutstanding extends Model
     public function branchOffice(): BelongsTo
     {
         return $this->belongsTo(BranchOffice::class, 'loan_branch_office', 'branch_code_fincloud');
+    }
+
+    public function cbrCustomer(): BelongsTo
+    {
+        return $this->belongsTo(CbrCustomer::class, 'loan_cif', 'cif_no');
+    }
+
+    public function msoLoanAtmr(): BelongsTo
+    {
+        return $this->belongsTo(MSOLoanATMR::class, 'loan_alt_account', 'loan_account');
     }
 }

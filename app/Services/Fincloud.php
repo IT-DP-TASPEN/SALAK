@@ -103,11 +103,11 @@ class Fincloud
         );
     }
 
-    public function inquiryDetailOutstandingReport(Carbon $asOf): array
+    public function inquiryDetailOutstandingReport(Carbon $asOf): \Generator
     {
         $branches = $this->getBranches();
 
-        $responses = [];
+        $header = null;
         foreach ($branches as $branch) {
             $response = $this->downloadReportFile(
                 path: sprintf(
@@ -120,20 +120,48 @@ class Fincloud
                 ),
             );
 
-            $responses[$branch] = $response;
-        }
+            $lines = explode("\n", trim($response));
+            if (empty($lines)) {
+                continue;
+            }
 
-        $header = null;
-        foreach ($responses as $response) {
-            $line = strtok($response, "\n");
-            if (is_null($header)) {
-                $header = $line;
-            } elseif ($header !== $line) {
+            $firstLine = array_shift($lines);
+            $firstLineNorm = ltrim(rtrim($firstLine, "\r\n"), "\xEF\xBB\xBF");
+
+            if ($header === null) {
+                $header = $firstLineNorm;
+                yield $header;
+            } elseif ($header !== $firstLineNorm) {
                 throw new \RuntimeException('inconsistent CSV header across branches');
             }
-        }
 
-        return $responses;
+            foreach ($lines as $line) {
+                if ($line === '') {
+                    continue;
+                }
+                yield rtrim($line, "\r\n");
+            }
+        }
+    }
+
+    public function inquiryCbrCustomerReport(Carbon $asOf): \Generator
+    {
+        $response = $this->downloadReportFile(
+            path: sprintf(
+                '/app/report/cbr/%s',
+                $asOf->format('Ymd'),
+            ),
+            file: 'cbrcustomer.csv',
+        );
+        // trim BOM if exists
+        $response = ltrim($response, "\xEF\xBB\xBF");
+        $lines = explode("\n", trim($response));
+        foreach ($lines as $line) {
+            if ($line === '') {
+                continue;
+            }
+            yield rtrim($line, "\r\n");
+        }
     }
 
     public function inquiryBalanceSheetReport(Carbon $asOf, ?string $branch = null): string
@@ -153,6 +181,27 @@ class Fincloud
         );
     }
 
+    public function inquiryLoanCollateralListReport(?Carbon $asOf): string
+    {
+        return $this->requestWithSession(
+            method: 'GET',
+            path: '/system/laporanUmum/data/lap',
+            raw: true,
+            query: [
+                'nm' => 'Loan Collateral List',
+                'type' => 'csv',
+                'p' => json_encode([
+                    '',
+                    '',
+                    '1900-01-01',
+                    is_null($asOf) ? now()->format('Y-m-d') : $asOf->format('Y-m-d'),
+                ]),
+            ],
+            formBody: [
+                'sessionId' => $this->sessionId,
+            ],
+        );
+    }
 
     public function downloadReportFile(string $path, string $file): string
     {
