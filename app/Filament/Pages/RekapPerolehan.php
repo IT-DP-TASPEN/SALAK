@@ -42,6 +42,16 @@ class RekapPerolehan extends Page implements HasTable
                             ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['1'], null, $this->getAsOfDate())))
                             ->label('Total'),
                     ),
+                TextColumn::make('current_year_retained_earnings')
+                    ->label('Laba Tahun Berjalan')
+                    ->money('IDR', 0, 'id_ID')
+                    ->getStateUsing(fn($record) => array_sum(BranchOffice::saldoNeraca2(['3231982'], $record->branch_code_fincloud, $this->getAsOfDate())))
+                    ->summarize(
+                        Summarizer::make()
+                            ->money('IDR', 0, 'id_ID')
+                            ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['3231982'], null, $this->getAsOfDate())))
+                            ->label('Total'),
+                    ),
                 TextColumn::make('kredit')
                     ->label('Kredit')
                     ->money('IDR', 0, 'id_ID')
