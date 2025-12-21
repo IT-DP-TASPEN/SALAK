@@ -33,6 +33,7 @@ class AdminPanelProvider extends PanelProvider
                 'primary' => Color::Amber,
             ])
             ->spa()
+            ->databaseNotifications()
             ->brandLogo(asset('logo.png'))
             ->favicon(asset('dp.png'))
             ->sidebarFullyCollapsibleOnDesktop()
