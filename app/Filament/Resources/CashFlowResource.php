@@ -148,6 +148,7 @@ class CashFlowResource extends Resource
                     ->sortable(),
                 Tables\Columns\TextColumn::make('cash_keterangan')
                     ->label('Keterangan')
+                    ->limit(50)
                     ->searchable(),
                 Tables\Columns\TextColumn::make('cash_jumlah')
                     ->label('Jumlah')
