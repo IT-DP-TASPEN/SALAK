@@ -3,9 +3,11 @@
 namespace App\Filament\Resources\ProyeksiFundingResource\Pages;
 
 use App\Filament\Resources\ProyeksiFundingResource;
-use App\Models\Agent;
+use App\Models\ProyeksiFunding;
+use App\Models\User;
 use Carbon\Carbon;
 use Filament\Actions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateProyeksiFunding extends CreateRecord
@@ -25,5 +27,33 @@ class CreateProyeksiFunding extends CreateRecord
         }
 
         return $data;
+    }
+
+    protected function handleRecordCreation(array $data): ProyeksiFunding
+    {
+        $record = parent::handleRecordCreation($data);
+        $submitter = auth()->user();
+
+        User::query()
+            ->where('branch_office_id', $submitter->branch_office_id)
+            ->whereKeyNot($submitter->id)
+            ->permission('create_proyeksi::funding::approval') // spatie scope
+            ->each(function (User $user) use ($submitter, $record) {
+                $user->notify(
+                    Notification::make()
+                        ->title('New Proyeksi Funding Submission')
+                        ->body("A new Proyeksi Funding has been submitted by {$submitter->name} and is pending your approval.")
+                        ->actions([
+                            Actions\Action::make('view_proyeksi_funding')
+                                ->label('View Proyeksi Funding')
+                                ->url(fn() => ProyeksiFundingResource::getUrl('view', ['record' => $record]))
+                                ->icon('heroicon-o-eye'),
+                        ])
+                        ->info()
+                        ->toDatabase(),
+                );
+            });
+
+        return $record;
     }
 }
