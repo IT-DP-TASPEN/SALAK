@@ -4,6 +4,7 @@ namespace App\Filament\Pages;
 
 use App\Models\BranchOffice;
 use App\Models\LoanOutstanding;
+use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
@@ -18,6 +19,7 @@ use Filament\Support\RawJs;
 class SimulasiTks extends Page implements HasForms
 {
     use InteractsWithForms;
+    use HasPageShield;
 
     protected static ?string $navigationIcon = 'heroicon-o-calculator';
     protected static ?string $navigationLabel = 'Simulasi TKS';
