@@ -169,7 +169,7 @@ class BranchOffice extends BaseModel
         );
 
         // TODO: data ini nanti harus diambil dari db
-        $abaTotal -= 2_000_000_000; // dikurangi 2 miliar
+        $abaTotal -= 2_000_000_000; // dikurangi 2 miliar (jaminan LPS) (TODO: kurangin 2M per bank)
 
         return $ppkaUmum + max(0.0, $abaTotal * 0.05);
     }
@@ -200,133 +200,126 @@ class BranchOffice extends BaseModel
             '131' => 1.0,
             '129' => 1.0,
         ];
-        $totalATMR = 0.0;
 
         $tanggal ??= Carbon::today()->toDateString();
+        $totalATMR = 0.0;
 
+        // ========== 1) ATMR dari GL ==========
         $keys = array_keys($GLWeights);
         $neraca = static::saldoNeraca2($keys, $branch, $tanggal);
 
         foreach ($neraca as $perkKode => $saldo) {
-            $totalATMR += $saldo * $GLWeights[$perkKode];
+            $totalATMR += (float) $saldo * (float) ($GLWeights[$perkKode] ?? 0.0);
         }
 
-        $badLoans = LoanOutstanding::query()
+        // Base query loan (biar konsisten filter cabang & tanggal)
+        $loanBase = LoanOutstanding::query()
             ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->where('loan_date_params', $tanggal)
+            ->where('loan_date_params', $tanggal);
+
+        $excluded = collect(); // kumpulin loan_account yang udah “diklasifikasi”
+        $excludedArr = fn() => $excluded->unique()->values()->all();
+
+        // ========== 2) Bad loans (100%) ==========
+        $badLoans = (clone $loanBase)
             ->where(function ($q) use ($tanggal) {
-                $q
-                    ->where('loan_end_date', '<', $tanggal)
-                    ->orWhereIn('loan_bi_collectability', [5]);
+                $q->where('loan_end_date', '<', $tanggal)
+                    ->orWhere('loan_bi_collectability', 5);
             })
-            ->selectRaw('loan_account, loan_bi_collectability, loan_outstanding')
+            ->select(['loan_account', 'loan_outstanding'])
             ->get();
 
-        $totalATMR += $badLoans->sum('loan_outstanding') * 1.0; // 100%
-        $excludedAccounts = $badLoans->pluck('loan_account')->toArray();
+        $totalATMR += (float) $badLoans->sum('loan_outstanding') * 1.0;
+        $excluded = $excluded->merge($badLoans->pluck('loan_account'));
 
-        $landCollaterals = LoanCollateralList::query()
-            ->whereNotIn('loan_acc_no', $excludedAccounts)
+        // ========== 3) Loans dengan agunan land/building (30%) ==========
+        // Catatan: gue ambil daftar account dari collateral, tapi exposure-nya tetep dari LoanOutstanding (snapshot tanggal yg sama),
+        // biar gak ke-dobel gara-gara collateral multi-row / outstanding collateral beda definisi.
+        $landAccounts = LoanCollateralList::query()
+            ->whereNotIn('loan_acc_no', $excludedArr())
             ->where(function ($q) {
-                $q
-                    ->where('collateral_type', 'like', '%land%')
+                $q->where('collateral_type', 'like', '%land%')
                     ->orWhere('collateral_type', 'like', '%building%');
             })
-            ->selectRaw('loan_acc_no, outstanding')
-            ->get();
+            ->distinct()
+            ->pluck('loan_acc_no');
 
-        $totalATMR += $landCollaterals->sum('outstanding')  * 0.3; // 30%
-        $excludedAccounts = array_merge($excludedAccounts, $landCollaterals->pluck('loan_acc_no')->toArray());
+        if ($landAccounts->isNotEmpty()) {
+            $landOutstanding = (clone $loanBase)
+                ->whereNotIn('loan_account', $excludedArr())
+                ->whereIn('loan_account', $landAccounts->all())
+                ->sum('loan_outstanding');
 
-        $total874 = LoanOutstanding::query()
-            ->whereNotIn('loan_account', $excludedAccounts)
-            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->where('loan_date_params', $tanggal)
+            $totalATMR += (float) $landOutstanding * 0.30;
+            $excluded = $excluded->merge($landAccounts);
+        }
+
+        // ========== 4) Golongan 874 (50%) ==========
+        $candidates874 = (clone $loanBase)
+            ->whereNotIn('loan_account', $excludedArr())
             ->where(function ($q) {
-                $q->whereHas('msoLoanAtmr', function ($q) {
-                    $q
-                        ->where('loan_golongan_debitur', '874')
-                        ->whereNotIn('loan_jenis_usaha', ['1', '2']); // bukan UMK
-                })->orWhere(function ($q) {
-                    $q
-                        ->doesntHave('msoLoanAtmr')
-                        ->whereHas('cbrCustomer', function ($q) {
-                            $q
-                                ->where('owner_group', '874')
-                                ->whereNotIn('debtor_group', ['UK', 'UM']); // bukan UMK
-                        });
-                });
-            })
-            ->select('loan_account', 'loan_outstanding')
-            ->get();
-
-        $totalATMR += $total874->sum('loan_outstanding') * 0.5; // 50%
-        $excludedAccounts = array_merge($excludedAccounts, $total874->pluck('loan_account')->toArray());
-
-        $total875 = LoanOutstanding::whereNotIn('loan_account', $excludedAccounts)
-            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->where('loan_date_params', $tanggal)
-            ->whereHas('msoLoanAtmr', function ($q) {
-                $q
-                    ->where('loan_golongan_debitur', '875') // Lainnya
-                    ->whereNotIn('loan_jenis_usaha', ['1', '2']); // Bukan UMK
-            })
-            ->orWhere(function ($q) {
-                $q
-                    ->doesntHave('msoLoanAtmr')
-                    ->whereHas('cbrCustomer', function ($q) {
-                        $q
-                            ->where('owner_group', '875') // Lainnya
-                            ->whereNotIn('debtor_group', ['UK', 'UM']); // Bukan UMK
+                $q->doesntHave('cbrCustomer')
+                    ->whereHas('msoLoanAtmr', function ($q) {
+                        $q->where('loan_golongan_debitur', '874')
+                            ->whereNotIn('loan_jenis_usaha', ['1', '2']); // bukan UMK
+                    })->orWhere(function ($q) {
+                        $q->doesntHave('msoLoanAtmr')
+                            ->whereHas('cbrCustomer', function ($q) {
+                                $q->where('owner_group', '874')
+                                    ->whereNotIn('debtor_group', ['UK', 'UM']); // bukan UMK
+                            });
                     });
             })
-            ->selectRaw('loan_account, loan_outstanding')
+            ->select(['loan_account', 'loan_cif', 'loan_outstanding', 'loan_principal', 'loan_installment_loans'])
+            ->with(['latestDapem:payroll_dapem_masters.customer_id,nominal_dapem,bulan_dapem'])
             ->get();
 
-        $totalATMR += $total875->sum('loan_outstanding') * 1.0; // 100%
-        $excludedAccounts = array_merge($excludedAccounts, $total875->pluck('loan_account')->toArray());
+        $loans874 = $candidates874->filter(function ($loan) {
+            if (($loan->loan_principal ?? 0) <= 200_000_000) {
+                return true;
+            }
 
-        $totalUMK = LoanOutstanding::whereNotIn('loan_account', $excludedAccounts)
-            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->where('loan_date_params', $tanggal)
-            ->whereHas('msoLoanAtmr', function ($q) {
-                $q
-                    ->whereIn('loan_jenis_usaha', ['1', '2']) // Mikro & Kecil
-                    ->whereNotIn('loan_golongan_debitur', ['874', '875']); // Bukan Pensiunan / Pegawai & Lainnya
-            })
-            ->orWhere(function ($q) {
-                $q
-                    ->doesntHave('msoLoanAtmr')
-                    ->whereHas('cbrCustomer', function ($q) {
-                        $q
-                            ->whereIn('debtor_group', ['UK', 'UM']) // Mikro & Kecil
-                            ->whereNotIn('owner_group', ['874', '875']); // Bukan Pensiunan / Pegawai & Lainnya
+            $dapem = $loan->latestDapem;
+            $nominal = (float) ($dapem->nominal_dapem ?? 0);
+
+            if ($nominal <= 0) {
+                return false;
+            }
+
+            $ratio = ((float) ($loan->loan_installment_loans ?? 0) / $nominal) * 100.0;
+            return $ratio <= 30.0;
+        });
+
+        $totalATMR += (float) $loans874->sum('loan_outstanding') * 0.50;
+        $excluded = $excluded->merge($loans874->pluck('loan_account'));
+
+        $umkLoans = (clone $loanBase)
+            ->whereNotIn('loan_account', $excludedArr())
+            ->where(function ($q) {
+                $q->doesntHave('cbrCustomer')
+                    ->whereHas('msoLoanAtmr', function ($q) {
+                        $q->whereIn('loan_jenis_usaha', ['1', '2']) // Mikro & Kecil
+                            ->whereNotIn('loan_golongan_debitur', ['874', '875']);
+                    })->orWhere(function ($q) {
+                        $q->doesntHave('msoLoanAtmr')
+                            ->whereHas('cbrCustomer', function ($q) {
+                                $q->whereIn('debtor_group', ['UK', 'UM'])
+                                    ->whereNotIn('owner_group', ['874', '875']);
+                            });
                     });
             })
-            ->selectRaw('loan_account, loan_outstanding')
+            ->select(['loan_account', 'loan_outstanding'])
             ->get();
-        $totalATMR += $totalUMK->sum('loan_outstanding') * 0.70; // 70%
 
-        // aktiva tetap & inventaris : 150
-        // 197
-        // 196
-        // 195
-        // 194
-        // 193
-        // 192
-        // 191
-        // 184
-        // 183
-        // 182
-        // 181
-        // 171
-        // 163
-        // 164
-        // 162
-        // 161
-        // 132
-        // 131
-        // 129
+        $totalATMR += (float) $umkLoans->sum('loan_outstanding') * 0.70;
+        $excluded = $excluded->merge($umkLoans->pluck('loan_account'));
+
+        // ========== 6) Remaining loans (100%) ==========
+        $remainingOutstanding = (clone $loanBase) // 875
+            ->whereNotIn('loan_account', $excludedArr())
+            ->sum('loan_outstanding');
+
+        $totalATMR += (float) $remainingOutstanding * 1.0;
 
         return $totalATMR;
     }
