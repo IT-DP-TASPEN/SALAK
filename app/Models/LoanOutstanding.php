@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class LoanOutstanding extends Model
 {
@@ -50,5 +51,17 @@ class LoanOutstanding extends Model
     public function msoLoanAtmr(): BelongsTo
     {
         return $this->belongsTo(MSOLoanATMR::class, 'loan_alt_account', 'loan_account');
+    }
+
+    public function dapem(): BelongsTo
+    {
+        return $this->belongsTo(PayrollMaster::class, 'loan_cif', 'customer_id');
+    }
+
+    public function latestDapem(): HasOne
+    {
+        return $this
+            ->hasOne(PayrollMaster::class, 'customer_id', 'loan_cif')
+            ->latestOfMany('bulan_dapem'); // ambil nominal_dapem bulan paling baru
     }
 }
