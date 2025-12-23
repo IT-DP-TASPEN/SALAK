@@ -105,6 +105,20 @@ return [
             'trust_server_certificate' => true,
         ],
 
+        'edapem' => [
+            'driver' => env('EDAPEM_DB_CONNECTION', 'mysql'),
+            'host' => env('EDAPEM_DB_HOST'),
+            'port' => env('EDAPEM_DB_PORT'),
+            'database' => env('EDAPEM_DB_DATABASE'),
+            'username' => env('EDAPEM_DB_USERNAME'),
+            'password' => env('EDAPEM_DB_PASSWORD'),
+            'charset' => 'utf8mb4',
+            'collation' => 'utf8mb4_unicode_ci',
+            'prefix' => '',
+            'strict' => false,
+            'engine' => null,
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),
