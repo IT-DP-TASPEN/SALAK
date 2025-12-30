@@ -8,18 +8,20 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::exec('/bin/bash', [
-    '-lc',
-    sprintf(
-        '%1$s -date=%3$s; %2$s -date=%3$s',
-        base_path('saldo-neraca-updater'),
-        base_path('loan-outstanding-updater'),
-        now()->format('Y-m-d')
-    ),
-])
-    ->everyThreeHours()
+Schedule::command('app:fetch-balance-sheet-report', [now()->subDay()->format('Y-m-d')])
+    ->dailyAt('04:30')
     ->onOneServer()
     ->runInBackground()
+    ->withoutOverlapping()
+    ->appendOutputTo(storage_path('logs/schedule.log'));
+
+Schedule::call(function () {
+    Artisan::call('app:fetch-balance-sheet-report');
+    Artisan::call('app:update-loan-outstanding-report');
+})
+    ->everyThreeHours()
+    ->name('Fetch Daily Financial Reports')
+    ->onOneServer()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/schedule.log'));
 

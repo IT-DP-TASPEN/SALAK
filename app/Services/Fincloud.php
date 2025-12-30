@@ -203,6 +203,23 @@ class Fincloud
         );
     }
 
+    public function inquiryLoanOutstandingFromGeneralReport(?string $branch = null): string
+    {
+        return $this->requestWithSession(
+            method: 'GET',
+            path: '/system/laporanUmum/data/lap',
+            raw: true,
+            query: [
+                'nm' => 'Loan Outstanding Details Report Today',
+                'type' => 'csv',
+                'p' => json_encode([is_null($branch) ? '' : $branch]),
+            ],
+            formBody: [
+                'sessionId' => $this->sessionId,
+            ],
+        );
+    }
+
     public function downloadReportFile(string $path, string $file): string
     {
         return $this->requestWithSession(
