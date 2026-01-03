@@ -22,7 +22,7 @@ Schedule::call(function () {
     $yesterday = now()->subDay()->format('Y-m-d');
     Artisan::call('app:fetch-atmr-data-from-mso');
     Artisan::call('app:fetch-cbr-customer-report', ['date' => $yesterday]);
-    Artisan::call('app:fetch-loan-collateral-list-report', ['date' => $yesterday]);
+    Artisan::call('app:fetch-loan-collateral-list', ['date' => $yesterday]);
 })
     ->everyThreeHours()
     ->name('Fetch Daily Financial Reports')

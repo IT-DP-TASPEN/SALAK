@@ -342,12 +342,12 @@ class BranchOffice extends BaseModel
 
         $kpmm = $modal / $atmr * 100;
 
-        print_r([
-            'modal_inti' => number_format($modalInti, 2, ',', '.'),
-            'modal_pelengkap' => number_format($modalPelengkap, 2, ',', '.'),
-            'atmr' => number_format($atmr, 2, ',', '.'),
-            'kpmm' => number_format($kpmm, 2, ',', '.') . '%',
-        ]);
+        // print_r([
+        //     'modal_inti' => number_format($modalInti, 2, ',', '.'),
+        //     'modal_pelengkap' => number_format($modalPelengkap, 2, ',', '.'),
+        //     'atmr' => number_format($atmr, 2, ',', '.'),
+        //     'kpmm' => number_format($kpmm, 2, ',', '.') . '%',
+        // ]);
 
         return $kpmm;
     }
