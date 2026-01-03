@@ -86,7 +86,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('KPMM', number_format($kpmm, 2, ',', '.') . '%')
             ->color($kshtKpmm['color'])
-            ->description($this->descriptionWithOjk($kshtKpmm['description'], '>= 12%'))
+            ->description($this->descriptionWithOjk($kshtKpmm['description'], '>= 15%'))
             ->icon('heroicon-o-shield-check');
     }
 
