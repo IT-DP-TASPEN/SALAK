@@ -158,18 +158,22 @@ class BranchOffice extends BaseModel
             $ppkaUmum += (float) $totalOutstanding * $weights[$collectability];
         }
 
-        $abaTotal = array_sum(
-            static::saldoNeraca2(
-                [
-                    '110', // Placement In Other Banks
-                ],
-                $branch,
-                $tanggal
-            )
-        );
+        $threshold = 2_000_000_000;
+        $sumPerPrefix = function (string $prefix) use ($tanggal, $branch, $threshold) {
+            return SaldoNeraca::query()
+                ->where('tanggal', $tanggal)
+                ->when($branch, fn($q) => $q->where('cabang', $branch))
+                ->where('noakun', 'like', $prefix . '%')
+                ->whereRaw('CHAR_LENGTH(noakun) = 7')
+                ->where('saldoakhir', '>', 0)
+                ->selectRaw('SUM(saldoakhir - IF(saldoakhir >= ?, ?, 0)) AS total', [$threshold, $threshold])
+                ->value('total') ?? 0;
+        };
 
-        // TODO: data ini nanti harus diambil dari db
-        $abaTotal -= 2_000_000_000; // dikurangi 2 miliar (jaminan LPS) (TODO: kurangin 2M per bank)
+        $abaTotal =
+            $sumPerPrefix('111') + // Giro
+            $sumPerPrefix('112') + // Tabungan
+            $sumPerPrefix('113'); // Deposito
 
         return $ppkaUmum + max(0.0, $abaTotal * 0.05);
     }
@@ -218,14 +222,12 @@ class BranchOffice extends BaseModel
             ->where('loan_date_params', $tanggal);
 
         $excluded = collect(); // kumpulin loan_account yang udah “diklasifikasi”
-        $excludedArr = fn() => $excluded->unique()->values()->all();
+        // $excludedArr = fn() => $excluded->unique()->values()->all();
 
         // ========== 2) Bad loans (100%) ==========
         $badLoans = (clone $loanBase)
-            ->where(function ($q) use ($tanggal) {
-                $q->where('loan_end_date', '<', $tanggal)
-                    ->orWhere('loan_bi_collectability', 5);
-            })
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->where('loan_bi_collectability', 5)
             ->select(['loan_account', 'loan_outstanding'])
             ->get();
 
@@ -236,7 +238,7 @@ class BranchOffice extends BaseModel
         // Catatan: gue ambil daftar account dari collateral, tapi exposure-nya tetep dari LoanOutstanding (snapshot tanggal yg sama),
         // biar gak ke-dobel gara-gara collateral multi-row / outstanding collateral beda definisi.
         $landAccounts = LoanCollateralList::query()
-            ->whereNotIn('loan_acc_no', $excludedArr())
+            ->whereNotIn('loan_acc_no', $excluded->unique()->values()->all())
             ->where(function ($q) {
                 $q->where('collateral_type', 'like', '%land%')
                     ->orWhere('collateral_type', 'like', '%building%');
@@ -246,7 +248,6 @@ class BranchOffice extends BaseModel
 
         if ($landAccounts->isNotEmpty()) {
             $landOutstanding = (clone $loanBase)
-                ->whereNotIn('loan_account', $excludedArr())
                 ->whereIn('loan_account', $landAccounts->all())
                 ->sum('loan_outstanding');
 
@@ -256,14 +257,14 @@ class BranchOffice extends BaseModel
 
         // ========== 4) Golongan 874 (50%) ==========
         $candidates874 = (clone $loanBase)
-            ->whereNotIn('loan_account', $excludedArr())
+            ->whereNotIn('loan_account', $excluded->unique()->values()->all())
             ->where(function ($q) {
-                $q->doesntHave('cbrCustomer')
-                    ->whereHas('msoLoanAtmr', function ($q) {
-                        $q->where('loan_golongan_debitur', '874')
-                            ->whereNotIn('loan_jenis_usaha', ['1', '2']); // bukan UMK
-                    })->orWhere(function ($q) {
-                        $q->doesntHave('msoLoanAtmr')
+                $q->whereHas('msoLoanAtmr', function ($q) {
+                    $q->where('loan_golongan_debitur', '874')
+                        ->whereNotIn('loan_jenis_usaha', ['1', '2']); // bukan UMK
+                })
+                    ->orWhere(function ($q) {
+                        $q->whereDoesntHave('msoLoanAtmr')
                             ->whereHas('cbrCustomer', function ($q) {
                                 $q->where('owner_group', '874')
                                     ->whereNotIn('debtor_group', ['UK', 'UM']); // bukan UMK
@@ -294,7 +295,7 @@ class BranchOffice extends BaseModel
         $excluded = $excluded->merge($loans874->pluck('loan_account'));
 
         $umkLoans = (clone $loanBase)
-            ->whereNotIn('loan_account', $excludedArr())
+            ->whereNotIn('loan_account', $excluded->unique()->values()->all())
             ->where(function ($q) {
                 $q->doesntHave('cbrCustomer')
                     ->whereHas('msoLoanAtmr', function ($q) {
@@ -316,7 +317,7 @@ class BranchOffice extends BaseModel
 
         // ========== 6) Remaining loans (100%) ==========
         $remainingOutstanding = (clone $loanBase) // 875
-            ->whereNotIn('loan_account', $excludedArr())
+            ->whereNotIn('loan_account', $excluded->unique()->values()->all())
             ->sum('loan_outstanding');
 
         $totalATMR += (float) $remainingOutstanding * 1.0;
