@@ -780,8 +780,12 @@ class BranchOffice extends BaseModel
         $kas = static::konsolidasiSaldoKas($asOf, $branch);
 
         $ret = $kas + $giroTab;
-        if ($efektif && ($branch === null || $branch === '001')) {
+        if ($efektif) {
+            if ($branch) {
+                $ret -= BranchOffice::where('branch_code_fincloud', $branch)->sum('branch_saldo_aba_blokir');
+            } else {
             $ret -= BranchOffice::sum('branch_saldo_aba_blokir');
+            }
         }
 
         if ($simulated) {
