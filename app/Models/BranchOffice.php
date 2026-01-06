@@ -767,7 +767,7 @@ class BranchOffice extends BaseModel
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
         $asOf = $asOf->toDateString();
 
-        $neraca = static::saldoNeraca2(['1011000'], $branch, $asOf);
+        $neraca = static::saldoNeraca2(['100'], $branch, $asOf);
         return array_sum($neraca);
     }
 
