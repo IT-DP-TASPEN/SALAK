@@ -784,7 +784,7 @@ class BranchOffice extends BaseModel
             if ($branch) {
                 $ret -= BranchOffice::where('branch_code_fincloud', $branch)->sum('branch_saldo_aba_blokir');
             } else {
-            $ret -= BranchOffice::sum('branch_saldo_aba_blokir');
+                $ret -= BranchOffice::sum('branch_saldo_aba_blokir');
             }
         }
 
