@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\LoanOutstanding;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -8,10 +9,17 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote');
 
-Schedule::command('app:fetch-balance-sheet-report', [now()->subDay()->format('Y-m-d')])
-    ->dailyAt('04:30')
+Schedule::call(function () {
+    $yesterday = now()->subDay()->format('Y-m-d');
+    Artisan::call('app:fetch-balance-sheet-report', ['date' => $yesterday]);
+
+    // delete all yesterday's LoanOutstanding data
+    LoanOutstanding::where('loan_date_params', $yesterday)->delete();
+    Artisan::call('app:fetch-loan-outstanding-report', ['date' => $yesterday]);
+})
+    ->dailyAt('04:00')
+    ->name('Revalidate Balance Sheet and Loan Outstanding Data')
     ->onOneServer()
-    ->runInBackground()
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/schedule.log'));
 
