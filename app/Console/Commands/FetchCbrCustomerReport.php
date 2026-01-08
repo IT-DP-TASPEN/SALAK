@@ -72,7 +72,7 @@ class FetchCbrCustomerReport extends Command
                 if (count($batch) >= $batchSize) {
                     CbrCustomer::upsert(
                         $batch,
-                        ['cif_no', 'management_name'],
+                        ['cif_no'],
                         array_keys($batch[0]),
                     );
                     $totalSaved += count($batch);
@@ -85,7 +85,7 @@ class FetchCbrCustomerReport extends Command
             if (count($batch) > 0) {
                 CbrCustomer::upsert(
                     $batch,
-                    ['cif_no', 'management_name'],
+                    ['cif_no'],
                     array_keys($batch[0]),
                 );
                 $totalSaved += count($batch);
