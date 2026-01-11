@@ -32,7 +32,6 @@ class SendDailyReport extends Command
         $kas = BranchOffice::konsolidasiSaldoKas($asOf);
         $tab = array_sum(BranchOffice::saldoNeraca2(['112'], null, $asOf));
         $dep = array_sum(BranchOffice::saldoNeraca2(['113'], null, $asOf));
-        $kre = array_sum(BranchOffice::saldoNeraca2(['121'], null, $asOf));
         $krePerKolek = LoanOutstanding::query()
             ->selectRaw('loan_bi_collectability, SUM(loan_outstanding) as total_outstanding')
             ->where('loan_date_params', $asOf)
@@ -40,6 +39,7 @@ class SendDailyReport extends Command
             ->orderBy('loan_bi_collectability')
             ->pluck('total_outstanding', 'loan_bi_collectability')
             ->toArray();
+        $kre = array_sum($krePerKolek);
         $aba = array_sum(BranchOffice::saldoNeraca2(['110'], null, $asOf));
         $asset = array_sum(BranchOffice::saldoNeraca2(['1'], null, $asOf));
         $npl = BranchOffice::konsolidasiNPL($asOf);
@@ -67,11 +67,11 @@ class SendDailyReport extends Command
     private static function mapKolekNumberToLetter($amount): string
     {
         return match ($amount) {
-            1 => 'Lancar',
-            2 => 'Dalam Perhatian Khusus',
-            3 => 'Kurang Lancar',
-            4 => 'Diragukan',
-            5 => 'Macet',
+            1 => 'L',
+            2 => 'DPK',
+            3 => 'KL',
+            4 => 'D',
+            5 => 'M',
             default => 'Unknown',
         };
     }
