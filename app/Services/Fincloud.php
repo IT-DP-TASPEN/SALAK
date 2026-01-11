@@ -105,41 +105,59 @@ class Fincloud
 
     public function inquiryDetailOutstandingReport(Carbon $asOf): \Generator
     {
-        $branches = $this->getBranches();
-
-        $header = null;
-        foreach ($branches as $branch) {
+        try {
             $response = $this->downloadReportFile(
                 path: sprintf(
                     '/app/report/daily/%s',
                     $asOf->format('Ymd'),
                 ),
-                file: sprintf(
-                    'DetailOutstandingRekeningPinjaman_%s.csv',
-                    $branch,
-                ),
+                file: 'DetailOutstandingRekeningPinjaman.csv'
             );
 
-            $lines = explode("\n", trim($response));
-            if (empty($lines)) {
-                continue;
-            }
-
-            $firstLine = array_shift($lines);
-            $firstLineNorm = ltrim(rtrim($firstLine, "\r\n"), "\xEF\xBB\xBF");
-
-            if ($header === null) {
-                $header = $firstLineNorm;
-                yield $header;
-            } elseif ($header !== $firstLineNorm) {
-                throw new \RuntimeException('inconsistent CSV header across branches');
-            }
-
+            $lines = explode("\n", ltrim(trim($response), "\xEF\xBB\xBF"));
             foreach ($lines as $line) {
                 if ($line === '') {
                     continue;
                 }
                 yield rtrim($line, "\r\n");
+            }
+        } catch (\Exception $e) {
+            $branches = $this->getBranches();
+
+            $header = null;
+            foreach ($branches as $branch) {
+                $response = $this->downloadReportFile(
+                    path: sprintf(
+                        '/app/report/daily/%s',
+                        $asOf->format('Ymd'),
+                    ),
+                    file: sprintf(
+                        'DetailOutstandingRekeningPinjaman_%s.csv',
+                        $branch,
+                    ),
+                );
+
+                $lines = explode("\n", trim($response));
+                if (empty($lines)) {
+                    continue;
+                }
+
+                $firstLine = array_shift($lines);
+                $firstLineNorm = ltrim(rtrim($firstLine, "\r\n"), "\xEF\xBB\xBF");
+
+                if ($header === null) {
+                    $header = $firstLineNorm;
+                    yield $header;
+                } elseif ($header !== $firstLineNorm) {
+                    throw new \RuntimeException('inconsistent CSV header across branches');
+                }
+
+                foreach ($lines as $line) {
+                    if ($line === '') {
+                        continue;
+                    }
+                    yield rtrim($line, "\r\n");
+                }
             }
         }
     }

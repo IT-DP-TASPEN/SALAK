@@ -28,7 +28,7 @@ class SendDailyReport extends Command
      */
     public function handle()
     {
-        $asOf = Carbon::yesterday()->format('Y-m-d');
+        $asOf = Carbon::today()->format('Y-m-d');
         $kas = BranchOffice::konsolidasiSaldoKas($asOf);
         $tab = array_sum(BranchOffice::saldoNeraca2(['112'], null, $asOf));
         $dep = array_sum(BranchOffice::saldoNeraca2(['113'], null, $asOf));
