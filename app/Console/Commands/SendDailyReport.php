@@ -43,25 +43,33 @@ class SendDailyReport extends Command
         $aba = array_sum(BranchOffice::saldoNeraca2(['110'], null, $asOf));
         $asset = array_sum(BranchOffice::saldoNeraca2(['1'], null, $asOf));
         $npl = BranchOffice::konsolidasiNPL($asOf);
+        $nbat = array_sum(BranchOffice::saldoNeraca2(['323'], null, $asOf));
 
-        $msg = "Daily Report as of {$asOf}:\n";
-        $msg .= "Kas: " . self::formatAmount($kas) . "\n";
-        $msg .= "Tabungan: " . self::formatAmount($tab) . "\n";
-        $msg .= "Deposito: " . self::formatAmount($dep) . "\n";
-        $msg .= "Kredit: " . self::formatAmount($kre) . "\n";
+        $msg = "*YTH*\n";
+        $msg .= "PAK OKA\n";
+        $msg .= "PAK ANDI\n";
+        $msg .= "PAK MASKUM\n\n";
+        $msg .= "Selamat Pagi Pak berikut kami sampaikan posisi Neraca\n";
+        $msg .= "*Realisasi Target Konsol per {$asOf}*:\n";
+        $msg .= "*Kas*: " . self::formatAmount($kas) . "\n";
+        $msg .= "*Tabungan*: " . self::formatAmount($tab) . "\n";
+        $msg .= "*Deposito*: " . self::formatAmount($dep) . "\n";
+        $msg .= "*Kredit*: " . self::formatAmount($kre) . "\n";
         foreach ($krePerKolek as $kolek => $amount) {
             $msg .= "  - " . self::mapKolekNumberToLetter($kolek) . ": " . self::formatAmount($amount) . "\n";
         }
-        $msg .= "ABA: " . self::formatAmount($aba) . "\n";
-        $msg .= "Total Asset: " . self::formatAmount($asset) . "\n";
-        $msg .= "NPL: " . sprintf("%.2f%%", $npl) . "\n";
+        $msg .= "*ABA*: " . self::formatAmount($aba) . "\n";
+        $msg .= "*Total Asset*: " . self::formatAmount($asset) . "\n";
+        $msg .= "*NPAT*: " . self::formatAmount($nbat) . "\n";
+        $msg .= "*NPL*: " . sprintf("%.2f%%", $npl) . "\n\n";
+        $msg .= "Terima kasih Pak.\n";
 
         print_r($msg);
     }
 
     private static function formatAmount($amount): string
     {
-        return "Rp. " . number_format($amount, 2, '.', ',');
+        return "Rp. " . number_format($amount, 2, ',', '.');
     }
 
     private static function mapKolekNumberToLetter($amount): string
