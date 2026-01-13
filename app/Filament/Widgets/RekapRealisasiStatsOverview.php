@@ -47,7 +47,9 @@ class RekapRealisasiStatsOverview extends BaseWidget
         $asset = array_sum(BranchOffice::saldoNeraca2(['1'], $branch, $asOf));
         $npat = array_sum(BranchOffice::saldoNeraca2(['323'], $branch, $asOf));
         $npl = BranchOffice::konsolidasiNPL($asOf, $branch);
+        $par = BranchOffice::konsolidasiPAR($asOf, $branch);
         $modalInti = BranchOffice::konsolidasiModalInti($asOf, $branch);
+        $modalPelengkap = BranchOffice::konsolidasiModalPelengkap($asOf, $branch);
 
         return [
             Stat::make('Kas', $this->formatAmount($kas))
@@ -74,7 +76,13 @@ class RekapRealisasiStatsOverview extends BaseWidget
             Stat::make('NPL', number_format($npl, 2, ',', '.') . '%')
                 ->icon('heroicon-o-exclamation-triangle')
                 ->color($this->nplColor($npl)),
+            Stat::make('PAR', number_format($par, 2, ',', '.') . '%')
+                ->icon('heroicon-o-exclamation-circle')
+                ->color('danger'),
             Stat::make('Modal Inti', $this->formatAmount($modalInti))
+                ->icon('heroicon-o-cube-transparent')
+                ->color('primary'),
+            Stat::make('Modal Pelengkap', $this->formatAmount($modalPelengkap))
                 ->icon('heroicon-o-cube-transparent')
                 ->color('primary'),
         ];

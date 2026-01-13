@@ -42,6 +42,20 @@ class BranchOffice extends BaseModel
         return $this->hasMany(LoanOutstanding::class, 'loan_branch_office', 'branch_code_fincloud');
     }
 
+    public static function konsolidasiPAR(?string $tanggal = null, ?string $branch = null): float
+    {
+        $par = LoanOutstanding::query()
+            ->selectRaw(
+                'SUM(CASE WHEN loan_days_past_due > 1 AND loan_days_past_due <= 90 THEN loan_outstanding END) * 1.0
+                / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as par_percentage'
+            )
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->value('par_percentage');
+
+        return $par ?? 0.0;
+    }
+
     public function npl(?string $tanggal = null): float
     {
         return static::konsolidasiNPL($tanggal, $this->branch_code_fincloud);
