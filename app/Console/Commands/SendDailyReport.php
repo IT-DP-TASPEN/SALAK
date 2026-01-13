@@ -43,6 +43,7 @@ class SendDailyReport extends Command
         $aba = array_sum(BranchOffice::saldoNeraca2(['110'], null, $asOf));
         $asset = array_sum(BranchOffice::saldoNeraca2(['1'], null, $asOf));
         $npl = BranchOffice::konsolidasiNPL($asOf);
+        $par = BranchOffice::konsolidasiPAR($asOf);
         $nbat = array_sum(BranchOffice::saldoNeraca2(['323'], null, $asOf));
 
         $msg = "*YTH*\n";
@@ -61,7 +62,8 @@ class SendDailyReport extends Command
         $msg .= "*ABA*: " . self::formatAmount($aba) . "\n";
         $msg .= "*Total Asset*: " . self::formatAmount($asset) . "\n";
         $msg .= "*NPAT*: " . self::formatAmount($nbat) . "\n";
-        $msg .= "*NPL*: " . sprintf("%.2f%%", $npl) . "\n\n";
+        $msg .= "*NPL*: " . sprintf("%.2f%%", $npl) . "\n";
+        $msg .= "*PAR*: " . sprintf("%.2f%%", $par) . "\n\n";
         $msg .= "Terima kasih Pak.\n";
 
         print_r($msg);
