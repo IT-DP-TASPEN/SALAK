@@ -189,7 +189,7 @@ class BranchOffice extends BaseModel
             $sumPerPrefix('112') + // Tabungan
             $sumPerPrefix('113'); // Deposito
 
-        return $ppkaUmum + max(0.0, $abaTotal * 0.05);
+        return $ppkaUmum + max(0.0, $abaTotal * 0.005);
     }
 
     public static function konsolidasiATMR(?string $tanggal = null, ?string $branch = null): float
