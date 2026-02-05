@@ -6,6 +6,7 @@ use App\Models\BranchOffice;
 use App\Models\LoanOutstanding;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
@@ -80,7 +81,8 @@ class SimulasiTks extends Page implements HasForms
     public function mount(): void
     {
         $defaultRatio = array_key_first($this->selectedRatio);
-        $defaultComponents = $this->defaultComponentsForRatio($defaultRatio);
+        $defaultTanggal = Carbon::today()->toDateString();
+        $defaultComponents = $this->defaultComponentsForRatio($defaultRatio, $defaultTanggal);
         $this->selectedRatio[$defaultRatio] = array_replace(
             $this->selectedRatio[$defaultRatio],
             $defaultComponents
@@ -88,6 +90,7 @@ class SimulasiTks extends Page implements HasForms
 
         $this->form->fill([
             'ratio' => $defaultRatio,
+            'tanggal' => $defaultTanggal,
             'components' => $defaultComponents,
         ]);
 
@@ -97,6 +100,7 @@ class SimulasiTks extends Page implements HasForms
     public function form(Form $form): Form
     {
         $defaultRatio = array_key_first($this->selectedRatio);
+        $defaultTanggal = Carbon::today()->toDateString();
         $ratioOptions = array_combine(
             array_keys($this->selectedRatio),
             array_keys($this->selectedRatio)
@@ -107,19 +111,36 @@ class SimulasiTks extends Page implements HasForms
             ->schema([
                 Section::make('Simulasi TKS')
                     ->schema([
+                        DatePicker::make('tanggal')
+                            ->label('Tanggal')
+                            ->default($defaultTanggal)
+                            ->maxDate(Carbon::today())
+                            ->reactive()
+                            ->afterStateUpdated(function ($state, Get $get, callable $set) use ($defaultRatio) {
+                                $ratio = $get('ratio') ?: $defaultRatio;
+                                if (!$ratio || !isset($this->selectedRatio[$ratio])) {
+                                    $set('components', []);
+                                    $this->simulation = null;
+                                    return;
+                                }
+
+                                $defaults = $this->defaultComponentsForRatio($ratio, $state);
+                                $set('components', $defaults);
+                                $this->simulation = $this->calculateSimulation($ratio, $defaults);
+                            }),
                         Select::make('ratio')
                             ->label('Pilih Rasio')
                             ->options($ratioOptions)
                             ->default($defaultRatio)
                             ->reactive()
-                            ->afterStateUpdated(function ($state, callable $set) {
+                            ->afterStateUpdated(function ($state, Get $get, callable $set) {
                                 if (!$state || !isset($this->selectedRatio[$state])) {
                                     $set('components', []);
                                     $this->simulation = null;
                                     return;
                                 }
 
-                                $defaults = $this->defaultComponentsForRatio($state);
+                                $defaults = $this->defaultComponentsForRatio($state, $get('tanggal'));
                                 // $this->selectedRatio[$state] = array_replace(
                                 //     $this->selectedRatio[$state],
                                 //     $defaults
@@ -518,14 +539,14 @@ class SimulasiTks extends Page implements HasForms
         return is_numeric($normalized) ? (float) $normalized : 0.0;
     }
 
-    private function defaultComponentsForRatio(string $ratio): array
+    private function defaultComponentsForRatio(string $ratio, ?string $tanggal = null): array
     {
         $defaults = $this->selectedRatio[$ratio] ?? [];
         if ($defaults === []) {
             return [];
         }
 
-        $asOf = Carbon::today();
+        $asOf = $this->resolveAsOf($tanggal);
         $tanggal = $asOf->toDateString();
         $branch = $this->getBranchCode();
 
@@ -553,6 +574,19 @@ class SimulasiTks extends Page implements HasForms
         };
 
         return array_replace($defaults, $computed);
+    }
+
+    private function resolveAsOf(?string $tanggal): Carbon
+    {
+        if (!$tanggal) {
+            return Carbon::today();
+        }
+
+        try {
+            return Carbon::parse($tanggal);
+        } catch (\Throwable) {
+            return Carbon::today();
+        }
     }
 
     private function getBranchCode(): ?string
