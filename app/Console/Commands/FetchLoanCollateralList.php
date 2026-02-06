@@ -69,6 +69,7 @@ class FetchLoanCollateralList extends Command
 
                 $data = array_combine($header, $columns);
                 $data = array_map(fn($value) => $value ? trim($value) : null, $data);
+                $data['fetch_date'] = $date->format('Y-m-d');
                 $data['credit_limit'] = static::parseCurrency($data['credit_limit']);
                 $data['loan_principal'] = static::parseCurrency($data['loan_principal']);
                 $data['outstanding'] = static::parseCurrency($data['outstanding']);

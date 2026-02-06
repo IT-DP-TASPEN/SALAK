@@ -252,6 +252,7 @@ class BranchOffice extends BaseModel
         // Catatan: gue ambil daftar account dari collateral, tapi exposure-nya tetep dari LoanOutstanding (snapshot tanggal yg sama),
         // biar gak ke-dobel gara-gara collateral multi-row / outstanding collateral beda definisi.
         $landAccounts = LoanCollateralList::query()
+            ->where('fetch_date', $tanggal ?? Carbon::today()->toDateString())
             ->whereNotIn('loan_acc_no', $excluded->unique()->values()->all())
             ->where(function ($q) {
                 $q->where('collateral_type', 'like', '%land%')
@@ -272,15 +273,17 @@ class BranchOffice extends BaseModel
         // ========== 4) Golongan 874 (50%) ==========
         $candidates874 = (clone $loanBase)
             ->whereNotIn('loan_account', $excluded->unique()->values()->all())
-            ->where(function ($q) {
+            ->where(function ($q) use ($tanggal) {
                 $q->whereHas('msoLoanAtmr', function ($q) {
                     $q->where('loan_golongan_debitur', '874')
                         ->whereNotIn('loan_jenis_usaha', ['1', '2']); // bukan UMK
                 })
-                    ->orWhere(function ($q) {
+                    ->orWhere(function ($q) use ($tanggal) {
                         $q->whereDoesntHave('msoLoanAtmr')
-                            ->whereHas('cbrCustomer', function ($q) {
-                                $q->where('owner_group', '874')
+                            ->whereHas('cbrCustomer', function ($q) use ($tanggal) {
+                                $q
+                                    ->where('fetch_date', $tanggal ?? Carbon::today()->toDateString())
+                                    ->where('owner_group', '874')
                                     ->whereNotIn('debtor_group', ['UK', 'UM']); // bukan UMK
                             });
                     });
@@ -310,15 +313,17 @@ class BranchOffice extends BaseModel
 
         $umkLoans = (clone $loanBase)
             ->whereNotIn('loan_account', $excluded->unique()->values()->all())
-            ->where(function ($q) {
+            ->where(function ($q) use ($tanggal) {
                 $q->doesntHave('cbrCustomer')
                     ->whereHas('msoLoanAtmr', function ($q) {
                         $q->whereIn('loan_jenis_usaha', ['1', '2']) // Mikro & Kecil
                             ->whereNotIn('loan_golongan_debitur', ['874', '875']);
-                    })->orWhere(function ($q) {
+                    })->orWhere(function ($q) use ($tanggal) {
                         $q->doesntHave('msoLoanAtmr')
-                            ->whereHas('cbrCustomer', function ($q) {
-                                $q->whereIn('debtor_group', ['UK', 'UM'])
+                            ->whereHas('cbrCustomer', function ($q) use ($tanggal) {
+                                $q
+                                    ->where('fetch_date', $tanggal ?? Carbon::today()->toDateString())
+                                    ->whereIn('debtor_group', ['UK', 'UM'])
                                     ->whereNotIn('owner_group', ['874', '875']);
                             });
                     });

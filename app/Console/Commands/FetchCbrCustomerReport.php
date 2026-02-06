@@ -67,6 +67,7 @@ class FetchCbrCustomerReport extends Command
                 }
 
                 $data = array_combine($header, $columns);
+                $data['fetch_date'] = $date->format('Y-m-d');
 
                 $batch[] = array_map(fn($value) => $value ? trim($value) : null, $data);
                 if (count($batch) >= $batchSize) {
