@@ -63,7 +63,7 @@ class FetchBalanceSheetReport extends Command
                     return $res;
                 }, $lines);
 
-                foreach (array_chunk($records, 100) as $chunk) {
+                foreach (array_chunk($records, 200) as $chunk) {
                     SaldoNeraca::upsert(
                         $chunk,
                         ['cabang', 'tanggal', 'noakun'],
@@ -76,7 +76,7 @@ class FetchBalanceSheetReport extends Command
             return Command::FAILURE;
         }
 
-        $this->info('Successfully fetched balance sheet report.');
+        $this->info(PHP_EOL . 'Successfully fetched balance sheet report.');
         return Command::SUCCESS;
     }
 
