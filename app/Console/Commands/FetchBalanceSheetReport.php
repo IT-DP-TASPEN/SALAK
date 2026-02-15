@@ -99,9 +99,22 @@ class FetchBalanceSheetReport extends Command
         if (empty($value)) {
             return 0.0;
         }
+        $sign = 1;
+        $negativeIndicators = [
+            '(' => ')',
+            '<' => '>',
+            '-' => '',
+        ];
+        foreach ($negativeIndicators as $open => $close) {
+            if (str_starts_with($value, $open) && str_ends_with($value, $close)) {
+                $sign = -1;
+                $value = str_replace([$open, $close], '', $value);
+                break;
+            }
+        }
         $value = str_replace('<', '', $value);
         $value = str_replace('>', '', $value);
         $value = str_replace(',', '', $value);
-        return (float) $value;
+        return (float) $value * $sign;
     }
 }
