@@ -683,21 +683,6 @@ class BranchOffice extends BaseModel
                 static::saldoNeraca2(
                     [
                         '323', // Current Year Retained Earning
-                        // '558',
-                    ],
-                    $branch,
-                    $asOf->toDateString()
-                )
-            );
-
-            // TODO: temp workaround, coa kepala 3 masih disimpan sebagai nilai positif.
-            if ($labaBeforeTax < 0.0) {
-                $labaBeforeTax *= -1.0;
-            }
-
-            $labaBeforeTax += array_sum(
-                static::saldoNeraca2(
-                    [
                         '558', // Income Tax
                     ],
                     $branch,
@@ -851,14 +836,20 @@ class BranchOffice extends BaseModel
         }
 
         $rows = SaldoNeraca::query()
-            ->select(
-                'noakun as perk_kode',
-                DB::raw('SUM(COALESCE(saldoakhir, 0)) as saldo'),
-            )
+            ->selectRaw('noakun as perk_kode')
+            ->selectRaw("
+            SUM(
+                COALESCE(saldoakhir, 0) *
+                CASE
+                    WHEN noakun IN ('1272005') OR LEFT(noakun, 1) IN ('2','3','4','6') THEN -1
+                    ELSE 1
+                END
+            ) as saldo
+        ")
             ->when($branchCode, fn($q) => $q->where('cabang', $branchCode))
             ->whereIn('noakun', $kodePerkiraanList)
             ->where('tanggal', $asOf->toDateString())
-            ->groupBy('perk_kode')
+            ->groupBy('noakun')              // lebih aman daripada groupBy alias
             ->pluck('saldo', 'perk_kode');
 
         return $rows->toArray();
