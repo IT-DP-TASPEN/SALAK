@@ -683,7 +683,22 @@ class BranchOffice extends BaseModel
                 static::saldoNeraca2(
                     [
                         '323', // Current Year Retained Earning
-                        '312', // Estimated Income Tax
+                        // '558',
+                    ],
+                    $branch,
+                    $asOf->toDateString()
+                )
+            );
+
+            // TODO: temp workaround, coa kepala 3 masih disimpan sebagai nilai positif.
+            if ($labaBeforeTax < 0.0) {
+                $labaBeforeTax *= -1.0;
+            }
+
+            $labaBeforeTax += array_sum(
+                static::saldoNeraca2(
+                    [
+                        '558', // Income Tax
                     ],
                     $branch,
                     $asOf->toDateString()
