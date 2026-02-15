@@ -841,9 +841,9 @@ class BranchOffice extends BaseModel
             SUM(
                 COALESCE(saldoakhir, 0) *
                 CASE
-                    WHEN LEFT(noakun, 1) IN ('2','3','4','6') THEN -1
-                    WHEN noakun IN ('1272005') THEN -1
-                    ELSE 1
+                    WHEN LEFT(noakun, 1) IN ('2','3','4','6') THEN 1
+                    WHEN noakun IN ('1272005') THEN 1
+                    ELSE -1
                 END
             ) as saldo
         ")
