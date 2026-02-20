@@ -430,31 +430,6 @@ class BranchOffice extends BaseModel
         return $ppka;
     }
 
-    public static function konsolidasiPPKAKhusus(?string $tanggal = null, ?string $branch = null): float
-    {
-        $weights = [
-            // PPKA Khusus
-            3 => 0.10,  // 10%
-            4 => 0.50,  // 50%
-            5 => 1.00,  // 100%
-        ];
-
-        $totals = LoanOutstanding::query()
-            ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
-            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
-            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
-            ->whereIn('loan_bi_collectability', array_keys($weights))
-            ->groupBy('loan_bi_collectability')
-            ->pluck('total_outstanding', 'loan_bi_collectability');
-
-        $ppka = 0.0;
-        foreach ($totals as $collectability => $totalOutstanding) {
-            $ppka += (float) $totalOutstanding * $weights[$collectability];
-        }
-
-        return $ppka;
-    }
-
     public function pendapatanOperasional(?string $tanggal = null): float
     {
         return static::konsolidasiPendapatanOperasional($tanggal, $this->branch_code_fincloud);
