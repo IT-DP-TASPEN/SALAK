@@ -82,13 +82,14 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiNPLNett(?string $tanggal = null, ?string $branch = null): float
     {
-        $ckpn = array_sum(BranchOffice::saldoNeraca2(['1272005'], $branch, $tanggal));
+        // $ckpn = array_sum(BranchOffice::saldoNeraca2(['1272005'], $branch, $tanggal));
+        $ppka = static::konsolidasiPPKAKhusus($tanggal, $branch);
 
         $npl = LoanOutstanding::query()
             ->selectRaw(
                 '(SUM(CASE WHEN loan_bi_collectability IN (3, 4, 5) THEN loan_outstanding END) - ?) * 1.0
                 / NULLIF(SUM(loan_outstanding), 0) * 1.0 * 100 as npl_percentage',
-                [$ckpn]
+                [$ppka]
             )
             ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
             ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
@@ -382,6 +383,56 @@ class BranchOffice extends BaseModel
             // PPKA Umum
             1 => 0.005, // 0.5%
             2 => 0.03,  // 3%
+            // PPKA Khusus
+            3 => 0.10,  // 10%
+            4 => 0.50,  // 50%
+            5 => 1.00,  // 100%
+        ];
+
+        $totals = LoanOutstanding::query()
+            ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->whereIn('loan_bi_collectability', array_keys($weights))
+            ->groupBy('loan_bi_collectability')
+            ->pluck('total_outstanding', 'loan_bi_collectability');
+
+        $ppka = 0.0;
+        foreach ($totals as $collectability => $totalOutstanding) {
+            $ppka += (float) $totalOutstanding * $weights[$collectability];
+        }
+
+        return $ppka;
+    }
+
+    public static function konsolidasiPPKAKhusus(?string $tanggal = null, ?string $branch = null): float
+    {
+        $weights = [
+            // PPKA Khusus
+            3 => 0.10,  // 10%
+            4 => 0.50,  // 50%
+            5 => 1.00,  // 100%
+        ];
+
+        $totals = LoanOutstanding::query()
+            ->select('loan_bi_collectability', DB::raw('SUM(loan_outstanding) as total_outstanding'))
+            ->when($branch, fn($q) => $q->where('loan_branch_office', $branch))
+            ->where('loan_date_params', $tanggal ?? Carbon::today()->toDateString())
+            ->whereIn('loan_bi_collectability', array_keys($weights))
+            ->groupBy('loan_bi_collectability')
+            ->pluck('total_outstanding', 'loan_bi_collectability');
+
+        $ppka = 0.0;
+        foreach ($totals as $collectability => $totalOutstanding) {
+            $ppka += (float) $totalOutstanding * $weights[$collectability];
+        }
+
+        return $ppka;
+    }
+
+    public static function konsolidasiPPKAKhusus(?string $tanggal = null, ?string $branch = null): float
+    {
+        $weights = [
             // PPKA Khusus
             3 => 0.10,  // 10%
             4 => 0.50,  // 50%
