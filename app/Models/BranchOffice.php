@@ -787,7 +787,7 @@ class BranchOffice extends BaseModel
     {
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
         $tanggal = $asOf->toDateString();
-        $totalBakiDebet = array_sum(static::saldoNeraca2(['121'], $branch, $tanggal));
+        $totalBakiDebet = array_sum(static::saldoNeraca2(['121', '122'], $branch, $tanggal));
         if ($simulated) {
             $proyeksiLendings = ProyeksiLending::query()
                 ->when($branch, fn($q) => $q->whereHas('branchOffice', fn($q2) => $q2->where('branch_code_fincloud', $branch)))
