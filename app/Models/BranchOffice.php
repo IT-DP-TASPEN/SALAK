@@ -47,7 +47,7 @@ class BranchOffice extends BaseModel
         $modalInti = static::konsolidasiModalInti($tanggal, $branch);
         $ppap = static::konsolidasiPPKAKhusus($tanggal, $branch);
 
-        return $modalInti > 0 ? ($ppap / $modalInti) * 100 : 0;
+        return $ppap > 0 ? ($modalInti / $ppap) * 100 : 0.0;
     }
 
     public static function konsolidasiPAR(?string $tanggal = null, ?string $branch = null): float
