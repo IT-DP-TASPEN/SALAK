@@ -51,6 +51,8 @@ class RekapRealisasiStatsOverview extends BaseWidget
         $modalInti = BranchOffice::konsolidasiModalInti($asOf, $branch);
         $modalPelengkap = BranchOffice::konsolidasiModalPelengkap($asOf, $branch);
         $atmr = BranchOffice::konsolidasiATMR($asOf, $branch);
+        $assetLiquid = BranchOffice::konsolidasiAssetLiquid($asOf, branch: $branch);
+        $kewajibanLancar = BranchOffice::konsolidasiKewajibanLancar($asOf, $branch);
 
         return [
             Stat::make('Kas', $this->formatAmount($kas))
@@ -61,6 +63,12 @@ class RekapRealisasiStatsOverview extends BaseWidget
                 ->color('primary'),
             Stat::make('Deposito', $this->formatAmount($dep))
                 ->icon('heroicon-o-lock-closed')
+                ->color('primary'),
+            Stat::make('Asset Liquid', $this->formatAmount($assetLiquid))
+                ->icon('heroicon-o-cubes')
+                ->color('primary'),
+            Stat::make('Kewajiban Lancar', $this->formatAmount($kewajibanLancar))
+                ->icon('heroicon-o-document-duplicate')
                 ->color('primary'),
             Stat::make('Kredit', $this->formatAmount($kredit))
                 ->icon('heroicon-o-currency-dollar')
