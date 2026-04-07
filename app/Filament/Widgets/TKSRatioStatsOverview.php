@@ -53,10 +53,33 @@ class TKSRatioStatsOverview extends BaseWidget
     {
         $miapb = BranchOffice::konsolidasiMIAPB($tanggal, $branch);
 
+        $kshtMiapb = match (true) {
+            $miapb >= 200 => [
+                'color' => 'success',
+                'description' => 'Sangat sehat',
+            ],
+            $miapb >= 180 && $miapb < 200 => [
+                'color' => 'success',
+                'description' => 'Sehat',
+            ],
+            $miapb >= 150 && $miapb < 180 => [
+                'color' => 'warning',
+                'description' => 'Cukup sehat',
+            ],
+            $miapb >= 120 && $miapb < 150 => [
+                'color' => 'danger',
+                'description' => 'Tidak sehat',
+            ],
+            default => [
+                'color' => 'danger',
+                'description' => 'Sangat tidak sehat',
+            ],
+        };
+
         return Stat::make('MIAPB', number_format($miapb, 2, ',', '.') . '%')
-            ->icon('heroicon-o-chart-bar')
-            ->color('primary')
-            ->description('Rasio MIAPB');
+            ->color($kshtMiapb['color'])
+            ->description($this->descriptionWithOjk($kshtMiapb['description'], '>= 200%'))
+            ->icon('heroicon-o-chart-bar');
     }
 
     private function descriptionWithOjk(?string $status, string $ojkRequirement): Htmlable
