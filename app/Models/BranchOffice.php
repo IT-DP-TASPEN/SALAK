@@ -42,6 +42,14 @@ class BranchOffice extends BaseModel
         return $this->hasMany(LoanOutstanding::class, 'loan_branch_office', 'branch_code_fincloud');
     }
 
+    public static function konsolidasiMIAPB(?string $tanggal = null, ?string $branch = null): float
+    {
+        $modalInti = static::konsolidasiModalInti($tanggal, $branch);
+        $ppap = static::konsolidasiPPKAKhusus($tanggal, $branch);
+
+        return $modalInti > 0 ? ($ppap / $modalInti) * 100 : 0;
+    }
+
     public static function konsolidasiPAR(?string $tanggal = null, ?string $branch = null): float
     {
         $par = LoanOutstanding::query()

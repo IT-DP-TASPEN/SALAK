@@ -48,6 +48,16 @@ class TKSRatioStatsOverview extends BaseWidget
         ];
     }
 
+    private function miapb(?string $tanggal = null, ?string $branch = null): Stat
+    {
+        $miapb = BranchOffice::konsolidasiMIAPB($tanggal, $branch);
+
+        return Stat::make('MIAPB', number_format($miapb, 2, ',', '.') . '%')
+            ->icon('heroicon-o-chart-bar')
+            ->color('primary')
+            ->description('Rasio MIAPB');
+    }
+
     private function descriptionWithOjk(?string $status, string $ojkRequirement): Htmlable
     {
         $statusLine = $status ? '<div>' . e($status) . '</div>' : '';
