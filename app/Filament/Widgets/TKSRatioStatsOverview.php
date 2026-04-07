@@ -45,6 +45,7 @@ class TKSRatioStatsOverview extends BaseWidget
             $this->nim($targetDate, $branch),
             $this->ldr($targetDate, branch: $branch),
             $this->cashRatio($targetDate, branch: $branch),
+            $this->miapb($targetDate, $branch),
         ];
     }
 
