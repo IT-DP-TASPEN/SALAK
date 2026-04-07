@@ -65,7 +65,7 @@ class RekapRealisasiStatsOverview extends BaseWidget
                 ->icon('heroicon-o-lock-closed')
                 ->color('primary'),
             Stat::make('Asset Liquid', $this->formatAmount($assetLiquid))
-                ->icon('heroicon-o-cubes')
+                ->icon('heroicon-o-cube')
                 ->color('primary'),
             Stat::make('Kewajiban Lancar', $this->formatAmount($kewajibanLancar))
                 ->icon('heroicon-o-document-duplicate')
