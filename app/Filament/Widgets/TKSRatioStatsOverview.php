@@ -2,7 +2,7 @@
 
 namespace App\Filament\Widgets;
 
-use App\Models\BranchOffice;
+use App\Services\TksRatioSnapshotService;
 use Carbon\Carbon;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
@@ -34,25 +34,32 @@ class TKSRatioStatsOverview extends BaseWidget
     {
         $targetDate = $this->selectedDate ?? Carbon::today()->toDateString();
         $branch = $this->branchCode;
+        $snapshot = app(TksRatioSnapshotService::class)->getSnapshot($targetDate, $branch);
 
         return [
-            $this->kpmm($targetDate, $branch),
-            $this->ckpnPerPPKA($targetDate, $branch),
-            $this->nplNett($targetDate, $branch),
-            $this->npl($targetDate, $branch),
-            $this->roa($targetDate, $branch),
-            $this->bopo($targetDate, $branch),
-            $this->nim($targetDate, $branch),
-            $this->ldr($targetDate, branch: $branch),
-            $this->cashRatio($targetDate, branch: $branch),
-            $this->miapb($targetDate, $branch),
+            $this->kpmm($this->metric($snapshot, 'kpmm')),
+            $this->ckpnPerPPKA($this->metric($snapshot, 'ckpn_per_ppka')),
+            $this->nplNett($this->metric($snapshot, 'npl_nett')),
+            $this->npl($this->metric($snapshot, 'npl')),
+            $this->roa($this->metric($snapshot, 'roa')),
+            $this->bopo($this->metric($snapshot, 'bopo')),
+            $this->nim($this->metric($snapshot, 'nim')),
+            $this->ldr($this->metric($snapshot, 'ldr'), $this->metric($snapshot, 'npl')),
+            $this->cashRatio($this->metric($snapshot, 'cash_ratio')),
+            $this->miapb($this->metric($snapshot, 'miapb')),
         ];
     }
 
-    private function miapb(?string $tanggal = null, ?string $branch = null): Stat
+    /**
+     * @param  array<string, float>  $snapshot
+     */
+    private function metric(array $snapshot, string $key): float
     {
-        $miapb = BranchOffice::konsolidasiMIAPB($tanggal, $branch);
+        return (float) ($snapshot[$key] ?? 0.0);
+    }
 
+    private function miapb(float $miapb): Stat
+    {
         $kshtMiapb = match (true) {
             $miapb >= 200 => [
                 'color' => 'success',
@@ -91,10 +98,8 @@ class TKSRatioStatsOverview extends BaseWidget
         );
     }
 
-    private function kpmm(?string $tanggal = null, ?string $branch = null): Stat
+    private function kpmm(float $kpmm): Stat
     {
-        $kpmm = BranchOffice::konsolidasiKPMM($tanggal, $branch);
-
         $kshtKpmm = match (true) {
             $kpmm >= 15.0 => [
                 'color' => 'success',
@@ -124,10 +129,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-shield-check');
     }
 
-    private function ckpnPerPPKA(?string $tanggal = null, ?string $branch = null): Stat
+    private function ckpnPerPPKA(float $ckpnPerPPKA): Stat
     {
-        $ckpnPerPPKA = BranchOffice::konsolidasiCkpnPerPPKA($tanggal, $branch);
-
         $kshtCkpnPerPPKA = match (true) {
             $ckpnPerPPKA < 50 => [
                 'color' => 'success',
@@ -150,10 +153,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-shield-exclamation');
     }
 
-    private function roa(?string $tanggal = null, ?string $branch = null): Stat
+    private function roa(float $roa): Stat
     {
-        $roa = BranchOffice::konsolidasiROA($tanggal, $branch);
-
         $kshtRoa = match (true) {
             $roa >= 2.0 => [
                 'color' => 'success',
@@ -183,10 +184,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-building-library');
     }
 
-    private function nim(?string $tanggal = null, ?string $branch = null): Stat
+    private function nim(float $nim): Stat
     {
-        $nim = BranchOffice::konsolidasiNim($tanggal, $branch);
-
         $kshtNim = match (true) {
             $nim >= 10 => [
                 'color' => 'success',
@@ -216,10 +215,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-percent-badge');
     }
 
-    private function cashRatio(?string $tanggal = null, bool $simulated = false, bool $efektif = true, ?string $branch = null): Stat
+    private function cashRatio(float $cashRatio): Stat
     {
-        $cashRatio = BranchOffice::konsolidasiCashRatio($tanggal, $simulated, $efektif, $branch);
-
         $kshtCashRatio = match (true) {
             $cashRatio >= 4.05 => [
                 'color' => 'success',
@@ -249,10 +246,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-currency-dollar');
     }
 
-    private function npl(?string $tanggal = null, ?string $branch = null): Stat
+    private function npl(float $nplPercentage): Stat
     {
-        $nplPercentage = BranchOffice::konsolidasiNPL($tanggal, $branch);
-
         $kshtNpl = match (true) {
             $nplPercentage <= 5 => [
                 'level' => 'Tidak signifikan',
@@ -278,10 +273,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-exclamation-triangle');
     }
 
-    private function nplNett(?string $tanggal = null, ?string $branch = null): Stat
+    private function nplNett(float $nplNettPercentage): Stat
     {
-        $nplNettPercentage = BranchOffice::konsolidasiNPLNett($tanggal, $branch);
-
         $kshtNplNett = match (true) {
             $nplNettPercentage <= 2 => [
                 'level' => 'Tidak signifikan',
@@ -307,10 +300,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-shield-check');
     }
 
-    private function bopo(?string $tanggal = null, ?string $branch = null): Stat
+    private function bopo(float $bopo): Stat
     {
-        $bopo = BranchOffice::konsolidasiBOPO($tanggal, $branch);
-
         $kshtBopo = match (true) {
             $bopo <= 85 => [
                 'color' => 'success',
@@ -340,11 +331,8 @@ class TKSRatioStatsOverview extends BaseWidget
             ->icon('heroicon-o-calculator');
     }
 
-    private function ldr(?string $tanggal = null, bool $simulated = false, ?string $branch = null): Stat
+    private function ldr(float $ldr, float $nplPercentage): Stat
     {
-        $nplPercentage = BranchOffice::konsolidasiNPL($tanggal, $branch);
-        $ldr = BranchOffice::konsolidasiLDR($tanggal, $simulated, $branch);
-
         $kshtLdr = match (true) {
             $ldr <= 90 => [
                 'color' => 'success',

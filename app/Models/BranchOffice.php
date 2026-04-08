@@ -187,9 +187,12 @@ class BranchOffice extends BaseModel
                 ->where('tanggal', $tanggal)
                 ->when($branch, fn($q) => $q->where('cabang', $branch))
                 ->where('noakun', 'like', $prefix . '%')
-                ->whereRaw('CHAR_LENGTH(noakun) = 7')
+                ->whereRaw('LENGTH(noakun) = 7')
                 ->where('saldoakhir', '>', 0)
-                ->selectRaw('SUM(saldoakhir - IF(saldoakhir >= ?, ?, 0)) AS total', [$threshold, $threshold])
+                ->selectRaw(
+                    'SUM(saldoakhir - CASE WHEN saldoakhir >= ? THEN ? ELSE 0 END) AS total',
+                    [$threshold, $threshold]
+                )
                 ->value('total') ?? 0;
         };
 
@@ -831,7 +834,6 @@ class BranchOffice extends BaseModel
 
         $giroTab = array_sum(static::saldoNeraca2(['111', '112'], $branch, $asOf));
         $kas = static::konsolidasiSaldoKas($asOf, $branch);
-
         $ret = $kas + $giroTab;
         if ($efektif) {
             if ($branch) {
@@ -876,7 +878,7 @@ class BranchOffice extends BaseModel
                 COALESCE(saldoakhir, 0) *
                 CASE
                     WHEN noakun IN ('1272005') THEN -1
-                    WHEN LEFT(noakun, 1) IN ('2','3','4','6') THEN -1
+                    WHEN SUBSTR(noakun, 1, 1) IN ('2','3','4','6') THEN -1
                     ELSE 1
                 END
             ) as saldo
