@@ -46,7 +46,7 @@ return [
                 ['pos' => '2201020000', 'description' => '-/- Biaya Transaksi Belum Diamortisasi', 'coas' => ['2352200', '2352201'], 'is_total' => false],
                 ['pos' => '2201030000', 'description' => '-/- Diskonto Belum Diamortisasi', 'coas' => [], 'is_total' => false],
                 ['pos' => '2202000000', 'description' => 'Dana Setoran Modal-Kewajiban', 'coas' => [], 'is_total' => false],
-                ['pos' => '2203000000', 'description' => 'Liabilitas Antarkantor', 'coas' => ['292'], 'is_total' => false],
+                ['pos' => '2203000000', 'description' => 'Liabilitas Antarkantor', 'coas' => [], 'is_total' => false],
                 ['pos' => '2299000000', 'description' => 'Liabilitas lainnya', 'coas' => ['209', '251', '252', '253', '291', '292'], 'is_total' => false],
                 ['pos' => '2000000000', 'description' => 'TOTAL LIABILITAS', 'coas' => [], 'is_total' => true],
             ],
