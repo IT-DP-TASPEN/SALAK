@@ -59,7 +59,7 @@ return [
                 ['pos' => '3102010000', 'description' => 'a. Agio', 'coas' => [], 'is_total' => false],
                 ['pos' => '3102020000', 'description' => 'b. Modal Sumbangan', 'coas' => [], 'is_total' => false],
                 ['pos' => '3102030000', 'description' => 'c. Dana Setoran Modal - Ekuitas', 'coas' => [], 'is_total' => false],
-                ['pos' => '3102990000', 'description' => 'd. Tambahan Modal Disetor Lainnya', 'coas' => ['303'], 'is_total' => false],
+                ['pos' => '3102990000', 'description' => 'd. Tambahan Modal Disetor Lainnya', 'coas' => [], 'is_total' => false],
                 ['pos' => '3103010000', 'description' => 'a. Keuntungan (Kerugian) dari Perubahan Nilai Aset Keuangan dalam Kelompok Tersedia untuk Dijual', 'coas' => [], 'is_total' => false],
                 ['pos' => '3103020000', 'description' => 'b. Keuntungan Revaluasi Aset Tetap', 'coas' => [], 'is_total' => false],
                 ['pos' => '3103990000', 'description' => 'c. Lainnya', 'coas' => [], 'is_total' => false],
