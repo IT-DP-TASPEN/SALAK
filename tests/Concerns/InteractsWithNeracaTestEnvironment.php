@@ -95,7 +95,7 @@ trait InteractsWithNeracaTestEnvironment
         return User::query()->create([
             'name' => $name,
             'username' => strtolower(str_replace(' ', '_', $name)),
-            'email' => strtolower(str_replace(' ', '.', $name)) . '@example.test',
+            'email' => strtolower(str_replace(' ', '.', $name)).'@example.test',
             'password' => 'password',
             'branch_office_id' => $branchOfficeId,
         ]);
@@ -104,6 +104,13 @@ trait InteractsWithNeracaTestEnvironment
     protected function grantNeracaPagePermission(User $user): void
     {
         $permission = Permission::findOrCreate('page_Neraca', 'web');
+        $user->givePermissionTo($permission);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    protected function grantLabaRugiPagePermission(User $user): void
+    {
+        $permission = Permission::findOrCreate('page_LabaRugi', 'web');
         $user->givePermissionTo($permission);
         app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
