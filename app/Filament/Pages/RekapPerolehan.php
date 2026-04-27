@@ -26,9 +26,17 @@ class RekapPerolehan extends Page implements HasTable
 
     public function table(Table $table): Table
     {
+        $user = auth()->user();
+
         return $table
             ->paginated(false)
-            ->query(BranchOffice::query())
+            ->query(
+                BranchOffice::query()
+                    ->when(($user?->isKantorPusatEmployee() ?? false),
+                        fn($query) => $query,
+                        fn($query) => $query->where('branch_code', $user->branchOffice?->branch_code)
+                    )
+            )
             ->columns([
                 TextColumn::make('branch_name')
                     ->label('Kantor Cabang'),
