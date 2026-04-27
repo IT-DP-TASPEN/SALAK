@@ -35,7 +35,17 @@ class TksRatioCacheTest extends TestCase
             'database.connections.mysql' => $sharedSqliteConfig,
             'database.connections.edapem' => $sharedSqliteConfig,
             'cache.default' => 'array',
+            'cache.stores.rekap_tks' => [
+                'driver' => 'database',
+                'connection' => 'sqlite',
+                'table' => 'rekap_tks_cache',
+                'lock_connection' => 'sqlite',
+                'lock_table' => 'rekap_tks_cache_locks',
+            ],
+            'neraca.tks_cache_store' => 'rekap_tks',
         ]);
+
+        Cache::forgetDriver(['array', 'rekap_tks']);
 
         DB::purge('sqlite');
         DB::purge('mysql');
@@ -117,8 +127,8 @@ class TksRatioCacheTest extends TestCase
         $this->assertTrue($service->hasCachedSnapshot($historicalDate, '002'));
         $this->assertFalse($service->hasCachedSnapshot('2026-01-06', null));
 
-        $allSnapshot = Cache::get($service->cacheKey($historicalDate, null));
-        $branchSnapshot = Cache::get($service->cacheKey($historicalDate, '001'));
+        $allSnapshot = $this->tksCache()->get($service->cacheKey($historicalDate, null));
+        $branchSnapshot = $this->tksCache()->get($service->cacheKey($historicalDate, '001'));
 
         $this->assertNotSame($service->cacheKey($historicalDate, null), $service->cacheKey($historicalDate, '001'));
         $this->assertNotSame($allSnapshot['ldr'], $branchSnapshot['ldr']);
@@ -137,22 +147,46 @@ class TksRatioCacheTest extends TestCase
             ->expectsOutputToContain('Warmed baru: 1')
             ->assertSuccessful();
 
-        $initialSnapshot = Cache::get($service->cacheKey($historicalDate, '001'));
+        $initialSnapshot = $this->tksCache()->get($service->cacheKey($historicalDate, '001'));
         $this->updateSavingsBalance($historicalDate, '001', 800);
 
         $this->artisan('cache:warm-rekap-tks --branch=001')
             ->expectsOutputToContain('Sudah tercache: 1')
             ->assertSuccessful();
 
-        $cachedWithoutRefresh = Cache::get($service->cacheKey($historicalDate, '001'));
+        $cachedWithoutRefresh = $this->tksCache()->get($service->cacheKey($historicalDate, '001'));
         $this->assertSame($initialSnapshot['ldr'], $cachedWithoutRefresh['ldr']);
 
         $this->artisan('cache:warm-rekap-tks --branch=001 --refresh')
             ->expectsOutputToContain('Refreshed: 1')
             ->assertSuccessful();
 
-        $refreshedSnapshot = Cache::get($service->cacheKey($historicalDate, '001'));
+        $refreshedSnapshot = $this->tksCache()->get($service->cacheKey($historicalDate, '001'));
         $this->assertNotSame($initialSnapshot['ldr'], $refreshedSnapshot['ldr']);
+    }
+
+    public function test_optimize_clear_keeps_tks_cache_while_clearing_default_cache(): void
+    {
+        $historicalDate = '2026-01-07';
+
+        $this->seedBranch('001', 'Cabang 1');
+        $this->seedRatioSourceData($historicalDate, '001', savings: 400, loanOutstanding: 600);
+
+        $service = app(TksRatioSnapshotService::class);
+        $cacheKey = $service->cacheKey($historicalDate, '001');
+
+        $this->assertNotNull($service->warmSnapshot($historicalDate, '001'));
+        Cache::put('regular-cache-key', 'will-be-cleared', 3600);
+
+        $this->assertTrue(Cache::has('regular-cache-key'));
+        $this->assertTrue($service->hasCachedSnapshot($historicalDate, '001'));
+
+        $this->artisan('optimize:clear')
+            ->assertSuccessful();
+
+        $this->assertFalse(Cache::has('regular-cache-key'));
+        $this->assertTrue($service->hasCachedSnapshot($historicalDate, '001'));
+        $this->assertIsArray($this->tksCache()->get($cacheKey));
     }
 
     public function test_command_exits_successfully_when_no_eligible_historical_dates_exist(): void
@@ -233,6 +267,23 @@ class TksRatioCacheTest extends TestCase
             $table->date('bulan_dapem')->nullable();
             $table->timestamps();
         });
+
+        Schema::create('rekap_tks_cache', function (Blueprint $table): void {
+            $table->string('key')->primary();
+            $table->mediumText('value');
+            $table->integer('expiration');
+        });
+
+        Schema::create('rekap_tks_cache_locks', function (Blueprint $table): void {
+            $table->string('key')->primary();
+            $table->string('owner');
+            $table->integer('expiration');
+        });
+    }
+
+    private function tksCache()
+    {
+        return Cache::store((string) config('neraca.tks_cache_store', 'rekap_tks'));
     }
 
     private function seedBranch(string $code, string $name): void

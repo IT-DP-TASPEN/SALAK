@@ -1,6 +1,8 @@
 <?php
 
 return [
+    'tks_cache_store' => env('REKAP_TKS_CACHE_STORE', 'rekap_tks'),
+
     'sections' => [
         'assets' => [
             'label' => 'Aset',

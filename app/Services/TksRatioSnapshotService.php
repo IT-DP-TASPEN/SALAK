@@ -25,26 +25,28 @@ class TksRatioSnapshotService
 
         $cacheKey = $this->cacheKey($asOf->toDateString(), $branch);
 
-        if (Cache::has($cacheKey)) {
+        $cache = $this->cache();
+
+        if ($cache->has($cacheKey)) {
             /** @var array<string, float> $cached */
-            $cached = Cache::get($cacheKey, []);
+            $cached = $cache->get($cacheKey, []);
 
             return $cached;
         }
 
         try {
             /** @var array<string, float> */
-            return Cache::lock($this->lockKey($asOf->toDateString(), $branch), 300)
-                ->block(10, function () use ($asOf, $branch, $cacheKey): array {
+            return $cache->lock($this->lockKey($asOf->toDateString(), $branch), 300)
+                ->block(10, function () use ($asOf, $branch, $cache, $cacheKey): array {
                     /** @var array<string, float> */
-                    return Cache::rememberForever(
+                    return $cache->rememberForever(
                         $cacheKey,
                         fn(): array => $this->buildSnapshot($asOf->toDateString(), $branch),
                     );
                 });
         } catch (LockTimeoutException) {
             /** @var array<string, float>|null $cached */
-            $cached = Cache::get($cacheKey);
+            $cached = $cache->get($cacheKey);
 
             return $cached ?? $this->buildSnapshot($asOf->toDateString(), $branch);
         }
@@ -63,33 +65,34 @@ class TksRatioSnapshotService
         }
 
         $cacheKey = $this->cacheKey($asOf->toDateString(), $branch);
+        $cache = $this->cache();
 
-        if (! $refresh && Cache::has($cacheKey)) {
+        if (! $refresh && $cache->has($cacheKey)) {
             /** @var array<string, float> $cached */
-            $cached = Cache::get($cacheKey, []);
+            $cached = $cache->get($cacheKey, []);
 
             return $cached;
         }
 
         try {
             /** @var array<string, float> */
-            return Cache::lock($this->lockKey($asOf->toDateString(), $branch), 300)
-                ->block(10, function () use ($asOf, $branch, $refresh, $cacheKey): array {
-                    if (! $refresh && Cache::has($cacheKey)) {
+            return $cache->lock($this->lockKey($asOf->toDateString(), $branch), 300)
+                ->block(10, function () use ($asOf, $branch, $cache, $refresh, $cacheKey): array {
+                    if (! $refresh && $cache->has($cacheKey)) {
                         /** @var array<string, float> $cached */
-                        $cached = Cache::get($cacheKey, []);
+                        $cached = $cache->get($cacheKey, []);
 
                         return $cached;
                     }
 
                     $snapshot = $this->buildSnapshot($asOf->toDateString(), $branch);
-                    Cache::forever($cacheKey, $snapshot);
+                    $cache->forever($cacheKey, $snapshot);
 
                     return $snapshot;
                 });
         } catch (LockTimeoutException) {
             /** @var array<string, float>|null $cached */
-            $cached = Cache::get($cacheKey);
+            $cached = $cache->get($cacheKey);
 
             return $cached;
         }
@@ -111,7 +114,7 @@ class TksRatioSnapshotService
 
     public function hasCachedSnapshot(string $date, ?string $branch = null): bool
     {
-        return Cache::has($this->cacheKey($date, $this->normalizeBranch($branch)));
+        return $this->cache()->has($this->cacheKey($date, $this->normalizeBranch($branch)));
     }
 
     public function cacheKey(string $date, ?string $branch = null): string
@@ -127,6 +130,11 @@ class TksRatioSnapshotService
     private function shouldBypassCache(Carbon $asOf, ?string $branch = null): bool
     {
         return $asOf->isToday() || ! $this->hasCoreSourceData($asOf->toDateString(), $branch);
+    }
+
+    private function cache()
+    {
+        return Cache::store((string) config('neraca.tks_cache_store', 'rekap_tks'));
     }
 
     private function normalizeDate(?string $date = null): Carbon

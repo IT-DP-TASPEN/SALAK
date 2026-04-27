@@ -46,6 +46,14 @@ return [
             'lock_table' => env('DB_CACHE_LOCK_TABLE'),
         ],
 
+        'rekap_tks' => [
+            'driver' => 'database',
+            'connection' => env('REKAP_TKS_CACHE_CONNECTION'),
+            'table' => env('REKAP_TKS_CACHE_TABLE', 'rekap_tks_cache'),
+            'lock_connection' => env('REKAP_TKS_CACHE_LOCK_CONNECTION'),
+            'lock_table' => env('REKAP_TKS_CACHE_LOCK_TABLE', 'rekap_tks_cache_locks'),
+        ],
+
         'file' => [
             'driver' => 'file',
             'path' => storage_path('framework/cache/data'),
