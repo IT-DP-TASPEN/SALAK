@@ -27,6 +27,7 @@ class RekapPerolehan extends Page implements HasTable
     public function table(Table $table): Table
     {
         $user = auth()->user();
+        $branchCode = ($user?->isKantorPusatEmployee() ?? false) ? null : $user->branchOffice?->branch_code_fincloud;
 
         return $table
             ->paginated(false)
@@ -47,7 +48,7 @@ class RekapPerolehan extends Page implements HasTable
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
-                            ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['1'], null, $this->getAsOfDate())))
+                            ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['1'], $branchCode, $this->getAsOfDate())))
                             ->label('Total'),
                     ),
                 TextColumn::make('current_year_retained_earnings')
@@ -57,7 +58,7 @@ class RekapPerolehan extends Page implements HasTable
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
-                            ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['3231982'], null, $this->getAsOfDate())))
+                            ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['3231982'], $branchCode, $this->getAsOfDate())))
                             ->label('Total'),
                     ),
                 TextColumn::make('kredit')
@@ -67,7 +68,7 @@ class RekapPerolehan extends Page implements HasTable
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
-                            ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['121', '122'], null, $this->getAsOfDate())))
+                            ->using(fn() => array_sum(BranchOffice::saldoNeraca2(['121', '122'], $branchCode, $this->getAsOfDate())))
                             ->label('Total'),
                     ),
                 TextColumn::make('dpk_tabungan')
@@ -80,8 +81,8 @@ class RekapPerolehan extends Page implements HasTable
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
-                            ->using(function () {
-                                $gl = BranchOffice::saldoNeraca2(['221', '2212111', '2212116', '2212199'], null, $this->getAsOfDate());
+                            ->using(function () use ($branchCode) {
+                                $gl = BranchOffice::saldoNeraca2(['221', '2212111', '2212116', '2212199'], $branchCode, $this->getAsOfDate());
                                 return ($gl['221'] ?? 0) - ($gl['2212111'] ?? 0) - ($gl['2212116'] ?? 0) - ($gl['2212199'] ?? 0);
                             })
                             ->label('Total'),
@@ -96,8 +97,8 @@ class RekapPerolehan extends Page implements HasTable
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
-                            ->using(function () {
-                                $gl = BranchOffice::saldoNeraca2(['231', '2312202'], null, $this->getAsOfDate());
+                            ->using(function () use ($branchCode) {
+                                $gl = BranchOffice::saldoNeraca2(['231', '2312202'], $branchCode, $this->getAsOfDate());
                                 return ($gl['231'] ?? 0) - ($gl['2312202'] ?? 0);
                             })
                             ->label('Total'),
@@ -112,8 +113,8 @@ class RekapPerolehan extends Page implements HasTable
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
-                            ->using(function () {
-                                $gl = BranchOffice::saldoNeraca2(['2212111', '2212116', '2312202'], null, $this->getAsOfDate());
+                            ->using(function () use ($branchCode) {
+                                $gl = BranchOffice::saldoNeraca2(['2212111', '2212116', '2312202'], $branchCode, $this->getAsOfDate());
                                 return ($gl['2212111'] ?? 0) + ($gl['2212116'] ?? 0) + ($gl['2312202'] ?? 0);
                             })
                             ->label('Total'),
@@ -128,8 +129,8 @@ class RekapPerolehan extends Page implements HasTable
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
-                            ->using(function () {
-                                $gl = BranchOffice::saldoNeraca2(['261'], null, $this->getAsOfDate());
+                            ->using(function () use ($branchCode) {
+                                $gl = BranchOffice::saldoNeraca2(['261'], $branchCode, $this->getAsOfDate());
                                 return $gl['261'] ?? 0;
                             })
                             ->label('Total'),
