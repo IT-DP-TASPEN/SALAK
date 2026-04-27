@@ -66,7 +66,7 @@ return [
                 ['pos' => '3103980000', 'description' => 'd. Pajak Penghasilan terkait dengan Ekuitas Lain', 'coas' => ['312'], 'is_total' => false],
                 ['pos' => '3104010000', 'description' => 'a. Umum', 'coas' => ['311'], 'is_total' => false],
                 ['pos' => '3104020000', 'description' => 'b. Tujuan', 'coas' => [], 'is_total' => false],
-                ['pos' => '3105010000', 'description' => 'a. Laba Tahun lalu', 'coas' => ['322'], 'is_total' => false],
+                ['pos' => '3105010000', 'description' => 'a. Laba Tahun lalu', 'coas' => ['321', '322'], 'is_total' => false],
                 ['pos' => '3105020000', 'description' => 'b. Laba Tahun Berjalan', 'coas' => ['323'], 'is_total' => false],
                 ['pos' => '3000000000', 'description' => 'TOTAL EKUITAS', 'coas' => [], 'is_total' => true],
             ],
