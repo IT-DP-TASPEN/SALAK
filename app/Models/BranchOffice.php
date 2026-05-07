@@ -807,7 +807,9 @@ class BranchOffice extends BaseModel
                 ->sum('lending_booking_bersih');
             $totalBakiDebet += $proyeksiLendings;
         }
-        $totalSimpanan = array_sum(static::saldoNeraca2(['221', '2312200', '2312201'], $branch, $tanggal));
+        $simpanan = array_sum(static::saldoNeraca2(['221', '2312200', '2312201'], $branch, $tanggal));
+        // exclude savings internal and savings abp
+        $totalSimpanan = $simpanan - array_sum(static::saldoNeraca2(['2212111', '2212116', '2212199'], $branch, $tanggal));
 
         return $totalSimpanan == 0.0 ? 0.0 : ($totalBakiDebet / $totalSimpanan * 100);
     }
