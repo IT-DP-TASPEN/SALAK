@@ -10,7 +10,7 @@ class NeracaReportService
     /**
      * @return array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, is_total: bool}>}>
      */
-    public function build(?string $date = null, ?string $branchCode = null): array
+    public function build(?string $date = null, ?string $branchCode = null, bool $showZeroBalances = true): array
     {
         $sections = config('neraca.sections', []);
         $asOf = $this->normalizeDate($date);
@@ -34,6 +34,10 @@ class NeracaReportService
                     $runningTotal += $value;
                 }
 
+                if (! $showZeroBalances && ! $isTotal && $this->isZero($value)) {
+                    continue;
+                }
+
                 $rows[] = [
                     'pos' => (string) ($rowConfig['pos'] ?? ''),
                     'description' => (string) ($rowConfig['description'] ?? ''),
@@ -48,7 +52,42 @@ class NeracaReportService
             ];
         }
 
+        return $this->appendLiabilitiesAndEquityTotal($report);
+    }
+
+    /**
+     * @param  array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, is_total: bool}>}>  $report
+     * @return array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, is_total: bool}>}>
+     */
+    private function appendLiabilitiesAndEquityTotal(array $report): array
+    {
+        if (! isset($report['assets'])) {
+            return $report;
+        }
+
+        $report['assets']['rows'][] = [
+            'pos' => '',
+            'description' => 'TOTAL LIABILITAS + EKUITAS',
+            'value' => $this->sectionTotal($report['liabilities']['rows'] ?? [])
+                + $this->sectionTotal($report['equity']['rows'] ?? []),
+            'is_total' => true,
+        ];
+
         return $report;
+    }
+
+    /**
+     * @param  array<int, array{pos: string, description: string, value: float, is_total: bool}>  $rows
+     */
+    private function sectionTotal(array $rows): float
+    {
+        foreach (array_reverse($rows) as $row) {
+            if ($row['is_total']) {
+                return (float) $row['value'];
+            }
+        }
+
+        return 0.0;
     }
 
     /**
@@ -111,5 +150,10 @@ class NeracaReportService
         $branchCode = is_string($branchCode) ? trim($branchCode) : $branchCode;
 
         return blank($branchCode) ? null : $branchCode;
+    }
+
+    private function isZero(float $value): bool
+    {
+        return abs($value) < 0.00001;
     }
 }

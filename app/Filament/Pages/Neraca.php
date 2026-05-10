@@ -6,6 +6,7 @@ use App\Filament\Widgets\NeracaFilter;
 use App\Services\NeracaReportService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Livewire\Attributes\On;
 
@@ -27,6 +28,8 @@ class Neraca extends Page
 
     public ?string $selectedBranchCode = null;
 
+    public bool $showZeroBalances = false;
+
     /**
      * @var array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, is_total: bool}>}>
      */
@@ -44,6 +47,20 @@ class Neraca extends Page
     {
         return [
             NeracaFilter::class,
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('downloadPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->url(fn (): string => route('neraca.pdf', [
+                    'date' => $this->selectedDate,
+                    'branch' => $this->selectedBranchCode,
+                    'show_zero_balances' => $this->showZeroBalances ? 1 : 0,
+                ])),
         ];
     }
 
@@ -72,9 +89,17 @@ class Neraca extends Page
         $this->refreshReport();
     }
 
+    #[On('neracaShowZeroBalancesChanged')]
+    public function updateShowZeroBalances(bool $showZeroBalances): void
+    {
+        $this->showZeroBalances = $showZeroBalances;
+
+        $this->refreshReport();
+    }
+
     public function formatCurrency(float $value): string
     {
-        return 'Rp ' . number_format($value, 0, ',', '.');
+        return 'Rp '.number_format($value, 0, ',', '.');
     }
 
     private function refreshReport(): void
@@ -82,6 +107,7 @@ class Neraca extends Page
         $this->sections = app(NeracaReportService::class)->build(
             $this->selectedDate,
             $this->selectedBranchCode,
+            $this->showZeroBalances,
         );
     }
 

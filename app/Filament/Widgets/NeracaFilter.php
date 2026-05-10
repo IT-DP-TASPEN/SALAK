@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Models\BranchOffice;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -33,7 +34,7 @@ class NeracaFilter extends Widget implements HasForms
             ->schema([
                 DatePicker::make('filter_date')
                     ->label('Tanggal')
-                    ->default(fn() => now())
+                    ->default(fn () => now())
                     ->maxDate(today())
                     ->reactive()
                     ->closeOnDateSelection()
@@ -50,7 +51,7 @@ class NeracaFilter extends Widget implements HasForms
                     ->visible($isHeadOfficeUser)
                     ->placeholder('Semua Cabang')
                     ->options(
-                        fn() => BranchOffice::query()
+                        fn () => BranchOffice::query()
                             ->orderBy('branch_code_fincloud')
                             ->pluck('branch_name', 'branch_code_fincloud')
                             ->toArray()
@@ -59,6 +60,14 @@ class NeracaFilter extends Widget implements HasForms
                     ->columnSpanFull()
                     ->afterStateUpdated(function (?string $state): void {
                         $this->dispatch('neracaBranchOfficeChanged', blank($state) ? null : $state);
+                    }),
+                Checkbox::make('show_zero_balances')
+                    ->label('Tampilkan saldo nol (0)')
+                    ->default(false)
+                    ->reactive()
+                    ->columnSpanFull()
+                    ->afterStateUpdated(function (?bool $state): void {
+                        $this->dispatch('neracaShowZeroBalancesChanged', (bool) $state);
                     }),
             ]);
     }

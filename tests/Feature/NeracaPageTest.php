@@ -42,12 +42,15 @@ class NeracaPageTest extends TestCase
         $this->actingAs($user);
 
         Livewire::test(NeracaFilter::class)
-            ->assertSee('Kantor Cabang');
+            ->assertSee('Kantor Cabang')
+            ->assertSee('Tampilkan saldo nol (0)');
 
         Livewire::test(Neraca::class)
             ->assertSet('selectedBranchCode', null)
             ->assertSet('selectedDate', '2026-01-08')
+            ->assertSet('showZeroBalances', false)
             ->assertSee('Rp 1.332')
+            ->assertDontSee('Kas dalam Valuta Asing')
             ->call('updateSelectedBranch', '001')
             ->assertSet('selectedBranchCode', '001')
             ->assertSee('Rp 444')
@@ -81,5 +84,52 @@ class NeracaPageTest extends TestCase
             ->call('updateSelectedBranch', '002')
             ->assertSet('selectedBranchCode', '001')
             ->assertSee('Rp 444');
+    }
+
+    public function test_show_zero_balance_checkbox_toggles_zero_rows(): void
+    {
+        $this->createBranchOffice(1, '000', 'Kantor Pusat');
+        $this->createBranchOffice(2, '001', 'Cabang 1');
+
+        $this->createSaldoNeraca('2026-01-08', '001', '101', 444);
+
+        $user = $this->createUserWithBranch('Kantor Pusat User', 1);
+        $this->grantNeracaPagePermission($user);
+        $this->actingAs($user);
+
+        Livewire::test(Neraca::class)
+            ->assertSet('showZeroBalances', false)
+            ->assertDontSee('Kas dalam Valuta Asing')
+            ->call('updateShowZeroBalances', true)
+            ->assertSet('showZeroBalances', true)
+            ->assertSee('Kas dalam Valuta Asing')
+            ->call('updateShowZeroBalances', false)
+            ->assertSet('showZeroBalances', false)
+            ->assertDontSee('Kas dalam Valuta Asing');
+    }
+
+    public function test_pdf_download_uses_current_user_branch_scope(): void
+    {
+        $this->createBranchOffice(1, '000', 'Kantor Pusat');
+        $this->createBranchOffice(2, '001', 'Cabang 1');
+        $this->createBranchOffice(3, '002', 'Cabang 2');
+
+        $this->createSaldoNeraca('2026-01-08', '001', '101', 444);
+        $this->createSaldoNeraca('2026-01-08', '002', '101', 888);
+
+        $user = $this->createUserWithBranch('Cabang User', 2);
+        $this->grantNeracaPagePermission($user);
+        $this->actingAs($user);
+
+        $response = $this->get(route('neraca.pdf', [
+            'date' => '2026-01-08',
+            'branch' => '002',
+            'show_zero_balances' => 0,
+        ]));
+
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $response->assertHeader('content-disposition', 'attachment; filename=neraca-2026-01-08-001.pdf');
+        $this->assertStringStartsWith('%PDF', $response->getContent());
     }
 }
