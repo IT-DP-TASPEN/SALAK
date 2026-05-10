@@ -23,7 +23,6 @@
 
         .section {
             margin-bottom: 18px;
-            page-break-inside: avoid;
         }
 
         .section-title {
@@ -31,6 +30,7 @@
             border: 1px solid #d1d5db;
             font-size: 13px;
             font-weight: 700;
+            page-break-after: avoid;
             padding: 7px 9px;
         }
 
@@ -51,6 +51,14 @@
             color: #374151;
             font-weight: 700;
             text-align: left;
+        }
+
+        thead {
+            display: table-header-group;
+        }
+
+        tr {
+            page-break-inside: avoid;
         }
 
         .pos {

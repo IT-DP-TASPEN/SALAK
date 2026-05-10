@@ -60,7 +60,8 @@ class Neraca extends Page
                     'date' => $this->selectedDate,
                     'branch' => $this->selectedBranchCode,
                     'show_zero_balances' => $this->showZeroBalances ? 1 : 0,
-                ])),
+                ]))
+                ->openUrlInNewTab(),
         ];
     }
 
