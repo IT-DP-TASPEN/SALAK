@@ -654,7 +654,7 @@ class SimulasiTks extends Page implements HasForms
         } else {
             $labaBeforeTax = array_sum(
                 BranchOffice::saldoNeraca2(
-                    ['323', '312'],
+                    ['323', '558'],
                     $branch,
                     $asOf->toDateString()
                 )
