@@ -41,4 +41,12 @@ return [
         'role' => env('FINCLOUD_ROLE'),
         'location' =>  env('FINCLOUD_LOCATION'),
     ],
+
+    'sso' => [
+        'enabled' => env('SSO_ENABLED', false),
+        'issuer' => env('SSO_ISSUER'),
+        'audience' => env('SSO_AUDIENCE'),
+        'shared_secret' => env('SSO_SHARED_SECRET'),
+    ],
+
 ];
