@@ -52,7 +52,7 @@ Schedule::command('cache:refresh-loan-to-deposit-ratio-history')
     ->withoutOverlapping()
     ->appendOutputTo(storage_path('logs/schedule.log'));
 
-Schedule::command('cache:warm-rekap-tks --to=' . now()->subDay()->format('Y-m-d') . ' --refresh')
+Schedule::command('cache:warm-rekap-tks --to=' . now()->subDay()->format('Y-m-d'))
     ->dailyAt('05:10')
     ->onOneServer()
     ->runInBackground()
