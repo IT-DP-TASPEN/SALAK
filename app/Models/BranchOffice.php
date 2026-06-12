@@ -468,17 +468,16 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiBebanOperasional(?string $tanggal = null, ?string $branch = null): float
     {
-        $beban = array_sum(
-            static::saldoNeraca2(
+        $beban = static::saldoNeraca2(
                 [
                     '5', // Expenses
+                '558', // Income Tax Expense
                 ],
                 $branch,
                 $tanggal
-            )
         );
 
-        return $beban;
+        return $beban['5'] - $beban['558'];
     }
 
     public function CKPNPerPPKA(?string $tanggal = null): float
