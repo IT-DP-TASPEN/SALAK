@@ -28,3 +28,7 @@ frankenphp
 frankenphp-worker.php
 loan-outstanding-updater
 saldo-neraca-updater
+*.xlsx
+*.txt
+*.csv
+*.pdf
