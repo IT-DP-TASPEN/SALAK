@@ -2,23 +2,32 @@
 
 namespace App\Services;
 
-use App\Models\BranchOffice;
 use Carbon\Carbon;
 
 class LabaRugiReportService
 {
     /**
-     * @return array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, is_total: bool}>}>
+     * @return array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, previous_value: float, yoy_percent: ?float, is_total: bool}>}>
      */
     public function build(?string $date = null, ?string $branchCode = null): array
     {
         $sections = config('laba-rugi.sections', []);
         $asOf = $this->normalizeDate($date);
         $branchCode = $this->normalizeBranchCode($branchCode);
-        $balances = $this->loadBalances($sections, $asOf, $branchCode);
+        $balanceService = app(ReportBalanceService::class);
+        $balances = $balanceService->loadCurrentCoaBalances($sections, $asOf, $branchCode);
+        $previousBalances = $balanceService->loadPreviousRowBalances($sections, $asOf, $branchCode);
 
-        [$rowValues, $groupTotals] = $this->buildDetailValues($sections, $balances);
+        [$rowValues, $groupTotals] = $this->buildDetailValues(
+            $sections,
+            fn (array $row, string $pos): float => $balanceService->sumCoaBalances($row['coas'] ?? [], $balances),
+        );
+        [$previousRowValues, $previousGroupTotals] = $this->buildDetailValues(
+            $sections,
+            fn (array $row, string $pos): float => (float) ($previousBalances[$pos] ?? 0.0),
+        );
         $formulaValues = $this->buildFormulaValues($groupTotals);
+        $previousFormulaValues = $this->buildFormulaValues($previousGroupTotals);
 
         $report = [];
 
@@ -29,12 +38,19 @@ class LabaRugiReportService
                 $formula = (string) ($rowConfig['formula'] ?? '');
                 $pos = (string) ($rowConfig['pos'] ?? '');
 
+                $value = $formula !== ''
+                    ? (float) ($formulaValues[$formula] ?? 0.0)
+                    : (float) ($rowValues[$pos] ?? 0.0);
+                $previousValue = $formula !== ''
+                    ? (float) ($previousFormulaValues[$formula] ?? 0.0)
+                    : (float) ($previousRowValues[$pos] ?? 0.0);
+
                 $rows[] = [
                     'pos' => $pos,
                     'description' => (string) ($rowConfig['description'] ?? ''),
-                    'value' => $formula !== ''
-                        ? (float) ($formulaValues[$formula] ?? 0.0)
-                        : (float) ($rowValues[$pos] ?? 0.0),
+                    'value' => $value,
+                    'previous_value' => $previousValue,
+                    'yoy_percent' => $balanceService->yoyPercent($value, $previousValue),
                     'is_total' => (bool) ($rowConfig['is_total'] ?? false),
                 ];
             }
@@ -50,10 +66,10 @@ class LabaRugiReportService
 
     /**
      * @param  array<string, mixed>  $sections
-     * @param  array<string, float|int>  $balances
+     * @param  callable(array<string, mixed>, string): float  $valueResolver
      * @return array{0: array<string, float>, 1: array<string, float>}
      */
-    private function buildDetailValues(array $sections, array $balances): array
+    private function buildDetailValues(array $sections, callable $valueResolver): array
     {
         $rowValues = [];
         $groupTotals = [];
@@ -66,7 +82,7 @@ class LabaRugiReportService
 
                 $pos = (string) ($row['pos'] ?? '');
                 $group = (string) ($row['group'] ?? '');
-                $value = $this->sumBalances($row['coas'] ?? [], $balances);
+                $value = $valueResolver($row, $pos);
 
                 $rowValues[$pos] = $value;
 
@@ -112,50 +128,6 @@ class LabaRugiReportService
             'other_comprehensive_income' => $otherComprehensiveIncome,
             'comprehensive_profit' => $currentYearProfit + $otherComprehensiveIncome,
         ];
-    }
-
-    /**
-     * @param  array<string, mixed>  $sections
-     * @return array<string, float|int>
-     */
-    private function loadBalances(array $sections, string $date, ?string $branchCode): array
-    {
-        $coas = [];
-
-        foreach ($sections as $section) {
-            foreach ($section['rows'] ?? [] as $row) {
-                foreach ($row['coas'] ?? [] as $coa) {
-                    $coa = trim((string) $coa);
-
-                    if ($coa === '') {
-                        continue;
-                    }
-
-                    $coas[$coa] = $coa;
-                }
-            }
-        }
-
-        if ($coas === []) {
-            return [];
-        }
-
-        return BranchOffice::saldoNeraca2(array_values($coas), $branchCode, $date);
-    }
-
-    /**
-     * @param  array<int, string>  $coas
-     * @param  array<string, float|int>  $balances
-     */
-    private function sumBalances(array $coas, array $balances): float
-    {
-        $total = 0.0;
-
-        foreach ($coas as $coa) {
-            $total += (float) ($balances[(string) $coa] ?? 0.0);
-        }
-
-        return $total;
     }
 
     /**

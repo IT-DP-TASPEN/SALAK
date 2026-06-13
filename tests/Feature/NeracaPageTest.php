@@ -36,6 +36,9 @@ class NeracaPageTest extends TestCase
         $this->createSaldoNeraca('2026-01-08', '002', '101', 888);
         $this->createSaldoNeraca('2026-01-07', '001', '101', 111);
         $this->createSaldoNeraca('2026-01-07', '002', '101', 222);
+        $this->createMsoMapping('1101010000', '1.100');
+        $this->createMsoBalance('2025-01-08', '001', '1.100', 222);
+        $this->createMsoBalance('2025-01-08', '002', '1.100', 444);
 
         $user = $this->createUserWithBranch('Kantor Pusat User', 1);
         $this->grantNeracaPagePermission($user);
@@ -50,6 +53,10 @@ class NeracaPageTest extends TestCase
             ->assertSet('selectedDate', '2026-01-08')
             ->assertSet('showZeroBalances', false)
             ->assertSee('Rp 1.332')
+            ->assertSee('Saldo Tahun Lalu')
+            ->assertSee('YoY%')
+            ->assertSee('Rp 666')
+            ->assertSee('100,00%')
             ->assertDontSee('Kas dalam Valuta Asing')
             ->call('updateSelectedBranch', '001')
             ->assertSet('selectedBranchCode', '001')

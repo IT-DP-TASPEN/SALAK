@@ -7,8 +7,8 @@
         body {
             color: #111827;
             font-family: DejaVu Sans, sans-serif;
-            font-size: 11px;
-            line-height: 1.35;
+            font-size: 9px;
+            line-height: 1.3;
         }
 
         h1 {
@@ -62,14 +62,20 @@
         }
 
         .pos {
-            width: 140px;
+            width: 105px;
             white-space: nowrap;
         }
 
         .amount {
             text-align: right;
             white-space: nowrap;
-            width: 160px;
+            width: 118px;
+        }
+
+        .percent {
+            text-align: right;
+            white-space: nowrap;
+            width: 58px;
         }
 
         .total td {
@@ -81,6 +87,7 @@
 <body>
     @php
         $formatCurrency = fn (float $value): string => 'Rp '.number_format($value, 0, ',', '.');
+        $formatPercentage = fn (?float $value): string => $value === null ? '-' : number_format($value, 2, ',', '.').'%' ;
     @endphp
 
     <h1>Neraca</h1>
@@ -98,7 +105,9 @@
                     <tr>
                         <th class="pos">Pos</th>
                         <th>Description</th>
-                        <th class="amount">Nilai</th>
+                        <th class="amount">Saldo</th>
+                        <th class="amount">Saldo Tahun Lalu</th>
+                        <th class="percent">YoY%</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -107,6 +116,8 @@
                             <td class="pos">{{ $row['pos'] }}</td>
                             <td>{{ $row['description'] }}</td>
                             <td class="amount">{{ $formatCurrency((float) $row['value']) }}</td>
+                            <td class="amount">{{ $formatCurrency((float) $row['previous_value']) }}</td>
+                            <td class="percent">{{ $formatPercentage($row['yoy_percent']) }}</td>
                         </tr>
                     @endforeach
                 </tbody>

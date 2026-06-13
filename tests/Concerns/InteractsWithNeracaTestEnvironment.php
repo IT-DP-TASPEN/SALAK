@@ -33,17 +33,21 @@ trait InteractsWithNeracaTestEnvironment
             'database.default' => 'sqlite',
             'database.connections.sqlite' => $sharedSqliteConfig,
             'database.connections.mysql' => $sharedSqliteConfig,
+            'database.connections.mso-backup' => $sharedSqliteConfig,
             'cache.default' => 'array',
         ]);
 
         DB::purge('sqlite');
         DB::purge('mysql');
+        DB::purge('mso-backup');
         DB::reconnect('sqlite');
         DB::reconnect('mysql');
+        DB::reconnect('mso-backup');
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $this->createNeracaSchema();
+        $this->registerMsoGetPerkSaldoFunction();
 
         Filament::setCurrentPanel(app(PanelRegistry::class)->get('admin'));
     }
@@ -55,6 +59,7 @@ trait InteractsWithNeracaTestEnvironment
 
         DB::disconnect('sqlite');
         DB::disconnect('mysql');
+        DB::disconnect('mso-backup');
 
         if (isset($this->databasePath) && is_file($this->databasePath)) {
             unlink($this->databasePath);
@@ -87,6 +92,30 @@ trait InteractsWithNeracaTestEnvironment
             'saldoakhir' => $balance,
             'created_at' => now(),
             'updated_at' => now(),
+        ]);
+    }
+
+    protected function createMsoMapping(string $pos, string $perk, int $notasi = 1, int $rincian = 0): void
+    {
+        DB::connection('mso-backup')->table('kode_perksandi')->insert([
+            'sandip_pos' => $pos,
+            'sandip_mbs' => $perk,
+            'sandip_notasi' => $notasi,
+            'sandip_rincian' => $rincian,
+        ]);
+    }
+
+    protected function createMsoBalance(string $date, ?string $branchCode, string $perk, float $balance): void
+    {
+        if ($branchCode !== null && strlen($branchCode) === 3) {
+            $branchCode = substr($branchCode, -2);
+        }
+
+        DB::connection('mso-backup')->table('mso_balances')->insert([
+            'tanggal' => $date,
+            'branch' => $branchCode,
+            'perk' => $perk,
+            'saldo' => $balance,
         ]);
     }
 
@@ -195,5 +224,51 @@ trait InteractsWithNeracaTestEnvironment
             $table->foreign('role_id')->references('id')->on('roles')->onDelete('cascade');
             $table->primary(['permission_id', 'role_id']);
         });
+
+        Schema::connection('mso-backup')->create('kode_perksandi', function (Blueprint $table): void {
+            $table->string('sandip_pos');
+            $table->string('sandip_mbs')->nullable();
+            $table->tinyInteger('sandip_notasi')->default(1);
+            $table->tinyInteger('sandip_rincian')->default(0);
+        });
+
+        Schema::connection('mso-backup')->create('mso_balances', function (Blueprint $table): void {
+            $table->id();
+            $table->date('tanggal');
+            $table->string('branch')->nullable();
+            $table->string('perk');
+            $table->decimal('saldo', 15, 2)->default(0);
+        });
+    }
+
+    private function registerMsoGetPerkSaldoFunction(): void
+    {
+        $databasePath = $this->databasePath;
+        $pdo = DB::connection('mso-backup')->getPdo();
+
+        $pdo->sqliteCreateFunction(
+            'GetPerkSaldo',
+            function (?string $perk, ?string $branch, ?string $date) use ($databasePath): float {
+                $lookup = new \PDO('sqlite:'.$databasePath);
+                $lookup->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+
+                if ($branch === null || $branch === '') {
+                    $statement = $lookup->prepare(
+                        'select coalesce(sum(saldo), 0) from mso_balances where perk = ? and tanggal = ?',
+                    );
+                    $statement->execute([$perk, $date]);
+
+                    return (float) $statement->fetchColumn();
+                }
+
+                $statement = $lookup->prepare(
+                    'select coalesce(sum(saldo), 0) from mso_balances where perk = ? and branch = ? and tanggal = ?',
+                );
+                $statement->execute([$perk, $branch, $date]);
+
+                return (float) $statement->fetchColumn();
+            },
+            3,
+        );
     }
 }

@@ -36,6 +36,9 @@ class LabaRugiPageTest extends TestCase
         $this->createSaldoNeraca('2026-01-08', '002', '401', -888);
         $this->createSaldoNeraca('2026-01-07', '001', '401', -111);
         $this->createSaldoNeraca('2026-01-07', '002', '401', -222);
+        $this->createMsoMapping('4101010201', '2.112');
+        $this->createMsoBalance('2025-01-08', '001', '2.112', 222);
+        $this->createMsoBalance('2025-01-08', '002', '2.112', 444);
 
         $user = $this->createUserWithBranch('Kantor Pusat User', 1);
         $this->grantLabaRugiPagePermission($user);
@@ -48,6 +51,10 @@ class LabaRugiPageTest extends TestCase
             ->assertSet('selectedBranchCode', null)
             ->assertSet('selectedDate', '2026-01-08')
             ->assertSee('Rp 1.332')
+            ->assertSee('Saldo Tahun Lalu')
+            ->assertSee('YoY%')
+            ->assertSee('Rp 666')
+            ->assertSee('100,00%')
             ->call('updateSelectedBranch', '001')
             ->assertSet('selectedBranchCode', '001')
             ->assertSee('Rp 444')

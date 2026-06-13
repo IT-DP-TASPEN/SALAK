@@ -28,7 +28,7 @@ class LabaRugi extends Page
     public ?string $selectedBranchCode = null;
 
     /**
-     * @var array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, is_total: bool}>}>
+     * @var array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, previous_value: float, yoy_percent: ?float, is_total: bool}>}>
      */
     public array $sections = [];
 
@@ -75,6 +75,15 @@ class LabaRugi extends Page
     public function formatCurrency(float $value): string
     {
         return 'Rp '.number_format($value, 0, ',', '.');
+    }
+
+    public function formatPercentage(?float $value): string
+    {
+        if ($value === null) {
+            return '-';
+        }
+
+        return number_format($value, 2, ',', '.').'%';
     }
 
     private function refreshReport(): void
