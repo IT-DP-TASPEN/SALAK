@@ -721,12 +721,11 @@ class SimulasiTks extends Page implements HasForms
 
     private function defaultLdrComponents(string $tanggal, ?string $branch): array
     {
-        $totalLoans = array_sum(BranchOffice::saldoNeraca2(['121'], $branch, $tanggal));
-        $totalDeposits = array_sum(BranchOffice::saldoNeraca2(['221', '2312200', '2312201'], $branch, $tanggal));
+        $components = BranchOffice::konsolidasiLDRComponents($tanggal, false, $branch);
 
         return [
-            'Total Loans' => $totalLoans,
-            'Total Deposits' => $totalDeposits,
+            'Total Loans' => $components['total_baki_debet'],
+            'Total Deposits' => $components['total_simpanan'],
             'NPL (%)' => BranchOffice::konsolidasiNPL($tanggal, $branch),
         ];
     }

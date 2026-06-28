@@ -469,12 +469,12 @@ class BranchOffice extends BaseModel
     public static function konsolidasiBebanOperasional(?string $tanggal = null, ?string $branch = null): float
     {
         $beban = static::saldoNeraca2(
-                [
-                    '5', // Expenses
+            [
+                '5', // Expenses
                 '558', // Income Tax Expense
-                ],
-                $branch,
-                $tanggal
+            ],
+            $branch,
+            $tanggal
         );
 
         return $beban['5'] - $beban['558'];
@@ -795,9 +795,22 @@ class BranchOffice extends BaseModel
 
     public static function konsolidasiLDR(?string $tanggal = null, bool $simulated = false, ?string $branch = null): float
     {
+        $components = static::konsolidasiLDRComponents($tanggal, $simulated, $branch);
+        $totalBakiDebet = $components['total_baki_debet'];
+        $totalSimpanan = $components['total_simpanan'];
+
+        return $totalSimpanan == 0.0 ? 0.0 : ($totalBakiDebet / $totalSimpanan * 100);
+    }
+
+    /**
+     * @return array{total_baki_debet: float, total_simpanan: float}
+     */
+    public static function konsolidasiLDRComponents(?string $tanggal = null, bool $simulated = false, ?string $branch = null): array
+    {
         $asOf = $tanggal ? Carbon::parse($tanggal) : Carbon::today();
         $tanggal = $asOf->toDateString();
         $totalBakiDebet = array_sum(static::saldoNeraca2(['121', '122'], $branch, $tanggal));
+
         if ($simulated) {
             $proyeksiLendings = ProyeksiLending::query()
                 ->when($branch, fn($q) => $q->whereHas('branchOffice', fn($q2) => $q2->where('branch_code_fincloud', $branch)))
@@ -806,11 +819,15 @@ class BranchOffice extends BaseModel
                 ->sum('lending_booking_bersih');
             $totalBakiDebet += $proyeksiLendings;
         }
+
         $simpanan = array_sum(static::saldoNeraca2(['221', '2312200', '2312201'], $branch, $tanggal));
         // exclude savings internal and savings abp
-        $totalSimpanan = $simpanan - array_sum(static::saldoNeraca2(['2212111', '2212116', '2212199'], $branch, $tanggal));
+        $totalSimpanan = $simpanan + array_sum(static::saldoNeraca2(['2212111', '2212116', '2212199'], $branch, $tanggal));
 
-        return $totalSimpanan == 0.0 ? 0.0 : ($totalBakiDebet / $totalSimpanan * 100);
+        return [
+            'total_baki_debet' => (float) $totalBakiDebet,
+            'total_simpanan' => (float) $totalSimpanan,
+        ];
     }
 
     public static function konsolidasiCashRatio2(?string $tanggal = null, float $totalLiquid = 0.0): float
