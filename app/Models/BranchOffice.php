@@ -822,7 +822,7 @@ class BranchOffice extends BaseModel
 
         $simpanan = array_sum(static::saldoNeraca2(['221', '2312200', '2312201'], $branch, $tanggal));
         // exclude savings internal and savings abp
-        $totalSimpanan = $simpanan + array_sum(static::saldoNeraca2(['2212111', '2212116', '2212199'], $branch, $tanggal));
+        $totalSimpanan = $simpanan - (array_sum(static::saldoNeraca2(['2212111', '2212116', '2212199'], $branch, $tanggal)));
 
         return [
             'total_baki_debet' => (float) $totalBakiDebet,
