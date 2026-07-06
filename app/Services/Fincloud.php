@@ -247,6 +247,7 @@ class Fincloud
             query: [
                 'file' => $file,
                 'path' => $path,
+                'sessionId' => $this->sessionId,
             ],
         );
     }
