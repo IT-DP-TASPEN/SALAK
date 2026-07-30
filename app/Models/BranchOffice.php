@@ -329,7 +329,9 @@ class BranchOffice extends BaseModel
         $umkLoans = (clone $loanBase)
             ->whereNotIn('loan_account', $excluded->unique()->values()->all())
             ->where(function ($q) use ($tanggal) {
-                $q->doesntHave('cbrCustomer')
+                $q->whereDoesntHave('cbrCustomer', function ($q) use ($tanggal) {
+                    $q->where('fetch_date', $tanggal);
+                })
                     ->whereHas('msoLoanAtmr', function ($q) {
                         $q->whereIn('loan_jenis_usaha', ['1', '2']) // Mikro & Kecil
                             ->whereNotIn('loan_golongan_debitur', ['874', '875']);
@@ -338,8 +340,8 @@ class BranchOffice extends BaseModel
                             ->whereHas('cbrCustomer', function ($q) use ($tanggal) {
                                 $q
                                     ->where('fetch_date', $tanggal ?? Carbon::today()->toDateString())
-                                    ->whereIn('debtor_group', ['UK', 'UM'])
-                                    ->whereNotIn('owner_group', ['874', '875']);
+                                    ->whereNotIn('owner_group', ['874', '875'])
+                                    ->whereIn('debtor_group', ['UK', 'UM']);
                             });
                     });
             })

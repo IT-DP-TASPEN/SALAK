@@ -6,6 +6,7 @@ use App\Models\LoanCollateralList;
 use App\Services\Fincloud;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class FetchLoanCollateralList extends Command
 {
@@ -31,7 +32,7 @@ class FetchLoanCollateralList extends Command
         try {
             $date = Carbon::parse($this->argument('date') ?? now()->subDay()->format('Y-m-d'));
 
-            $fincloud = new Fincloud();
+            $fincloud = app(Fincloud::class);
             $fincloud->login(
                 username: config('services.fincloud.username'),
                 password: config('services.fincloud.password'),
@@ -42,16 +43,26 @@ class FetchLoanCollateralList extends Command
             $this->info("Fetching loan collateral list as of {$date->format('Y-m-d')}");
 
             $report = ltrim($fincloud->inquiryLoanCollateralListReport($date), "\xEF\xBB\xBF");
-            $lines  = explode("\n", trim($report));
+            $lines = explode("\n", trim($report));
+            if ($lines === ['']) {
+                throw new \RuntimeException('Collateral report is empty.');
+            }
+
             $lineNo = 1;
             $header = array_map(
                 static::mapHeaderToField(...),
                 str_getcsv(array_shift($lines), separator: '|'),
             );
 
-            $batch      = [];
-            $batchSize  = 100;
-            $totalSaved = 0;
+            $missingHeaders = array_diff(['loan_acc_no', 'collateral_type'], $header);
+            if ($missingHeaders !== []) {
+                throw new \RuntimeException(
+                    'Missing required collateral headers: '.implode(', ', $missingHeaders)
+                );
+            }
+
+            $collaterals = [];
+            $validRows = 0;
 
             foreach ($lines as $line) {
                 $lineNo++;
@@ -64,40 +75,60 @@ class FetchLoanCollateralList extends Command
                 $columns = str_getcsv($line, separator: '|');
                 if (count($columns) !== count($header)) {
                     $this->warn("Line {$lineNo} dilewati: jumlah kolom tidak cocok dengan header.");
+
                     continue;
                 }
 
                 $data = array_combine($header, $columns);
-                $data = array_map(fn($value) => $value ? trim($value) : null, $data);
-                $data['fetch_date'] = $date->format('Y-m-d');
-                $data['credit_limit'] = static::parseCurrency($data['credit_limit']);
-                $data['loan_principal'] = static::parseCurrency($data['loan_principal']);
-                $data['outstanding'] = static::parseCurrency($data['outstanding']);
-                $data['collateral_real_value'] = $data['collateral_real_value'] ? static::parseCurrency($data['collateral_real_value']) : null;
-                $data['collateral_market_value'] = $data['collateral_market_value'] ? static::parseCurrency($data['collateral_market_value']) : null;
+                $loanAccount = static::cleanValue($data['loan_acc_no']);
+                if ($loanAccount === null) {
+                    $this->warn("Line {$lineNo} dilewati: nomor rekening pinjaman kosong.");
 
-                $batch[] = $data;
-                if (count($batch) >= $batchSize) {
-                    // Simpan batch ke database
-                    LoanCollateralList::upsert($batch, ['loan_account_number'], array_keys($batch[0]));
-                    $totalSaved += count($batch);
-                    $this->info("Saved {$totalSaved} records so far...");
-                    $batch = [];
+                    continue;
                 }
+
+                $validRows++;
+                $collateralType = static::cleanValue($data['collateral_type']);
+                if (
+                    $collateralType === null
+                    || (
+                        stripos($collateralType, 'land') === false
+                        && stripos($collateralType, 'building') === false
+                    )
+                ) {
+                    continue;
+                }
+
+                $collaterals[$loanAccount] = [
+                    'fetch_date' => $date->toDateString(),
+                    'loan_acc_no' => $loanAccount,
+                    'collateral_type' => $collateralType,
+                ];
             }
 
-            // Simpan sisa batch ke database
-            if (count($batch) > 0) {
-                LoanCollateralList::upsert($batch, ['loan_account_number'], array_keys($batch[0]));
-                $totalSaved += count($batch);
-                $this->info("Saved a total of {$totalSaved} records.");
+            if ($validRows === 0) {
+                throw new \RuntimeException('Collateral report contains no valid rows.');
             }
-        } catch (\Exception $e) {
-            $this->error("Error : " . $e->getMessage());
+
+            DB::transaction(function () use ($collaterals, $date) {
+                LoanCollateralList::query()
+                    ->where('fetch_date', $date->toDateString())
+                    ->delete();
+
+                foreach (array_chunk(array_values($collaterals), 1000) as $batch) {
+                    LoanCollateralList::query()->insert($batch);
+                }
+            });
+
+            $this->info('Saved '.count($collaterals).' unique land/building collateral accounts.');
+        } catch (\Throwable $e) {
+            $this->error('Error : '.$e->getMessage());
+
             return Command::FAILURE;
         }
 
-        $this->info("Finished fetching loan collateral list.");
+        $this->info('Finished fetching loan collateral list.');
+
         return Command::SUCCESS;
     }
 
@@ -108,21 +139,13 @@ class FetchLoanCollateralList extends Command
 
     private static function sanitizeHeader(string $header): string
     {
-        $header = trim($header);
-        $header = strtolower($header);
-        $header = str_replace(' ', '_', $header);
-        $header = str_replace('"', '', $header);
-        return $header;
+        return str_replace(' ', '_', strtolower(trim($header, " \t\n\r\0\x0B\xEF\xBB\xBF\"")));
     }
 
-    private static function parseCurrency(string $value): float
+    private static function cleanValue(?string $value): ?string
     {
-        if (empty($value)) {
-            return 0.0;
-        }
-        $value = str_replace('<', '', $value);
-        $value = str_replace('>', '', $value);
-        $value = str_replace(',', '', $value);
-        return (float) $value;
+        $value = trim((string) $value);
+
+        return $value === '' ? null : $value;
     }
 }
