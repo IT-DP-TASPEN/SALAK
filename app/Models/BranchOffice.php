@@ -119,6 +119,7 @@ class BranchOffice extends BaseModel
                     '300', // Authorized Capital
                     '3111000', // General Reserve
                     '3111001', // Goal Reserve
+                    '321', // Past Years Retained Earning
                     '322', // Last Year Retained Earning
                     '323', // This Year Retained Earning
                 ],
