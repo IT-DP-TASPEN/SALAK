@@ -7,12 +7,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class CbrCustomer extends Model
 {
-    protected $guarded = [];
+    public $timestamps = false;
 
-    public function loanCollateralLists(): HasMany
-    {
-        return $this->hasMany(LoanCollateralList::class, 'cif_no', 'cif_no');
-    }
+    protected $guarded = [];
 
     public function loanOutstandings(): HasMany
     {
