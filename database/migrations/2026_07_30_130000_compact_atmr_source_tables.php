@@ -34,37 +34,54 @@ return new class extends Migration
         });
 
         try {
-            $latestCbrRows = DB::table('cbr_customers')
-                ->selectRaw('MAX(id) AS id')
+            $cbrDates = DB::table('cbr_customers')
+                ->distinct()
                 ->whereNotNull('fetch_date')
-                ->where('cif_no', '<>', '')
-                ->groupBy('fetch_date', 'cif_no');
+                ->orderBy('fetch_date')
+                ->pluck('fetch_date');
 
-            DB::table('cbr_customers_slim')->insertUsing(
-                ['fetch_date', 'cif_no', 'owner_group', 'debtor_group'],
-                DB::table('cbr_customers as source')
-                    ->joinSub($latestCbrRows, 'latest', fn ($join) => $join->on('source.id', '=', 'latest.id'))
-                    ->select([
-                        'source.fetch_date',
-                        'source.cif_no',
-                        'source.owner_group',
-                        'source.debtor_group',
-                    ]),
-            );
+            foreach ($cbrDates as $fetchDate) {
+                $latestCbrRows = DB::table('cbr_customers')
+                    ->selectRaw('MAX(id) AS id')
+                    ->where('fetch_date', $fetchDate)
+                    ->where('cif_no', '<>', '')
+                    ->groupBy('fetch_date', 'cif_no');
 
-            DB::table('loan_collateral_lists_slim')->insertUsing(
-                ['fetch_date', 'loan_acc_no', 'collateral_type'],
-                DB::table('loan_collateral_lists')
-                    ->select(['fetch_date', 'loan_acc_no'])
-                    ->selectRaw('MIN(collateral_type) AS collateral_type')
-                    ->whereNotNull('fetch_date')
-                    ->where('loan_acc_no', '<>', '')
-                    ->where(function ($query) {
-                        $query->where('collateral_type', 'like', '%land%')
-                            ->orWhere('collateral_type', 'like', '%building%');
-                    })
-                    ->groupBy('fetch_date', 'loan_acc_no'),
-            );
+                DB::table('cbr_customers_slim')->insertUsing(
+                    ['fetch_date', 'cif_no', 'owner_group', 'debtor_group'],
+                    DB::table('cbr_customers as source')
+                        ->joinSub($latestCbrRows, 'latest', fn ($join) => $join->on('source.id', '=', 'latest.id'))
+                        ->where('source.fetch_date', $fetchDate)
+                        ->select([
+                            'source.fetch_date',
+                            'source.cif_no',
+                            'source.owner_group',
+                            'source.debtor_group',
+                        ]),
+                );
+            }
+
+            $collateralDates = DB::table('loan_collateral_lists')
+                ->distinct()
+                ->whereNotNull('fetch_date')
+                ->orderBy('fetch_date')
+                ->pluck('fetch_date');
+
+            foreach ($collateralDates as $fetchDate) {
+                DB::table('loan_collateral_lists_slim')->insertUsing(
+                    ['fetch_date', 'loan_acc_no', 'collateral_type'],
+                    DB::table('loan_collateral_lists')
+                        ->select(['fetch_date', 'loan_acc_no'])
+                        ->selectRaw('MIN(collateral_type) AS collateral_type')
+                        ->where('fetch_date', $fetchDate)
+                        ->where('loan_acc_no', '<>', '')
+                        ->where(function ($query) {
+                            $query->where('collateral_type', 'like', '%land%')
+                                ->orWhere('collateral_type', 'like', '%building%');
+                        })
+                        ->groupBy('fetch_date', 'loan_acc_no'),
+                );
+            }
 
             $this->swapTablesToSlim();
         } catch (Throwable $exception) {
