@@ -128,18 +128,6 @@ class BranchOffice extends BaseModel
             )
         );
 
-        $total -= abs(
-            array_sum(
-                static::saldoNeraca2(
-                    [
-                        '302', // Unpaid Capital
-                    ],
-                    $branch,
-                    $tanggal
-                )
-            )
-        );
-
         $ckpn = array_sum(
             static::saldoNeraca2(
                 [
