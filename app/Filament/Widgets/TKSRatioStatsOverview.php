@@ -101,23 +101,23 @@ class TKSRatioStatsOverview extends BaseWidget
     private function kpmm(float $kpmm): Stat
     {
         $kshtKpmm = match (true) {
-            $kpmm >= 12.0 => [
+            $kpmm >= 15.0 => [
                 'color' => 'success',
                 'description' => 'Sangat sehat',
             ],
-            $kpmm >= 10.0 && $kpmm < 12.0 => [
+            $kpmm >= 13.0 && $kpmm < 15.0 => [
                 'color' => 'success',
                 'description' => 'Sehat',
             ],
-            $kpmm >= 8.0 && $kpmm < 10.0 => [
+            $kpmm >= 12.0 && $kpmm < 13.0 => [
                 'color' => 'warning',
                 'description' => 'Cukup sehat',
             ],
-            $kpmm >= 6.0 && $kpmm < 8.0 => [
+            $kpmm >= 8.0 && $kpmm < 12.0 => [
                 'color' => 'danger',
                 'description' => 'Tidak sehat',
             ],
-            default => [ // $kpmm < 6.0
+            default => [ // $kpmm < 8.0
                 'color' => 'danger',
                 'description' => 'Sangat tidak sehat',
             ],
@@ -125,7 +125,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('KPMM', number_format($kpmm, 2, ',', '.') . '%')
             ->color($kshtKpmm['color'])
-            ->description($this->descriptionWithOjk($kshtKpmm['description'], '>= 12%'))
+            ->description($this->descriptionWithOjk($kshtKpmm['description'], '>= 15%'))
             ->icon('heroicon-o-shield-check');
     }
 
