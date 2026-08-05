@@ -81,13 +81,13 @@ class RekapBooking extends Page implements HasTable
 
         $bookedRegNos = BOSSAPPFLAG::on('boss')
             ->where('AP_CURRTRCODE', '9.0')
-            ->whereDate('AP_LASTTRDATE', $today)
+            ->where('AP_LASTTRDATE', $today)
             ->pluck('AP_REGNO')
             ->toArray();
 
         $pendingRegNos = BOSSAPPFLAG::on('boss')
             ->whereIn('AP_CURRTRCODE', ['3.3', '7.2'])
-            ->whereDate('AP_LASTTRDATE', '<=', $today)
+            ->where('AP_LASTTRDATE', '<=', $today)
             ->pluck('AP_REGNO')
             ->toArray();
         // dd($pendingRegNos);
