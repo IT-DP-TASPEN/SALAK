@@ -2,12 +2,14 @@
 
 namespace Tests\Feature;
 
+use App\Filament\Pages\SimulasiTks;
+use App\Models\BranchOffice;
 use App\Services\TksRatioSnapshotService;
 use Carbon\Carbon;
+use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
-use Illuminate\Database\Schema\Blueprint;
 use Tests\TestCase;
 
 class TksRatioCacheTest extends TestCase
@@ -198,6 +200,32 @@ class TksRatioCacheTest extends TestCase
             ->assertSuccessful();
     }
 
+    public function test_simulasi_tks_ldr_defaults_match_rekap_tks_components(): void
+    {
+        $date = Carbon::today()->toDateString();
+
+        $this->seedBranch('001', 'Cabang 1');
+        $this->seedLdrSourceData($date, '001');
+
+        $page = app(SimulasiTks::class);
+        $reflection = new \ReflectionClass($page);
+
+        $defaultComponents = $reflection
+            ->getMethod('defaultComponentsForRatio')
+            ->invoke($page, 'LDR', $date);
+        $simulation = $reflection
+            ->getMethod('calculateSimulation')
+            ->invoke($page, 'LDR', $defaultComponents);
+        $rekapComponents = BranchOffice::konsolidasiLDRComponents($date, false, null);
+        $rekapLdr = BranchOffice::konsolidasiLDR($date, false, null);
+
+        $this->assertEqualsWithDelta(650.0, $rekapComponents['total_baki_debet'], 0.0001);
+        $this->assertEqualsWithDelta(650.0, $rekapComponents['total_simpanan'], 0.0001);
+        $this->assertEqualsWithDelta($rekapComponents['total_baki_debet'], $defaultComponents['Total Loans'], 0.0001);
+        $this->assertEqualsWithDelta($rekapComponents['total_simpanan'], $defaultComponents['Total Deposits'], 0.0001);
+        $this->assertEqualsWithDelta($rekapLdr, $simulation['value'], 0.0001);
+    }
+
     private function createSchema(): void
     {
         Schema::create('branch_offices', function (Blueprint $table): void {
@@ -317,6 +345,7 @@ class TksRatioCacheTest extends TestCase
         $saldoRows = [
             '1272005' => -10,
             '5' => 100,
+            '558' => 0,
             '4' => -200,
             '401' => -150,
             '402' => -50,
@@ -393,5 +422,49 @@ class TksRatioCacheTest extends TestCase
                 'saldoakhir' => -$savings,
                 'updated_at' => now(),
             ]);
+    }
+
+    private function seedLdrSourceData(string $date, string $branch): void
+    {
+        $now = now();
+
+        $saldoRows = [
+            '121' => 600,
+            '122' => 50,
+            '221' => -500,
+            '2312200' => -200,
+            '2312201' => -100,
+            '2212111' => -20,
+            '2212116' => -10,
+            '2212199' => -120,
+        ];
+
+        DB::table('saldo_neracas')->insert(array_map(
+            fn(string $noakun, int|float $saldoakhir): array => [
+                'cabang' => $branch,
+                'tanggal' => $date,
+                'noakun' => $noakun,
+                'saldoakhir' => $saldoakhir,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ],
+            array_keys($saldoRows),
+            $saldoRows,
+        ));
+
+        DB::connection('mysql')->table('loan_outstandings')->insert([
+            'loan_date_params' => $date,
+            'loan_branch_office' => $branch,
+            'loan_account' => 'LDR-' . $branch . '-' . str_replace('-', '', $date),
+            'loan_cif' => 'CIF-LDR-' . $branch,
+            'loan_alt_account' => 'ALT-LDR-' . $branch,
+            'loan_principal' => 650,
+            'loan_installment_loans' => 25,
+            'loan_bi_collectability' => 1,
+            'loan_days_past_due' => 0,
+            'loan_outstanding' => 650,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
     }
 }
