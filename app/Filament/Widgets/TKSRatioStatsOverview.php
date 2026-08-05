@@ -36,7 +36,7 @@ class TKSRatioStatsOverview extends BaseWidget
         $branch = $this->branchCode;
         $snapshot = app(TksRatioSnapshotService::class)->getSnapshot($targetDate, $branch);
 
-        return [
+        $stats = [
             $this->kpmm($this->metric($snapshot, 'kpmm')),
             $this->ckpnPerPPKA($this->metric($snapshot, 'ckpn_per_ppka')),
             $this->nplNett($this->metric($snapshot, 'npl_nett')),
@@ -48,6 +48,16 @@ class TKSRatioStatsOverview extends BaseWidget
             $this->cashRatio($this->metric($snapshot, 'cash_ratio')),
             $this->miapb($this->metric($snapshot, 'miapb')),
         ];
+
+        foreach ($stats as $stat) {
+            $color = $stat->getColor();
+            $stat->extraAttributes([
+                ...$stat->getExtraAttributes(),
+                'style' => "background-image: linear-gradient(rgba(var(--{$color}-500), 0.12), rgba(var(--{$color}-500), 0.12));",
+            ]);
+        }
+
+        return $stats;
     }
 
     /**
@@ -356,10 +366,63 @@ class TKSRatioStatsOverview extends BaseWidget
             ],
         };
 
+        $zone = $this->resolveLdrZone($ldr);
+
         return Stat::make('LDR', number_format($ldr, 2, ',', '.') . '%')
-            ->color($kshtLdr['color'])
-            ->description($this->descriptionWithOjk($kshtLdr['description'], '<= 90%'))
-            ->icon('heroicon-o-chart-bar');
+            ->description("{$zone['label']} · {$zone['range']}")
+            ->descriptionIcon($zone['icon'])
+            ->color($zone['color'])
+            ->extraAttributes([
+                'class' => match ($zone['color']) {
+                    'danger' => 'ring-1 ring-danger-200 dark:ring-danger-700',
+                    'warning' => 'ring-1 ring-warning-200 dark:ring-warning-700',
+                    default => 'ring-1 ring-success-200 dark:ring-success-700',
+                },
+            ]);
+    }
+
+    private function resolveLdrZone(float $ldr): array
+    {
+        return match (true) {
+            $ldr >= 130 => [
+                'label' => 'Stop Ekspansi',
+                'range' => 'LDR ≥ 130%',
+                'color' => 'danger',
+                'icon' => 'heroicon-o-no-symbol',
+                'description' => 'Tahan pencairan kredit baru dan fokus meningkatkan funding.',
+                'actions' => [
+                    'Tahan pencairan kredit baru',
+                    'Fokus ke funding: bunga deposito, promo DPK, dan cross-selling',
+                    'Selling asset ke bank lain sesuai RAC',
+                ],
+            ],
+
+            $ldr > 90 => [
+                'label' => 'Ekspansi Terbatas',
+                'range' => 'LDR > 90% dan < 130%',
+                'color' => 'warning',
+                'icon' => 'heroicon-o-exclamation-triangle',
+                'description' => 'Ekspansi kredit dilakukan secara selektif dan terukur.',
+                'actions' => [
+                    'Ekspansi kredit selektif dan terukur',
+                    'Monitoring LDR dan likuiditas lebih intensif',
+                    'Prioritaskan kredit berkualitas dan nasabah existing',
+                ],
+            ],
+
+            default => [
+                'label' => 'Go Ekspansi',
+                'range' => 'LDR ≤ 90%',
+                'color' => 'success',
+                'icon' => 'heroicon-o-rocket-launch',
+                'description' => 'Pencairan kredit dapat dibuka sesuai pipeline.',
+                'actions' => [
+                    'Pencairan kredit baru dibuka sesuai pipeline',
+                    'Pastikan kenaikan DPK dan run-off pelunasan tetap terpantau',
+                    'Didukung realisasi piutang asuransi',
+                ],
+            ],
+        };
     }
 
     #[On('rekapTksDateChanged')]
