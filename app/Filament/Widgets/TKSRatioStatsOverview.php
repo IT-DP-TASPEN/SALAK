@@ -366,19 +366,12 @@ class TKSRatioStatsOverview extends BaseWidget
             ],
         };
 
-        $zone = $this->resolveLdrZone($ldr);
+        // $zone = $this->resolveLdrZone($ldr);
 
         return Stat::make('LDR', number_format($ldr, 2, ',', '.') . '%')
-            ->description("{$zone['label']} · {$zone['range']}")
-            ->descriptionIcon($zone['icon'])
-            ->color($zone['color'])
-            ->extraAttributes([
-                'class' => match ($zone['color']) {
-                    'danger' => 'ring-1 ring-danger-200 dark:ring-danger-700',
-                    'warning' => 'ring-1 ring-warning-200 dark:ring-warning-700',
-                    default => 'ring-1 ring-success-200 dark:ring-success-700',
-                },
-            ]);
+            ->color($kshtLdr['color'])
+            ->description($this->descriptionWithOjk($kshtLdr['description'], '<= 90%'))
+            ->icon('heroicon-o-chart-bar');
     }
 
     private function resolveLdrZone(float $ldr): array
