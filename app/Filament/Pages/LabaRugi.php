@@ -6,6 +6,7 @@ use App\Filament\Widgets\LabaRugiFilter;
 use App\Services\LabaRugiReportService;
 use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 use Carbon\Carbon;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 use Livewire\Attributes\On;
 
@@ -44,6 +45,20 @@ class LabaRugi extends Page
     {
         return [
             LabaRugiFilter::class,
+        ];
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('downloadPdf')
+                ->label('Cetak PDF')
+                ->icon('heroicon-o-printer')
+                ->url(fn (): string => route('laba-rugi.pdf', [
+                    'date' => $this->selectedDate,
+                    'branch' => $this->selectedBranchCode,
+                ]))
+                ->openUrlInNewTab(),
         ];
     }
 

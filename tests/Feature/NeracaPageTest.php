@@ -4,7 +4,9 @@ namespace Tests\Feature;
 
 use App\Filament\Pages\Neraca;
 use App\Filament\Widgets\NeracaFilter;
+use App\Services\NeracaReportService;
 use Livewire\Livewire;
+use Mockery\MockInterface;
 use Tests\Concerns\InteractsWithNeracaTestEnvironment;
 use Tests\TestCase;
 
@@ -127,6 +129,25 @@ class NeracaPageTest extends TestCase
         $user = $this->createUserWithBranch('Cabang User', 2);
         $this->grantNeracaPagePermission($user);
         $this->actingAs($user);
+
+        $this->mock(NeracaReportService::class, function (MockInterface $mock): void {
+            $mock->shouldReceive('build')
+                ->once()
+                ->with('2026-01-08', '001', false)
+                ->andReturn([
+                    'assets' => [
+                        'label' => 'Aset',
+                        'rows' => [[
+                            'pos' => '1101010000',
+                            'description' => 'Kas dalam Rupiah',
+                            'value' => 444.0,
+                            'previous_value' => 222.0,
+                            'yoy_percent' => 100.0,
+                            'is_total' => false,
+                        ]],
+                    ],
+                ]);
+        });
 
         $response = $this->get(route('neraca.pdf', [
             'date' => '2026-01-08',

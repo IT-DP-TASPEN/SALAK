@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="utf-8">
-    <title>Neraca {{ $date }}</title>
+    <title>{{ $reportTitle }} {{ $date }}</title>
     <style>
         body {
             color: #111827;
@@ -90,11 +90,13 @@
         $formatPercentage = fn (?float $value): string => $value === null ? '-' : number_format($value, 2, ',', '.').'%' ;
     @endphp
 
-    <h1>Neraca</h1>
+    <h1>{{ $reportTitle }}</h1>
     <div class="meta">
         Tanggal: {{ $date }}<br>
-        Kantor Cabang: {{ $branchLabel }}<br>
-        Saldo nol: {{ $showZeroBalances ? 'Ditampilkan' : 'Disembunyikan' }}
+        Kantor Cabang: {{ $branchLabel }}
+        @isset($showZeroBalances)
+            <br>Saldo nol: {{ $showZeroBalances ? 'Ditampilkan' : 'Disembunyikan' }}
+        @endisset
     </div>
 
     @foreach ($sections as $section)

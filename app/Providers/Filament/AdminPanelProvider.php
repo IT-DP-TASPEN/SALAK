@@ -34,6 +34,7 @@ class AdminPanelProvider extends PanelProvider
             ->spa()
             ->spaUrlExceptions([
                 '*/admin/neraca/pdf*',
+                '*/admin/laba-rugi/pdf*',
             ])
             ->databaseNotifications()
             ->brandLogo(asset('logo.png'))

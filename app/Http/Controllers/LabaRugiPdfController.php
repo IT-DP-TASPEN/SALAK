@@ -3,33 +3,26 @@
 namespace App\Http\Controllers;
 
 use App\Models\BranchOffice;
-use App\Services\NeracaReportService;
+use App\Services\LabaRugiReportService;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
-class NeracaPdfController extends Controller
+class LabaRugiPdfController extends Controller
 {
     public function __invoke(Request $request): Response
     {
         $date = $this->normalizeDate($request->query('date'));
         $branchCode = $this->resolveBranchCode($request);
-        $showZeroBalances = $request->boolean('show_zero_balances');
 
-        $sections = app(NeracaReportService::class)->build(
-            $date,
-            $branchCode,
-            $showZeroBalances,
-        );
+        $sections = app(LabaRugiReportService::class)->build($date, $branchCode);
 
         return Pdf::loadView('pdf.financial-report', [
-            'reportTitle' => 'Neraca',
+            'reportTitle' => 'Laba Rugi',
             'sections' => $sections,
             'date' => $date,
-            'branchCode' => $branchCode,
             'branchLabel' => $this->branchLabel($branchCode),
-            'showZeroBalances' => $showZeroBalances,
         ])
             ->setPaper('a4', 'landscape')
             ->download($this->filename($date, $branchCode));
@@ -66,7 +59,7 @@ class NeracaPdfController extends Controller
     {
         $branchSegment = blank($branchCode) ? 'semua-cabang' : $branchCode;
 
-        return "neraca-{$date}-{$branchSegment}.pdf";
+        return "laba-rugi-{$date}-{$branchSegment}.pdf";
     }
 
     private function normalizeDate(mixed $date): string
