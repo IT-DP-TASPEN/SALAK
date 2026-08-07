@@ -31,11 +31,11 @@ class SimulasiTks extends Page implements HasForms
     public ?array $simulation = null;
 
     private $selectedRatio = [
-        // 'KPMM' => [
-        //     'Modal Inti' => 0.00,
-        //     'Modal Pelengkap' => 0.00,
-        //     'Aset Tertimbang Menurut Risiko (ATMR)' => 0.00,
-        // ],
+        'KPMM' => [
+            'Modal Inti' => 0.00,
+            'Modal Pelengkap' => 0.00,
+            'Aset Tertimbang Menurut Risiko (ATMR)' => 0.00,
+        ],
         'CKPN per PPKA' => [
             'CKPN' => 0.00,
             'PPKA' => 0.00,
@@ -69,6 +69,10 @@ class SimulasiTks extends Page implements HasForms
         'Cash Ratio' => [
             'Aset Likuid' => 0.00,
             'Kewajiban Lancar' => 0.00,
+        ],
+        'Liquidity Coverage Ratio (LCR)' => [
+            'Aset Likuid' => 0.00,
+            'Nett Arus Kas' => 0.00,
         ],
     ];
 
@@ -203,6 +207,7 @@ class SimulasiTks extends Page implements HasForms
             'LDR' => $this->ratioValue('Total Loans', 'Total Deposits', $components),
             'NIM' => $this->ratioValue('Pendapatan Bunga Bersih', 'Rata-rata Aset Produktif', $components),
             'Cash Ratio' => $this->ratioValue('Aset Likuid', 'Kewajiban Lancar', $components),
+            'Liquidity Coverage Ratio (LCR)' => $this->ratioValue('Aset Likuid', 'Nett Arus Kas', $components),
             default => 0.0,
         };
 
@@ -569,6 +574,10 @@ class SimulasiTks extends Page implements HasForms
             'Cash Ratio' => [
                 'Aset Likuid' => BranchOffice::konsolidasiAssetLiquid($tanggal, false, true, $branch),
                 'Kewajiban Lancar' => BranchOffice::konsolidasiKewajibanLancar($tanggal, $branch),
+            ],
+            'Liquidity Coverage Ratio (LCR)' => [
+                'Aset Likuid' => BranchOffice::konsolidasiAssetLiquid($tanggal, false, true, $branch),
+                'Nett Arus Kas' => 0.00,
             ],
             default => [],
         };
