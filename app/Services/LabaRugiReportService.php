@@ -7,7 +7,7 @@ use Carbon\Carbon;
 class LabaRugiReportService
 {
     /**
-     * @return array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, previous_value: float, yoy_percent: ?float, is_total: bool}>}>
+     * @return array<string, array{label: string, rows: array<int, array<string, mixed>>}>
      */
     public function build(?string $date = null, ?string $branchCode = null): array
     {
@@ -17,47 +17,32 @@ class LabaRugiReportService
         $balanceService = app(ReportBalanceService::class);
         $balances = $balanceService->loadCurrentCoaBalances($sections, $asOf, $branchCode);
         $previousBalances = $balanceService->loadPreviousRowBalances($sections, $asOf, $branchCode);
+        $trees = [];
 
-        [$rowValues, $groupTotals] = $this->buildDetailValues(
-            $sections,
-            fn (array $row, string $pos): float => $balanceService->sumCoaBalances($row['coas'] ?? [], $balances),
-        );
-        [$previousRowValues, $previousGroupTotals] = $this->buildDetailValues(
-            $sections,
-            fn (array $row, string $pos): float => (float) ($previousBalances[$pos] ?? 0.0),
-        );
+        foreach ($sections as $sectionKey => $sectionConfig) {
+            $trees[$sectionKey] = $this->buildTree($sectionConfig['rows'] ?? []);
+        }
+
+        $valueResolver = fn (array $row, string $pos): float => $balanceService->sumCoaBalances($row['coas'] ?? [], $balances);
+        $previousValueResolver = fn (array $row, string $pos): float => (float) ($previousBalances[$pos] ?? 0.0);
+        $groupTotals = $this->buildGroupTotals($trees, $valueResolver);
+        $previousGroupTotals = $this->buildGroupTotals($trees, $previousValueResolver);
         $formulaValues = $this->buildFormulaValues($groupTotals);
         $previousFormulaValues = $this->buildFormulaValues($previousGroupTotals);
 
         $report = [];
 
         foreach ($sections as $sectionKey => $sectionConfig) {
-            $rows = [];
-
-            foreach ($sectionConfig['rows'] ?? [] as $rowConfig) {
-                $formula = (string) ($rowConfig['formula'] ?? '');
-                $pos = (string) ($rowConfig['pos'] ?? '');
-
-                $value = $formula !== ''
-                    ? (float) ($formulaValues[$formula] ?? 0.0)
-                    : (float) ($rowValues[$pos] ?? 0.0);
-                $previousValue = $formula !== ''
-                    ? (float) ($previousFormulaValues[$formula] ?? 0.0)
-                    : (float) ($previousRowValues[$pos] ?? 0.0);
-
-                $rows[] = [
-                    'pos' => $pos,
-                    'description' => (string) ($rowConfig['description'] ?? ''),
-                    'value' => $value,
-                    'previous_value' => $previousValue,
-                    'yoy_percent' => $balanceService->yoyPercent($value, $previousValue),
-                    'is_total' => (bool) ($rowConfig['is_total'] ?? false),
-                ];
-            }
-
             $report[$sectionKey] = [
                 'label' => (string) ($sectionConfig['label'] ?? $sectionKey),
-                'rows' => $rows,
+                'rows' => $this->buildReportRows(
+                    $trees[$sectionKey] ?? [],
+                    $valueResolver,
+                    $previousValueResolver,
+                    $formulaValues,
+                    $previousFormulaValues,
+                    $balanceService,
+                ),
             ];
         }
 
@@ -65,34 +50,148 @@ class LabaRugiReportService
     }
 
     /**
-     * @param  array<string, mixed>  $sections
-     * @param  callable(array<string, mixed>, string): float  $valueResolver
-     * @return array{0: array<string, float>, 1: array<string, float>}
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
      */
-    private function buildDetailValues(array $sections, callable $valueResolver): array
+    private function buildTree(array $rows): array
     {
-        $rowValues = [];
-        $groupTotals = [];
+        $index = 0;
 
-        foreach ($sections as $section) {
-            foreach ($section['rows'] ?? [] as $row) {
-                if (filled($row['formula'] ?? null)) {
-                    continue;
-                }
+        return $this->buildTreeLevel($rows, $index);
+    }
 
-                $pos = (string) ($row['pos'] ?? '');
-                $group = (string) ($row['group'] ?? '');
-                $value = $valueResolver($row, $pos);
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildTreeLevel(array $rows, int &$index, ?int $parentIndent = null): array
+    {
+        $tree = [];
 
-                $rowValues[$pos] = $value;
+        while (isset($rows[$index])) {
+            $description = (string) ($rows[$index]['description'] ?? '');
+            $indent = strlen($description) - strlen(ltrim($description, ' '));
 
-                if ($group !== '') {
-                    $groupTotals[$group] = ($groupTotals[$group] ?? 0.0) + $value;
+            if ($parentIndent !== null && $indent <= $parentIndent) {
+                break;
+            }
+
+            $node = $rows[$index];
+            $node['description'] = ltrim($description, ' ');
+            $node['children'] = [];
+            $index++;
+
+            if (isset($rows[$index])) {
+                $nextDescription = (string) ($rows[$index]['description'] ?? '');
+                $nextIndent = strlen($nextDescription) - strlen(ltrim($nextDescription, ' '));
+
+                if ($nextIndent > $indent) {
+                    $node['children'] = $this->buildTreeLevel($rows, $index, $indent);
                 }
             }
+
+            $tree[] = $node;
         }
 
-        return [$rowValues, $groupTotals];
+        return $tree;
+    }
+
+    /**
+     * @param  array<string, array<int, array<string, mixed>>>  $trees
+     * @param  callable(array<string, mixed>, string): float  $valueResolver
+     * @return array<string, float>
+     */
+    private function buildGroupTotals(array $trees, callable $valueResolver): array
+    {
+        $groupTotals = [];
+
+        foreach ($trees as $rows) {
+            $this->addLeafGroupTotals($rows, $valueResolver, $groupTotals);
+        }
+
+        return $groupTotals;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  callable(array<string, mixed>, string): float  $valueResolver
+     * @param  array<string, float>  $groupTotals
+     */
+    private function addLeafGroupTotals(array $rows, callable $valueResolver, array &$groupTotals): void
+    {
+        foreach ($rows as $row) {
+            if (($row['children'] ?? []) !== []) {
+                $this->addLeafGroupTotals($row['children'], $valueResolver, $groupTotals);
+
+                continue;
+            }
+
+            if (filled($row['formula'] ?? null)) {
+                continue;
+            }
+
+            $group = (string) ($row['group'] ?? '');
+
+            if ($group !== '') {
+                $pos = (string) ($row['pos'] ?? '');
+                $groupTotals[$group] = ($groupTotals[$group] ?? 0.0) + $valueResolver($row, $pos);
+            }
+        }
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  callable(array<string, mixed>, string): float  $valueResolver
+     * @param  callable(array<string, mixed>, string): float  $previousValueResolver
+     * @param  array<string, float>  $formulaValues
+     * @param  array<string, float>  $previousFormulaValues
+     * @return array<int, array<string, mixed>>
+     */
+    private function buildReportRows(
+        array $rows,
+        callable $valueResolver,
+        callable $previousValueResolver,
+        array $formulaValues,
+        array $previousFormulaValues,
+        ReportBalanceService $balanceService,
+    ): array {
+        $reportRows = [];
+
+        foreach ($rows as $row) {
+            $children = $this->buildReportRows(
+                $row['children'] ?? [],
+                $valueResolver,
+                $previousValueResolver,
+                $formulaValues,
+                $previousFormulaValues,
+                $balanceService,
+            );
+            $formula = (string) ($row['formula'] ?? '');
+            $pos = (string) ($row['pos'] ?? '');
+
+            if ($formula !== '') {
+                $value = (float) ($formulaValues[$formula] ?? 0.0);
+                $previousValue = (float) ($previousFormulaValues[$formula] ?? 0.0);
+            } elseif ($children !== []) {
+                $value = (float) array_sum(array_column($children, 'value'));
+                $previousValue = (float) array_sum(array_column($children, 'previous_value'));
+            } else {
+                $value = $valueResolver($row, $pos);
+                $previousValue = $previousValueResolver($row, $pos);
+            }
+
+            $reportRows[] = [
+                'pos' => $pos,
+                'description' => (string) ($row['description'] ?? ''),
+                'value' => $value,
+                'previous_value' => $previousValue,
+                'yoy_percent' => $balanceService->yoyPercent($value, $previousValue),
+                'is_total' => (bool) ($row['is_total'] ?? false),
+                'children' => $children,
+            ];
+        }
+
+        return $reportRows;
     }
 
     /**

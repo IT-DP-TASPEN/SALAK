@@ -14,7 +14,7 @@ return [
                 ['pos' => '1103010000', 'description' => 'Penempatan pada Bank Lain', 'coas' => ['111', '112', '113'], 'is_total' => false],
                 ['pos' => '1103020000', 'description' => '-/- Cadangan Kerugian Penurunan Nilai', 'coas' => ['114'], 'is_total' => false],
                 ['pos' => '1104010100', 'description' => 'Kredit yang Diberikan (Baki Debet)', 'coas' => ['121', '122'], 'is_total' => false],
-                ['pos' => '1104010200', 'description' => '-/- Provisi yang belum diamortisasi', 'coas' => ['123', '124', '129'], 'is_total' => false],
+                ['pos' => '1104010200', 'description' => '-/- Provisi yang belum diamortisasi', 'coas' => ['123', '124'], 'is_total' => false],
                 ['pos' => '1104010300', 'description' => 'Biaya Transaksi yang belum diamortisasi', 'coas' => ['125'], 'is_total' => false],
                 ['pos' => '1104010400', 'description' => '-/- Pendapatan Bunga yang Ditangguhkan dalam rangka restrukturisasi', 'coas' => ['126'], 'is_total' => false],
                 ['pos' => '1104010500', 'description' => '-/- Cadangan Kerugian Restrukturisasi', 'coas' => [], 'is_total' => false],
@@ -30,10 +30,11 @@ return [
                 ['pos' => '1205000000', 'description' => 'Properti Terbengkalai', 'coas' => [], 'is_total' => false],
                 ['pos' => '1206000000', 'description' => 'Aset Keuangan Lainnya', 'coas' => [], 'is_total' => false],
                 ['pos' => '1206010000', 'description' => '-/- Cadangan Kerugian Penurunan Nilai', 'coas' => [], 'is_total' => false],
-                ['pos' => '1299000000', 'description' => 'Aset Lainnya', 'coas' => ['131', '132', '161', '162', '163', '164', '171', '181', '182', '183', '184', '191', '192', '193', '194', '195', '196', '197', '198'], 'is_total' => false],
+                ['pos' => '1299000000', 'description' => 'Aset Lainnya', 'coas' => ['129', '131', '132', '161', '162', '163', '164', '171', '181', '182', '183', '184', '191', '192', '193', '194', '195', '196', '197', '198'], 'is_total' => false],
                 ['pos' => '1000000000', 'description' => 'TOTAL ASET', 'coas' => [], 'is_total' => true],
             ],
         ],
+
         'liabilities' => [
             'label' => 'Liabilitas',
             'rows' => [
@@ -49,10 +50,11 @@ return [
                 ['pos' => '2201030000', 'description' => '-/- Diskonto Belum Diamortisasi', 'coas' => [], 'is_total' => false],
                 ['pos' => '2202000000', 'description' => 'Dana Setoran Modal-Kewajiban', 'coas' => [], 'is_total' => false],
                 ['pos' => '2203000000', 'description' => 'Liabilitas Antarkantor', 'coas' => [], 'is_total' => false],
-                ['pos' => '2299000000', 'description' => 'Liabilitas lainnya', 'coas' => ['209', '251', '252', '253', '291', '292'], 'is_total' => false],
+                ['pos' => '2299000000', 'description' => 'Liabilitas lainnya', 'coas' => ['209', '251', '252', '253', '291', '292', '312'], 'is_total' => false],
                 ['pos' => '2000000000', 'description' => 'TOTAL LIABILITAS', 'coas' => [], 'is_total' => true],
             ],
         ],
+
         'equity' => [
             'label' => 'Ekuitas',
             'rows' => [
@@ -65,9 +67,9 @@ return [
                 ['pos' => '3103010000', 'description' => 'a. Keuntungan (Kerugian) dari Perubahan Nilai Aset Keuangan dalam Kelompok Tersedia untuk Dijual', 'coas' => [], 'is_total' => false],
                 ['pos' => '3103020000', 'description' => 'b. Keuntungan Revaluasi Aset Tetap', 'coas' => [], 'is_total' => false],
                 ['pos' => '3103990000', 'description' => 'c. Lainnya', 'coas' => [], 'is_total' => false],
-                ['pos' => '3103980000', 'description' => 'd. Pajak Penghasilan terkait dengan Ekuitas Lain', 'coas' => ['312'], 'is_total' => false],
-                ['pos' => '3104010000', 'description' => 'a. Umum', 'coas' => ['311'], 'is_total' => false],
-                ['pos' => '3104020000', 'description' => 'b. Tujuan', 'coas' => [], 'is_total' => false],
+                ['pos' => '3103980000', 'description' => 'd. Pajak Penghasilan terkait dengan Ekuitas Lain', 'coas' => [], 'is_total' => false],
+                ['pos' => '3104010000', 'description' => 'a. Umum', 'coas' => ['3111000'], 'is_total' => false],
+                ['pos' => '3104020000', 'description' => 'b. Tujuan', 'coas' => ['3111001'], 'is_total' => false],
                 ['pos' => '3105010000', 'description' => 'a. Laba Tahun lalu', 'coas' => ['321', '322'], 'is_total' => false],
                 ['pos' => '3105020000', 'description' => 'b. Laba Tahun Berjalan', 'coas' => ['323'], 'is_total' => false],
                 ['pos' => '3000000000', 'description' => 'TOTAL EKUITAS', 'coas' => [], 'is_total' => true],

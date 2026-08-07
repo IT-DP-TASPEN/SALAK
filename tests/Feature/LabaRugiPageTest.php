@@ -55,6 +55,9 @@ class LabaRugiPageTest extends TestCase
             ->assertSee('Rp 1.332')
             ->assertSee('Saldo Tahun Lalu')
             ->assertSee('YoY%')
+            ->assertSee('▾')
+            ->assertSeeHtml('x-data="{ expanded: {} }"')
+            ->assertSeeHtml('style="padding-left: 2.25rem"')
             ->assertSee('Rp 666')
             ->assertSee('100,00%')
             ->call('updateSelectedBranch', '001')
@@ -136,12 +139,21 @@ class LabaRugiPageTest extends TestCase
                     'operational' => [
                         'label' => 'Operasional',
                         'rows' => [[
-                            'pos' => '4101010201',
-                            'description' => 'Pendapatan Bunga',
+                            'pos' => '4100000000',
+                            'description' => 'Pendapatan Operasional',
                             'value' => 444.0,
                             'previous_value' => 222.0,
                             'yoy_percent' => 100.0,
-                            'is_total' => false,
+                            'is_total' => true,
+                            'children' => [[
+                                'pos' => '4101010201',
+                                'description' => 'Pendapatan Bunga',
+                                'value' => 444.0,
+                                'previous_value' => 222.0,
+                                'yoy_percent' => 100.0,
+                                'is_total' => false,
+                                'children' => [],
+                            ]],
                         ]],
                     ],
                 ]);

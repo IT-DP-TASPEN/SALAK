@@ -82,6 +82,10 @@
             background: #f3f4f6;
             font-weight: 700;
         }
+
+        .parent td {
+            font-weight: 700;
+        }
     </style>
 </head>
 <body>
@@ -113,15 +117,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach ($section['rows'] as $row)
-                        <tr @class(['total' => $row['is_total']])>
-                            <td class="pos">{{ $row['pos'] }}</td>
-                            <td>{{ $row['description'] }}</td>
-                            <td class="amount">{{ $formatCurrency((float) $row['value']) }}</td>
-                            <td class="amount">{{ $formatCurrency((float) $row['previous_value']) }}</td>
-                            <td class="percent">{{ $formatPercentage($row['yoy_percent']) }}</td>
-                        </tr>
-                    @endforeach
+                    @include('pdf.partials.financial-report-rows', [
+                        'rows' => $section['rows'],
+                        'depth' => 0,
+                        'formatCurrency' => $formatCurrency,
+                        'formatPercentage' => $formatPercentage,
+                    ])
                 </tbody>
             </table>
         </div>

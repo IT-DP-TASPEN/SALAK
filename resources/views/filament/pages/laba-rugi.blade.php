@@ -19,43 +19,16 @@
                             <th class="px-4 py-3 text-right font-semibold">YoY%</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 dark:divide-white/5">
-                        @foreach ($section['rows'] as $row)
-                            <tr @class([
-                                'bg-gray-50/80 dark:bg-white/5' => $row['is_total'],
-                            ])>
-                                <td @class([
-                                    'px-4 py-3 align-top whitespace-nowrap text-gray-900 dark:text-white',
-                                    'font-semibold' => $row['is_total'],
-                                ])>
-                                    {{ $row['pos'] }}
-                                </td>
-                                <td @class([
-                                    'px-4 py-3 align-top text-gray-700 dark:text-gray-200',
-                                    'font-semibold text-gray-900 dark:text-white' => $row['is_total'],
-                                ])>
-                                    {{ $row['description'] }}
-                                </td>
-                                <td @class([
-                                    'px-4 py-3 text-right tabular-nums whitespace-nowrap text-gray-900 dark:text-white',
-                                    'font-semibold' => $row['is_total'],
-                                ])>
-                                    {{ $this->formatCurrency($row['value']) }}
-                                </td>
-                                <td @class([
-                                    'px-4 py-3 text-right tabular-nums whitespace-nowrap text-gray-900 dark:text-white',
-                                    'font-semibold' => $row['is_total'],
-                                ])>
-                                    {{ $this->formatCurrency($row['previous_value']) }}
-                                </td>
-                                <td @class([
-                                    'px-4 py-3 text-right tabular-nums whitespace-nowrap text-gray-900 dark:text-white',
-                                    'font-semibold' => $row['is_total'],
-                                ])>
-                                    {{ $this->formatPercentage($row['yoy_percent']) }}
-                                </td>
-                            </tr>
-                        @endforeach
+                    <tbody
+                        class="divide-y divide-gray-100 dark:divide-white/5"
+                        x-data="{ expanded: {} }"
+                    >
+                        @include('filament.pages.partials.laba-rugi-rows', [
+                            'rows' => $section['rows'],
+                            'depth' => 0,
+                            'ancestors' => [],
+                            'pathPrefix' => '',
+                        ])
                     </tbody>
                 </table>
             </div>

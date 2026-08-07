@@ -49,20 +49,24 @@ class LabaRugiReportServiceTest extends TestCase
         $this->assertSame(1000.0, $this->rowValue($report['operational']['rows'], '4101010201'));
         $this->assertSame(500.0, $this->rowValue($report['operational']['rows'], '4101010203'));
         $this->assertSame(1540.0, $this->rowValue($report['operational']['rows'], '4100000000'));
+        $this->assertSame('1. Pendapatan Bunga', $report['operational']['rows'][0]['children'][0]['description']);
+        $this->assertSame('a. Bunga Kontraktual', $report['operational']['rows'][0]['children'][0]['children'][0]['description']);
+        $this->assertSame(1500.0, $this->rowByDescription($report['operational']['rows'], 'ii. Penempatan pada Bank Lain')['value']);
+        $this->assertSame(1500.0, $this->rowByDescription($report['operational']['rows'], '1. Pendapatan Bunga')['value']);
 
-        $this->assertSame(30.0, $this->rowValue($report['operational']['rows'], '5106090000'));
-        $this->assertSame(180.0, $this->rowValue($report['operational']['rows'], '5100000000'));
-        $this->assertSame(1360.0, $this->rowValue($report['operational']['rows'], '3104040100'));
+        $this->assertSame(10.0, $this->rowValue($report['operational']['rows'], '5106090000'));
+        $this->assertSame(160.0, $this->rowValue($report['operational']['rows'], '5100000000'));
+        $this->assertSame(1380.0, $this->rowValue($report['operational']['rows'], '3104040100'));
 
         $this->assertSame(105.0, $this->rowValue($report['non_operational']['rows'], '4200000000'));
         $this->assertSame(20.0, $this->rowValue($report['non_operational']['rows'], '5200000000'));
         $this->assertSame(85.0, $this->rowValue($report['non_operational']['rows'], '3104040200'));
-        $this->assertSame(1445.0, $this->rowValue($report['non_operational']['rows'], '3104040300'));
+        $this->assertSame(1465.0, $this->rowValue($report['non_operational']['rows'], '3104040300'));
 
-        $this->assertSame(40.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '5300000000'));
-        $this->assertSame(20.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '5400000000'));
-        $this->assertSame(1385.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '3104040400'));
-        $this->assertSame(1385.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '3104040600'));
+        $this->assertSame(20.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '5300000000'));
+        $this->assertSame(0.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '5400000000'));
+        $this->assertSame(1445.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '3104040400'));
+        $this->assertSame(1445.0, $this->rowValue($report['tax_and_comprehensive']['rows'], '3104040600'));
     }
 
     public function test_build_returns_consolidated_balances_when_branch_code_is_blank(): void
@@ -114,9 +118,10 @@ class LabaRugiReportServiceTest extends TestCase
         $this->assertEqualsWithDelta(87.5, $this->rowYoyPercent($report['operational']['rows'], '4101010201'), 0.00001);
 
         $this->assertSame(80.0, $this->rowPreviousValue($report['operational']['rows'], '4100000000'));
+        $this->assertSame(80.0, $this->rowByDescription($report['operational']['rows'], 'ii. Penempatan pada Bank Lain')['previous_value']);
         $this->assertSame(40.0, $this->rowPreviousValue($report['operational']['rows'], '5100000000'));
         $this->assertSame(40.0, $this->rowPreviousValue($report['operational']['rows'], '3104040100'));
-        $this->assertEqualsWithDelta(147.5, $this->rowYoyPercent($report['operational']['rows'], '3104040100'), 0.00001);
+        $this->assertEqualsWithDelta(150.0, $this->rowYoyPercent($report['operational']['rows'], '3104040100'), 0.00001);
 
         $this->assertSame(10.0, $this->rowPreviousValue($report['non_operational']['rows'], '3104040200'));
         $this->assertSame(50.0, $this->rowPreviousValue($report['non_operational']['rows'], '3104040300'));
@@ -125,44 +130,98 @@ class LabaRugiReportServiceTest extends TestCase
     }
 
     /**
-     * @param  array<int, array{pos: string, description: string, value: float, previous_value?: float, yoy_percent?: ?float, is_total: bool}>  $rows
+     * @param  array<int, array<string, mixed>>  $rows
      */
     private function rowValue(array $rows, string $pos): float
     {
-        foreach ($rows as $row) {
-            if ($row['pos'] === $pos) {
-                return $row['value'];
-            }
-        }
-
-        $this->fail("Row with pos [{$pos}] was not found.");
+        return (float) $this->row($rows, $pos)['value'];
     }
 
     /**
-     * @param  array<int, array{pos: string, description: string, value: float, previous_value?: float, yoy_percent?: ?float, is_total: bool}>  $rows
+     * @param  array<int, array<string, mixed>>  $rows
      */
     private function rowPreviousValue(array $rows, string $pos): float
     {
-        foreach ($rows as $row) {
-            if ($row['pos'] === $pos) {
-                return (float) ($row['previous_value'] ?? 0.0);
-            }
+        return (float) ($this->row($rows, $pos)['previous_value'] ?? 0.0);
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     */
+    private function rowYoyPercent(array $rows, string $pos): ?float
+    {
+        return $this->row($rows, $pos)['yoy_percent'] ?? null;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<string, mixed>
+     */
+    private function row(array $rows, string $pos): array
+    {
+        $row = $this->findRow($rows, $pos);
+
+        if ($row !== null) {
+            return $row;
         }
 
         $this->fail("Row with pos [{$pos}] was not found.");
     }
 
     /**
-     * @param  array<int, array{pos: string, description: string, value: float, previous_value?: float, yoy_percent?: ?float, is_total: bool}>  $rows
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<string, mixed>|null
      */
-    private function rowYoyPercent(array $rows, string $pos): ?float
+    private function findRow(array $rows, string $pos): ?array
     {
         foreach ($rows as $row) {
             if ($row['pos'] === $pos) {
-                return $row['yoy_percent'] ?? null;
+                return $row;
+            }
+
+            $match = $this->findRow($row['children'] ?? [], $pos);
+
+            if ($match !== null) {
+                return $match;
             }
         }
 
-        $this->fail("Row with pos [{$pos}] was not found.");
+        return null;
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<string, mixed>
+     */
+    private function rowByDescription(array $rows, string $description): array
+    {
+        $row = $this->findRowByDescription($rows, $description);
+
+        if ($row !== null) {
+            return $row;
+        }
+
+        $this->fail("Row with description [{$description}] was not found.");
+    }
+
+    /**
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<string, mixed>|null
+     */
+    private function findRowByDescription(array $rows, string $description): ?array
+    {
+        foreach ($rows as $row) {
+            if ($row['description'] === $description) {
+                return $row;
+            }
+
+            $match = $this->findRowByDescription($row['children'] ?? [], $description);
+
+            if ($match !== null) {
+                return $match;
+            }
+        }
+
+        return null;
     }
 }

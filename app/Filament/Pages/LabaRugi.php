@@ -29,7 +29,7 @@ class LabaRugi extends Page
     public ?string $selectedBranchCode = null;
 
     /**
-     * @var array<string, array{label: string, rows: array<int, array{pos: string, description: string, value: float, previous_value: float, yoy_percent: ?float, is_total: bool}>}>
+     * @var array<string, array{label: string, rows: array<int, array<string, mixed>>}>
      */
     public array $sections = [];
 
