@@ -196,8 +196,6 @@ func fetchDetails(sessionId, loanId string) error {
 		return fmt.Errorf("fetch loan details failed with status: %s", result.Status)
 	}
 
-	// fmt.Println(result.Data.Result.TempatPenyimpanan)
-	// loop through all fields and print the value if it's type is interface{}
 	fields := result.Data.Result
 	fmt.Println("Loan ID:", loanId)
 	v := reflect.ValueOf(fields)
@@ -205,9 +203,7 @@ func fetchDetails(sessionId, loanId string) error {
 
 	for i := 0; i < v.NumField(); i++ {
 		field := v.Field(i)
-		if field.Kind() == reflect.Interface && !field.IsNil() {
-			fmt.Printf("  - %s: %v (type: %T)\n", typeOfS.Field(i).Name, field.Interface(), field.Interface())
-		}
+		fmt.Printf("  - %s: %v (type: %T)\n", typeOfS.Field(i).Name, field.Interface(), field.Interface())
 	}
 
 	fmt.Println("----------------------------------------")
