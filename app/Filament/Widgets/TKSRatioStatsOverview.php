@@ -144,7 +144,7 @@ class TKSRatioStatsOverview extends BaseWidget
         $kshtCkpnPerPPKA = match (true) {
             $ckpnPerPPKA < 50 => [
                 'color' => 'success',
-                'description' => 'Sehat',
+                'description' => 'Sangat sehat',
             ],
             $ckpnPerPPKA >= 50 && $ckpnPerPPKA < 100 => [
                 'color' => 'warning',
