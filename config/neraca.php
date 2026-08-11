@@ -39,7 +39,7 @@ return [
             'label' => 'Liabilitas',
             'rows' => [
                 ['pos' => '2101000000', 'description' => 'Liabilitas Segera', 'coas' => ['201', '202', '203', '204', '205', '207', '208', '211', '212', '213', '214', '215', '216', '217', '218', '219'], 'is_total' => false],
-                ['pos' => '2102010100', 'description' => 'a Tabungan', 'coas' => ['2212101', '2212102', '2212103', '2212104', '2212105', '2212106', '2212107', '2212108', '2212109', '2212110', '2212112', '2212113', '2212114', '2212115'], 'is_total' => false],
+                ['pos' => '2102010100', 'description' => 'a Tabungan', 'coas' => ['2212101', '2212102', '2212103', '2212104', '2212105', '2212106', '2212107', '2212108', '2212109', '2212110', '2212112', '2212113', '2212114', '2212115', '2212199'], 'is_total' => false],
                 ['pos' => '2102010200', 'description' => '-/- Biaya Transaksi Belum Diamortisasi', 'coas' => ['2322200'], 'is_total' => false],
                 ['pos' => '2102020100', 'description' => 'b Deposito', 'coas' => ['2312200', '2312201'], 'is_total' => false],
                 ['pos' => '2102020200', 'description' => '-/- Biaya Transaksi Belum Diamortisasi', 'coas' => ['2332200'], 'is_total' => false],
