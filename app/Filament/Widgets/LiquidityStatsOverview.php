@@ -46,23 +46,23 @@ class LiquidityStatsOverview extends BaseWidget
         };
 
         $kshtCashRatio = match (true) {
-            $cashRatio >= 4.05 => [
+            $cashRatio >= 20.0 => [
                 'color' => 'success',
                 'description' => 'Sangat sehat',
             ],
-            $cashRatio >= 3.30 && $cashRatio < 4.05 => [
+            $cashRatio >= 15.0 && $cashRatio < 20.0 => [
                 'color' => 'success',
                 'description' => 'Sehat',
             ],
-            $cashRatio >= 2.55 && $cashRatio < 3.30 => [
+            $cashRatio >= 10.0 && $cashRatio < 15.0 => [
                 'color' => 'warning',
                 'description' => 'Cukup sehat',
             ],
-            $cashRatio >= 1.8 && $cashRatio < 2.55 => [
+            $cashRatio >= 5.0 && $cashRatio < 10.0 => [
                 'color' => 'danger',
                 'description' => 'Tidak sehat',
             ],
-            default => [
+            default => [ // $cashRatio < 5.0
                 'color' => 'danger',
                 'description' => 'Sangat tidak sehat',
             ],
