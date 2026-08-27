@@ -228,23 +228,23 @@ class TKSRatioStatsOverview extends BaseWidget
     private function cashRatio(float $cashRatio): Stat
     {
         $kshtCashRatio = match (true) {
-            $cashRatio >= 4.05 => [
+            $cashRatio >= 20.0 => [
                 'color' => 'success',
                 'description' => 'Sangat sehat',
             ],
-            $cashRatio >= 3.30 && $cashRatio < 4.05 => [
+            $cashRatio >= 15.0 && $cashRatio < 20.0 => [
                 'color' => 'success',
                 'description' => 'Sehat',
             ],
-            $cashRatio >= 2.55 && $cashRatio < 3.30 => [
+            $cashRatio >= 10.0 && $cashRatio < 15.0 => [
                 'color' => 'warning',
                 'description' => 'Cukup sehat',
             ],
-            $cashRatio >= 1.8 && $cashRatio < 2.55 => [
+            $cashRatio >= 5.0 && $cashRatio < 10.0 => [
                 'color' => 'danger',
                 'description' => 'Tidak sehat',
             ],
-            default => [
+            default => [ // $cashRatio < 5.0
                 'color' => 'danger',
                 'description' => 'Sangat tidak sehat',
             ],
@@ -252,7 +252,7 @@ class TKSRatioStatsOverview extends BaseWidget
 
         return Stat::make('Cash Ratio', number_format($cashRatio, 2, ',', '.') . '%')
             ->color($kshtCashRatio['color'])
-            ->description($this->descriptionWithOjk($kshtCashRatio['description'], '>= 4.05%'))
+            ->description($this->descriptionWithOjk($kshtCashRatio['description'], '>= 20%'))
             ->icon('heroicon-o-currency-dollar');
     }
 
