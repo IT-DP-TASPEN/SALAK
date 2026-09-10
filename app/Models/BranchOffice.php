@@ -889,6 +889,7 @@ class BranchOffice extends BaseModel
                 COALESCE(saldoakhir, 0) *
                 CASE
                     WHEN noakun IN ('1272005') THEN -1
+                    WHEN noakun IN ('321', '3211980') THEN 1
                     WHEN SUBSTR(noakun, 1, 1) IN ('2','3','4','6') THEN -1
                     ELSE 1
                 END
