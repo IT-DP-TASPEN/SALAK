@@ -75,15 +75,15 @@ class RekapPerolehan extends Page implements HasTable
                     ->label('DPK Tabungan')
                     ->money('IDR', 0, 'id_ID')
                     ->getStateUsing(function ($record) {
-                        $gl = BranchOffice::saldoNeraca2(['221', '2212111', '2212116'], $record->branch_code_fincloud, $this->getAsOfDate());
-                        return ($gl['221'] ?? 0) - ($gl['2212111'] ?? 0) - ($gl['2212116'] ?? 0);
+                        $gl = BranchOffice::saldoNeraca2(['221', '2212111', '2212116', '2212199'], $record->branch_code_fincloud, $this->getAsOfDate());
+                        return ($gl['221'] ?? 0) - ($gl['2212111'] ?? 0) - ($gl['2212116'] ?? 0) - ($gl['2212199'] ?? 0);
                     })
                     ->summarize(
                         Summarizer::make()
                             ->money('IDR', 0, 'id_ID')
                             ->using(function () use ($branchCode) {
-                                $gl = BranchOffice::saldoNeraca2(['221', '2212111', '2212116'], $branchCode, $this->getAsOfDate());
-                                return ($gl['221'] ?? 0) - ($gl['2212111'] ?? 0) - ($gl['2212116'] ?? 0);
+                                $gl = BranchOffice::saldoNeraca2(['221', '2212111', '2212116', '2212199'], $branchCode, $this->getAsOfDate());
+                                return ($gl['221'] ?? 0) - ($gl['2212111'] ?? 0) - ($gl['2212116'] ?? 0) - ($gl['2212199'] ?? 0);
                             })
                             ->label('Total'),
                     ),
